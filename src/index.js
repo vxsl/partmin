@@ -5,17 +5,12 @@ const axios = require('axios')
 const FormData = require('form-data')
 const fs = require("fs").promises
 const { createWriteStream } = require("fs")
+const config = require('./config.json')
 
 const USER = process.env.FB_USER
 const PASS = process.env.FB_PASS
 const PUSHOVER_TOKEN = process.env.PUSHOVER_TOKEN
 const PUSHOVER_USER = process.env.PUSHOVER_USER
-
-const LAT = 45.523765
-const LONG = -73.619439
-const RADIUS = 9.26176
-const PRICE = 2200
-const MIN_AREA = 50
 
 const PATH = `\
 /marketplace/category/propertyrentals?\
@@ -71,17 +66,17 @@ function click(element) {
 }
 
 async function getActuallyNew(els) {
-  const existing = JSON.parse(await fs.readFile('./out.json'));
+  const existing = JSON.parse(await fs.readFile('./tmp/out.json'));
   return els.filter(({ id }) => !existing.includes(id))
 }
 
 async function writeFile(newIDs) {
-  const existing = JSON.parse(await fs.readFile('./out.json'));
+  const existing = JSON.parse(await fs.readFile('./tmp/out.json'));
   await fs.writeFile('./out.json', JSON.stringify([...newIDs, ...existing]))
 }
 
 async function loadAndSetCookies(driver) {
-  const cookies = JSON.parse(await fs.readFile('./cookies.json'));
+  const cookies = JSON.parse(await fs.readFile('./tmp/cookies.json'));
   await driver.manage().deleteAllCookies()
 
   await driver.sendDevToolsCommand("Network.enable")
@@ -93,7 +88,7 @@ async function loadAndSetCookies(driver) {
 
 async function writeCookies(driver) {
   const cookies = await driver.manage().getCookies()
-  await fs.writeFile('./cookies.json', JSON.stringify(cookies.map(c => ({
+  await fs.writeFile('./tmp/cookies.json', JSON.stringify(cookies.map(c => ({
     ...c,
     domain: "https://www.facebook.com"
   }))))

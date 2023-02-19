@@ -1,5 +1,4 @@
 node_modules
-out.json
 .env
-cookies.json
 images
+tmp
