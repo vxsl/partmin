@@ -1,6 +1,10 @@
 import axios from "axios";
 import { promises as fs, createWriteStream } from "fs";
 
+export const getConfigValue = async (fn: (data: any) => any) => {
+  return readJSON("config.json").then(fn);
+};
+
 export const readJSON = async (path: string) =>
   JSON.parse(await fs.readFile(path, "utf-8"));
 

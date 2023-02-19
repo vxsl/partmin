@@ -18,7 +18,8 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "start": "ts-node --esm src/index.ts"
+    "start": "ts-node --esm src/index.ts",
+    "circles": "cd py && python reverse_geocode.py"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",

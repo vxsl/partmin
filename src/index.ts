@@ -1,23 +1,27 @@
 // const chromedriver = require("chromedriver");
 import dotenv from "dotenv";
 import { Builder, By, until } from "selenium-webdriver";
-import { isOnHomepage } from "./util/fb.js";
-import { downloadImage, readJSON, writeJSON } from "./util/io.js";
+import { isOnHomepage, MP_ITEM_XPATH } from "./util/fb.js";
+import {
+  downloadImage,
+  getConfigValue,
+  readJSON,
+  writeJSON,
+} from "./util/io.js";
 import { waitSeconds } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
 import { click, loadCookies, saveCookies, type } from "./util/selenium.js";
-// import CONFIG from "../config.json" assert { type: "json" };
-import config from "../config.js";
 
 dotenv.config();
-
 const USER = process.env.FB_USER;
 const PASS = process.env.FB_PASS;
 const PUSHOVER_TOKEN = process.env.PUSHOVER_TOKEN;
 const PUSHOVER_USER = process.env.PUSHOVER_USER;
 
-const PRICE = config.search.price.min;
-const MIN_AREA = config.search.minArea * 0.09290304;
+const PRICE: number = await getConfigValue((c) => c.search.price.min);
+const MIN_AREA: number = await getConfigValue(
+  (c) => c.search.minArea * 0.09290304
+);
 
 const PATH = `\
 /marketplace/category/propertyrentals?\
@@ -31,8 +35,6 @@ sortBy=creation_time_descend
 `;
 // latitude=${LAT}&\
 // longitude=${LONG}&\
-
-const ITEM_XPATH = `.//a[contains(@href,'/marketplace/item/')]`;
 
 // =======================================================================================
 
@@ -71,7 +73,7 @@ async function run() {
       // scrape the items from the results page:
       const els = await Promise.all(
         (
-          await driver.findElements(By.xpath(ITEM_XPATH))
+          await driver.findElements(By.xpath(MP_ITEM_XPATH))
         ).map((e) =>
           e.getAttribute("href").then(async (href) => {
             const id = href.match(/\d+/)?.[0];
