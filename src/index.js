@@ -164,22 +164,25 @@ async function run() {
         await downloadImage(img, './images/' + id + '.jpg')
         const sep = ' - '
         const text = await e.getText().then(t => {
-          return t.replace('\n', sep).replace(/^C+/, '').replace('\n', "____")
+          return t.replace('\n', sep).replace(/^C+/, '').replace('\n', sep)
         })
-        const loc = text.match(/____([A-zÀ-ú])+, QC/)[0].replace("____", '')
-        const title = text.replace(loc, '')
-        return ({ id: href.match(/\d+/)[0], title, loc })
+        const tokens = text.split(sep)
+        const price = tokens[0] ?? 'ERROR_PRICE'
+        const loc = tokens[tokens.length - 1] ?? "ERROR_LOC"
+        const name = tokens.slice(1, tokens.length - 1).join(sep) ?? "ERROR_NAME"
+        return ({ id: href.match(/\d+/)[0], title: `${price} - ${loc}`, message: name })
       }
       )))
 
       const actuallyNew = await getActuallyNew(els)
       await writeFile(actuallyNew.map(({ id }) => id))
-      for (const { id, title, loc } of actuallyNew) {
+      console.log("🚀  actuallyNew", actuallyNew)
+      for (const { id, title, message } of actuallyNew) {
         await sendNoti({
           id,
           title: `🏘️ ${title} `,
+          message,
           url: `fb://marketplace_product_details?id=${id}`,
-          message: loc
         })
 
         await new Promise(resolve => setTimeout(resolve, 1000))
