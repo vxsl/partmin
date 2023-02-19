@@ -2,10 +2,12 @@ require("chromedriver");
 require("dotenv").config()
 const { By, Builder, until } = require("selenium-webdriver");
 const axios = require('axios')
+const FormData = require('form-data')
 const fs = require("fs").promises
+const { createWriteStream } = require("fs")
 
-const USER = process.env.USER
-const PASS = process.env.PASS
+const USER = process.env.FB_USER
+const PASS = process.env.FB_PASS
 const PUSHOVER_TOKEN = process.env.PUSHOVER_TOKEN
 const PUSHOVER_USER = process.env.PUSHOVER_USER
 
@@ -27,6 +29,32 @@ propertyType=apartment-condo,house,townhouse&\
 minBedrooms=2&\
 sortBy=creation_time_descend
 `
+
+const ITEM_XPATH = `.//a[contains(@href,'/marketplace/item/')]`
+
+const downloadImage = async (url, image_path) => {
+  let f
+  try {
+    f = await fs.open(image_path, 'w')
+    const ws = createWriteStream(image_path)
+    return axios({
+      url,
+      responseType: 'stream',
+    }).then(
+      response =>
+        new Promise((resolve, reject) => {
+          response.data
+            .pipe(ws)
+            .on('finish', () => resolve())
+            .on('error', e => reject(e));
+        }),
+    ).finally(() => {
+      f?.close()
+    })
+  } finally {
+    await f?.close()
+  }
+}
 
 async function type(string, element) {
   for (let i = 0; i < string.length; i++) {
@@ -52,48 +80,127 @@ async function writeFile(newIDs) {
   await fs.writeFile('./out.json', JSON.stringify([...newIDs, ...existing]))
 }
 
+async function loadAndSetCookies(driver) {
+  const cookies = JSON.parse(await fs.readFile('./cookies.json'));
+  await driver.manage().deleteAllCookies()
+
+  await driver.sendDevToolsCommand("Network.enable")
+  for (const c of cookies) {
+    await driver.sendDevToolsCommand("Network.setCookie", c)
+  }
+  await driver.sendDevToolsCommand("Network.disable")
+}
+
+async function writeCookies(driver) {
+  const cookies = await driver.manage().getCookies()
+  await fs.writeFile('./cookies.json', JSON.stringify(cookies.map(c => ({
+    ...c,
+    domain: "https://www.facebook.com"
+  }))))
+}
+
+async function isOnHomepage(driver) {
+  return driver.findElements(By.css('[aria-label="Search Facebook"]')).then(els => els.length > 0)
+}
+
+const sendNoti = async (_data) => {
+  const form = new FormData()
+  const data = {
+    token: PUSHOVER_TOKEN,
+    user: PUSHOVER_USER,
+    ..._data,
+  }
+  let img
+  try {
+    img = await fs.readFile(`./images/${data.id}.jpg`)
+    form.append('attachment', img, { filename: `${data.id}.jpg` });
+    Object.entries(data).forEach(([key, value]) => {
+      form.append(key, value)
+    })
+  } catch (e) {
+    console.error(e)
+  }
+  try {
+    return img
+      ? axios.post('https://api.pushover.net/1/messages.json', form, { headers: form.getHeaders() })
+      : axios.post('https://api.pushover.net/1/messages.json', data)
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+// =======================================================================================
+
 async function run() {
   const driver = await new Builder().forBrowser("chrome").build();
+
+  await loadAndSetCookies(driver)
+  await driver.get(`https://www.facebook.com`);
+  await driver.navigate().refresh()
+
+  if (await isOnHomepage(driver) === false) {
+    username = driver.findElement(By.name("email"))
+    password = driver.findElement(By.name("pass"))
+    submit = driver.findElement(By.name("login"))
+    await type(USER, username)
+    await type(PASS, password)
+    await click(submit)
+    await driver.wait(until.elementLocated(By.css('[aria-label="Search Facebook"]')), 10 * 1000)
+  }
+
+
   const basic = `https://www.facebook.com${PATH}`
-  await driver.get(`https://www.facebook.com/login`);
-  username = driver.findElement(By.name("email"))
-  password = driver.findElement(By.name("pass"))
-  submit = driver.findElement(By.name("login"))
-  await type(USER, username)
-  await type(PASS, password)
-  await click(submit)
-  await driver.wait(until.elementLocated(By.css('[aria-label="Search Facebook"]')), 10 * 1000)
-  await driver.get(basic)
 
-  const xpath = `.//a[contains(@href,'/marketplace/item/')]`
-  const els = await driver.findElements(By.xpath(xpath))
-  const ids = await Promise.all(els.map(e => e.getAttribute('href').then(async href =>
-  (
-    {
-      id: href.match(/\d+/)[0],
-      title: await (await e.getText().then(t => t.replace('\n', ' - ').split('Montréal, QC')[0].split('C')[1]))
-    }
-  )
-  )))
+  while (true) {
+    try {
+      await driver.get(basic)
+      await writeCookies(driver)
+      await driver.wait(until.elementLocated(By.css('[aria-label="Search Marketplace"]')), 10 * 1000)
 
-  const actuallyNew = await getActuallyNew(ids)
-  await writeFile(actuallyNew.map(({ id }) => id))
-  console.log("🚀  actuallyNew", actuallyNew)
-  await actuallyNew.forEach(async ({ id, title }) => {
-    const payload = {
-      token: PUSHOVER_TOKEN,
-      user: PUSHOVER_USER,
-      message: `fb.com/marketplace/item/${id}`,
-      title: `🏘️ ${title}`,
-      url: `fb://marketplace_product_details?id=${id}`
+      const _els = await driver.findElements(By.xpath(ITEM_XPATH))
+      const els = await Promise.all(_els.map(e => e.getAttribute('href').then(async href => {
+        const img = await e.findElement(By.css('img')).then(img => img.getAttribute('src'))
+        const id = href.match(/\d+/)[0]
+        await downloadImage(img, './images/' + id + '.jpg')
+        const sep = ' - '
+        const text = await e.getText().then(t => {
+          return t.replace('\n', sep).replace(/^C+/, '').replace('\n', "____")
+        })
+        const loc = text.match(/____([A-zÀ-ú])+, QC/)[0].replace("____", '')
+        const title = text.replace(loc, '')
+        return ({ id: href.match(/\d+/)[0], title, loc })
+      }
+      )))
+
+      const actuallyNew = await getActuallyNew(els)
+      await writeFile(actuallyNew.map(({ id }) => id))
+      for (const { id, title, loc } of actuallyNew) {
+        await sendNoti({
+          id,
+          title: `🏘️ ${title} `,
+          url: `fb://marketplace_product_details?id=${id}`,
+          message: loc
+        })
+
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+
+      await new Promise(resolve => setTimeout(resolve, Math.random() * 60 * 1000 + 60 * 1000))
+
+      let waited = 0
+      const randomTime = Math.random() * 60000 + 60000
+      while (waited < randomTime) {
+        const toWait = Math.random() * 5 * 1000 + 5 * 1000
+        await new Promise(resolve => setTimeout(resolve, toWait))
+        waited += toWait
+      }
+    } catch (err) {
+      console.error(err)
+      break
     }
-    console.log(payload)
-    axios.post('https://api.pushover.net/1/messages.json', payload).catch(e => console.error(e))
-    await new Promise(resolve => setTimeout(resolve, 1000))
-  })
+  }
   driver.close()
 }
 
-run()
 
-// for ((;;)) {yarn start; sleep 60}
+run()
