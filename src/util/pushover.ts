@@ -1,6 +1,9 @@
 import axios from "axios";
 import FormData from "form-data";
 import { promises as fs } from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const PUSHOVER_ENDPOINT = "https://api.pushover.net/1/messages.json";
 

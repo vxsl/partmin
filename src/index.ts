@@ -1,7 +1,11 @@
 // const chromedriver = require("chromedriver");
 import dotenv from "dotenv";
 import { Builder, By, until } from "selenium-webdriver";
-import { isOnHomepage, MP_ITEM_XPATH } from "./util/fb.js";
+import {
+  isOnHomepage,
+  MP_ITEM_XPATH,
+  setMarketplaceLocation,
+} from "./util/fb.js";
 import {
   downloadImage,
   getConfigValue,
@@ -28,11 +32,11 @@ const PATH = `\
 maxPrice=${PRICE}&\
 minAreaSize=${MIN_AREA}&\
 exact=false&\
-radius=${10}&\
 propertyType=apartment-condo,house,townhouse&\
 minBedrooms=2&\
 sortBy=creation_time_descend
 `;
+// radius=${10}&\
 // latitude=${LAT}&\
 // longitude=${LONG}&\
 
@@ -47,7 +51,7 @@ async function run() {
 
   await loadCookies(driver);
   await driver.get(`https://www.facebook.com`);
-  await driver.navigate().refresh();
+  // await driver.navigate().refresh();
 
   if ((await isOnHomepage(driver)) === false) {
     await type(USER, driver.findElement(By.name("email")));
@@ -69,6 +73,8 @@ async function run() {
         until.elementLocated(By.css('[aria-label="Search Marketplace"]')),
         10 * 1000
       );
+
+      await setMarketplaceLocation(driver, "H2V", 13);
 
       // scrape the items from the results page:
       const els = await Promise.all(
@@ -121,11 +127,11 @@ async function run() {
           },
           `${id}.jpg`
         );
-        waitSeconds(1);
+        await waitSeconds(1);
       }
 
       // wait for a random interval between 1 and 2 minutes:
-      waitSeconds(Math.random() * 60 + 60);
+      await waitSeconds(Math.random() * 60 + 60);
     } catch (err) {
       console.error(err);
       break;
