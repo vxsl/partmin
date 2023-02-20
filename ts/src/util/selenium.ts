@@ -11,13 +11,12 @@ export const type = async (element: WebElementPromise, string: string) => {
     );
   }
 };
-export const click = async (element: WebElementPromise) => {
-  return new Promise((resolve) => {
+export const click = async (element: WebElementPromise) =>
+  await new Promise((resolve) => {
     setTimeout(() => {
       return element.click().then(resolve);
     }, Math.random() * 200);
   });
-};
 
 export const saveCookies = async (driver: WebDriver) =>
   writeJSON(
@@ -48,8 +47,8 @@ export const elementShouldExist = async (
   selector: string,
   driver: WebDriver
 ) =>
-  method === "xpath"
+  await (method === "xpath"
     ? driver.wait(until.elementLocated(By.xpath(selector)), 10 * 1000)
     : method === "css"
     ? driver.wait(until.elementLocated(By.css(selector)), 10 * 1000)
-    : Promise.resolve();
+    : Promise.resolve());
