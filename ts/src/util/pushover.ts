@@ -18,7 +18,7 @@ export const pushover = async (_data: Object, imgName?: string) => {
   let img;
   try {
     if (imgName) {
-      img = await fs.readFile(`./images/${imgName}`);
+      img = await fs.readFile(`tmp/images/${imgName}`);
       form.append("attachment", img, { filename: imgName });
     }
   } catch (e) {

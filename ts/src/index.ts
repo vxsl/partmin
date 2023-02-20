@@ -100,7 +100,7 @@ async function run() {
             const imgSrc = await e
               .findElement(By.css("img"))
               .then((img) => img.getAttribute("src"));
-            await downloadImage(imgSrc, "./images/" + id + ".jpg");
+            await downloadImage(imgSrc, "tmp/images/" + id + ".jpg");
 
             const SEP = " - ";
             const text = await e
@@ -120,9 +120,9 @@ async function run() {
       );
 
       // determine which items are new:
-      const seenItems = await readJSON("./tmp/out.json");
+      const seenItems = await readJSON("tmp/seen.json");
       const newItems = els.filter(({ id }) => !seenItems.includes(id));
-      writeJSON("./tmp/out.json", [
+      writeJSON("tmp/seen.json", [
         ...newItems.map(({ id }) => id),
         ...seenItems,
       ]);

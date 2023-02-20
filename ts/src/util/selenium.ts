@@ -21,7 +21,7 @@ export const click = async (element: WebElementPromise) => {
 
 export const saveCookies = async (driver: WebDriver) =>
   writeJSON(
-    "./tmp/cookies.json",
+    "tmp/cookies.json",
     await driver.manage().getCookies()
     // .map((c) => ({
     //   ...c,
@@ -30,7 +30,7 @@ export const saveCookies = async (driver: WebDriver) =>
   );
 
 export const loadCookies = async (driver: WebDriver) => {
-  const cookies: Object[] = await readJSON("./tmp/cookies.json");
+  const cookies: Object[] = await readJSON("tmp/cookies.json");
   await driver.manage().deleteAllCookies();
 
   // @ts-ignore
