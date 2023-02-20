@@ -1,20 +1,15 @@
 // const chromedriver = require("chromedriver");
 import dotenv from "dotenv";
 import { Builder, By, until } from "selenium-webdriver";
+import { processItems, scrapeItems } from "./util/fb-marketplace.js";
 import {
   fbClick,
   fbType,
   isOnHomepage,
   marketplaceReady,
-  MP_ITEM_XPATH,
   setMarketplaceLocation,
 } from "./util/fb.js";
-import {
-  downloadImage,
-  getConfigValue,
-  readJSON,
-  writeJSON,
-} from "./util/io.js";
+import { getConfigValue } from "./util/io.js";
 import { waitSeconds } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
 import { loadCookies, saveCookies } from "./util/selenium.js";
@@ -29,10 +24,6 @@ const MIN_PRICE: number = await getConfigValue((c) => c.search.price.min);
 const MAX_PRICE: number = await getConfigValue((c) => c.search.price.max);
 const MIN_AREA: number = await getConfigValue(
   (c) => c.search.minArea * 0.09290304
-);
-
-const BLACKLIST: string[] = await getConfigValue((c) =>
-  c.search.blacklist.map((b: string) => b.toLowerCase())
 );
 
 const PATH = `\
@@ -60,7 +51,6 @@ async function run() {
 
   await loadCookies(driver);
   await driver.get(`https://www.facebook.com`);
-  // await driver.navigate().refresh();
 
   if ((await isOnHomepage(driver)) === false) {
     await fbType(driver, driver.findElement(By.name("email")), USER);
@@ -88,71 +78,22 @@ async function run() {
       await setMarketplaceLocation(driver, "H2V", 13);
       await marketplaceReady(driver);
 
-      // scrape the items from the results page:
-      const els = await Promise.all(
-        (
-          await driver.findElements(By.xpath(MP_ITEM_XPATH))
-        ).map((e) =>
-          e.getAttribute("href").then(async (href) => {
-            const id = href.match(/\d+/)?.[0];
-            if (!id) pushover({ title: "ERROR", message: href, url: href });
+      const items = await scrapeItems(driver);
+      const newItems = await processItems(items, { log: true });
 
-            const imgSrc = await e
-              .findElement(By.css("img"))
-              .then((img) => img.getAttribute("src"));
-            await downloadImage(imgSrc, "tmp/images/" + id + ".jpg");
-
-            const SEP = " - ";
-            const text = await e
-              .getText()
-              .then((t) =>
-                t.replace("\n", SEP).replace(/^C+/, "").replace("\n", SEP)
-              );
-            const tokens = text.split(SEP);
-            const price = tokens[0] ?? "ERROR_PRICE";
-            const loc = tokens[tokens.length - 1] ?? "ERROR_LOC";
-            const name =
-              tokens.slice(1, tokens.length - 1).join(SEP) ?? "ERROR_NAME";
-
-            return { id, title: `${price} - ${loc}`, message: name };
-          })
-        )
-      );
-
-      // determine which items are new:
-      const seenItems = await readJSON("tmp/seen.json");
-      const newItems = els.filter(({ id }) => !seenItems.includes(id));
-      writeJSON("tmp/seen.json", [
-        ...newItems.map(({ id }) => id),
-        ...seenItems,
-      ]);
-
-      if (newItems?.length) {
-        console.log(
-          `checked ${els.length} items, found ${newItems.length} new:, `,
-          newItems
-        );
-      } else {
-        console.log(`checked ${els.length} items, found 0 new.`);
-      }
       // send a notification for each new item:
       for (const item of newItems) {
         const { id, title, message } = item;
-        if (
-          !BLACKLIST.some((b) => JSON.stringify(item).toLowerCase().includes(b))
-        ) {
-          // if (JSON.stringify(item).contain)
-          await pushover(
-            {
-              id,
-              title: `🏘️ ${title} `,
-              message,
-              url: `fb://marketplace_product_details?id=${id}`,
-            },
-            `${id}.jpg`
-          );
-          await waitSeconds(1);
-        }
+        await pushover(
+          {
+            id,
+            title: `🏘️ ${title} `,
+            message,
+            url: `fb://marketplace_product_details?id=${id}`,
+          },
+          `${id}.jpg`
+        );
+        await waitSeconds(1);
       }
 
       // wait for a random interval between 1 and 2 minutes:
