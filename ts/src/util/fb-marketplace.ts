@@ -14,7 +14,7 @@ export type MarketplaceItem = {
   message: string;
 };
 
-export const isBlacklisted = (item: MarketplaceItem) =>
+export const itemIsBlacklisted = (item: MarketplaceItem) =>
   BLACKLIST.some((b) => JSON.stringify(item).toLowerCase().includes(b));
 
 export const processItems = async (
@@ -27,7 +27,7 @@ export const processItems = async (
   >(
     ([n, b], item) => {
       if (!seenItems.includes(item.id)) {
-        (isBlacklisted(item) ? b : n).push(item);
+        (itemIsBlacklisted(item) ? b : n).push(item);
       }
       return [n, b];
     },

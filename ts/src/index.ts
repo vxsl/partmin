@@ -1,4 +1,3 @@
-// const chromedriver = require("chromedriver");
 import dotenv from "dotenv";
 import { Builder, By, until } from "selenium-webdriver";
 import {
@@ -6,17 +5,15 @@ import {
   processItems,
   scrapeItems,
 } from "./util/fb-marketplace.js";
-import {
-  fbClick,
-  fbType,
-  isOnHomepage,
-  marketplaceReady,
-  setMarketplaceLocation,
-} from "./util/fb.js";
+import { fbClick, fbType, isOnHomepage } from "./util/fb.js";
 import { getConfigValue } from "./util/io.js";
 import { log, waitSeconds } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
-import { loadCookies, saveCookies } from "./util/selenium.js";
+import {
+  elementShouldExist,
+  loadCookies,
+  saveCookies,
+} from "./util/selenium.js";
 
 dotenv.config();
 const USER = process.env.FB_USER;
@@ -29,6 +26,9 @@ const MAX_PRICE: number = await getConfigValue((c) => c.search.price.max);
 const MIN_AREA: number = await getConfigValue(
   (c) => c.search.minArea * 0.09290304
 );
+const LAT: number = await getConfigValue((c) => c.search.location.lat);
+const LONG: number = await getConfigValue((c) => c.search.location.lng);
+const RADIUS: number = await getConfigValue((c) => c.search.location.radius);
 
 const PATH = `\
 /marketplace/category/propertyrentals?\
@@ -38,17 +38,40 @@ minAreaSize=${MIN_AREA}&\
 exact=false&\
 propertyType=apartment-condo,house,townhouse&\
 minBedrooms=2&\
-sortBy=creation_time_descend
+sortBy=creation_time_descend&\
+radius=${RADIUS}&\
+latitude=${LAT}&\
+longitude=${LONG}&\
 `;
-// radius=${10}&\
-// latitude=${LAT}&\
-// longitude=${LONG}&\
 
 // =======================================================================================
 
 async function run() {
-  if (!USER || !PASS || !PUSHOVER_TOKEN || !PUSHOVER_USER) {
-    throw new Error("Missing env vars");
+  if (
+    !MIN_PRICE ||
+    !MAX_PRICE ||
+    !MIN_AREA ||
+    !LAT ||
+    !LONG ||
+    !RADIUS ||
+    !USER ||
+    !PASS ||
+    !PUSHOVER_TOKEN ||
+    !PUSHOVER_USER
+  ) {
+    const missing = Object.entries({
+      MIN_PRICE,
+      MAX_PRICE,
+      MIN_AREA,
+      LAT,
+      LONG,
+      RADIUS,
+      USER,
+      PASS,
+      PUSHOVER_TOKEN,
+      PUSHOVER_USER,
+    }).filter(([k, v]) => !v);
+    throw new Error(`Missing env vars: ${missing.map(([k]) => k).join(", ")}`);
   }
 
   const driver = await new Builder().forBrowser("chrome").build();
@@ -66,21 +89,17 @@ async function run() {
     );
   }
 
-  const basic = `https://www.facebook.com${PATH}`;
-
   while (true) {
     try {
-      await driver.get(basic);
+      await driver.get(`https://www.facebook.com${PATH}`);
       saveCookies(driver);
-      await driver.wait(
-        until.elementLocated(By.css('[aria-label="Search Marketplace"]')),
-        10 * 1000
+      await elementShouldExist(
+        "css",
+        '[aria-label="Search Marketplace"]',
+        driver
       );
 
-      waitSeconds(Math.random() * 1 + 1);
-
-      await setMarketplaceLocation(driver, "H2V", 13);
-      await marketplaceReady(driver);
+      await waitSeconds(Math.random() * 1 + 1);
 
       const items = await scrapeItems(driver);
       if (!items?.length) {
