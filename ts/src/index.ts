@@ -1,7 +1,11 @@
 // const chromedriver = require("chromedriver");
 import dotenv from "dotenv";
 import { Builder, By, until } from "selenium-webdriver";
-import { processItems, scrapeItems } from "./util/fb-marketplace.js";
+import {
+  newItemNotify,
+  processItems,
+  scrapeItems,
+} from "./util/fb-marketplace.js";
 import {
   fbClick,
   fbType,
@@ -10,7 +14,7 @@ import {
   setMarketplaceLocation,
 } from "./util/fb.js";
 import { getConfigValue } from "./util/io.js";
-import { waitSeconds } from "./util/misc.js";
+import { log, waitSeconds } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
 import { loadCookies, saveCookies } from "./util/selenium.js";
 
@@ -79,26 +83,25 @@ async function run() {
       await marketplaceReady(driver);
 
       const items = await scrapeItems(driver);
+      if (!items?.length) {
+        log("Somehow there are no items. Trying again.");
+        continue;
+      }
+
       const newItems = await processItems(items, { log: true });
 
       // send a notification for each new item:
       for (const item of newItems) {
-        const { id, title, message } = item;
-        await pushover(
-          {
-            id,
-            title: `🏘️ ${title} `,
-            message,
-            url: `fb://marketplace_product_details?id=${id}`,
-          },
-          `${id}.jpg`
-        );
+        await newItemNotify(item);
         await waitSeconds(1);
       }
 
       // wait for a random interval between 1 and 2 minutes:
       await waitSeconds(Math.random() * 60 + 60);
     } catch (err) {
+      pushover({
+        message: `⚠️ Something went wrong. You will no longer receive notifications.`,
+      });
       console.error(err);
       break;
     }

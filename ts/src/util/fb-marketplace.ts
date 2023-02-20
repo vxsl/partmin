@@ -1,7 +1,7 @@
-import { By, WebDriver } from "selenium-webdriver";
+import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { MP_ITEM_XPATH } from "./fb.js";
 import { downloadImage, getConfigValue, readJSON, writeJSON } from "./io.js";
-import { notUndefined } from "./misc.js";
+import { log, notUndefined, waitSeconds } from "./misc.js";
 import { pushover } from "./pushover.js";
 
 const BLACKLIST: string[] = await getConfigValue((c) =>
@@ -42,27 +42,33 @@ export const processItems = async (
 
   if (options.log) {
     if (!newItems.length && !blacklistedNewItems.length) {
-      console.log(`No new items. (checked ${items.length})`);
+      log(`No new items. (checked ${items.length})`);
     } else {
-      console.log("\n========================================");
+      console.log("\n=======================================================");
 
       if (newItems.length) {
-        console.log(
-          `Checked ${items.length} items, found ${newItems.length} new:, `,
+        log(
+          `Checked ${items.length} item${
+            items.length === 1 ? "" : "s"
+          }, found ${newItems.length} new:`,
           newItems
         );
         if (blacklistedNewItems.length) {
-          console.log(
-            `Also found ${blacklistedNewItems.length} new blacklisted items:, `,
-            blacklistedNewItems
+          log(
+            `Also found ${blacklistedNewItems.length} new blacklisted item${
+              blacklistedNewItems.length === 1 ? "" : "s"
+            }`
           );
         }
       } else {
-        console.log(
-          `Checked ${items.length} items, found ${blacklistedNewItems.length} new blacklisted: `,
-          { blacklisted: blacklistedNewItems }
+        log(
+          `Checked ${items.length} item${
+            items.length === 1 ? "" : "s"
+          }, found ${blacklistedNewItems.length} new blacklisted:`,
+          blacklistedNewItems
         );
       }
+      console.log("----------------------------------------\n");
     }
   }
 
@@ -71,12 +77,17 @@ export const processItems = async (
 
 export const scrapeItems = async (
   driver: WebDriver
-): Promise<MarketplaceItem[]> =>
-  (
+): Promise<MarketplaceItem[] | undefined> => {
+  let els: WebElement[] = [];
+  for (let i = 0; i < 10; i++) {
+    els = await driver.findElements(By.xpath(MP_ITEM_XPATH));
+    if (els.length) break;
+    await waitSeconds(1);
+  }
+  if (!els.length) return undefined;
+  return (
     await Promise.all(
-      (
-        await driver.findElements(By.xpath(MP_ITEM_XPATH))
-      ).map((e) => {
+      els.map((e) => {
         return e.getAttribute("href").then(async (href) => {
           const id = href.match(/\d+/)?.[0];
           if (!id) {
@@ -111,3 +122,12 @@ export const scrapeItems = async (
       })
     )
   ).filter(notUndefined);
+};
+
+export const newItemNotify = async (item: MarketplaceItem) => {
+  const { id, title, message } = item;
+  await pushover(
+    { title, message, url: `fb://marketplace_product_details?id=${id}` },
+    `${id}.jpg`
+  );
+};
