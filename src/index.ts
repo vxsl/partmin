@@ -2,7 +2,10 @@
 import dotenv from "dotenv";
 import { Builder, By, until } from "selenium-webdriver";
 import {
+  fbClick,
+  fbType,
   isOnHomepage,
+  marketplaceReady,
   MP_ITEM_XPATH,
   setMarketplaceLocation,
 } from "./util/fb.js";
@@ -14,7 +17,7 @@ import {
 } from "./util/io.js";
 import { waitSeconds } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
-import { click, loadCookies, saveCookies, type } from "./util/selenium.js";
+import { loadCookies, saveCookies } from "./util/selenium.js";
 
 dotenv.config();
 const USER = process.env.FB_USER;
@@ -22,14 +25,20 @@ const PASS = process.env.FB_PASS;
 const PUSHOVER_TOKEN = process.env.PUSHOVER_TOKEN;
 const PUSHOVER_USER = process.env.PUSHOVER_USER;
 
-const PRICE: number = await getConfigValue((c) => c.search.price.min);
+const MIN_PRICE: number = await getConfigValue((c) => c.search.price.min);
+const MAX_PRICE: number = await getConfigValue((c) => c.search.price.max);
 const MIN_AREA: number = await getConfigValue(
   (c) => c.search.minArea * 0.09290304
 );
 
+const BLACKLIST: string[] = await getConfigValue((c) =>
+  c.search.blacklist.map((b: string) => b.toLowerCase())
+);
+
 const PATH = `\
 /marketplace/category/propertyrentals?\
-maxPrice=${PRICE}&\
+minPrice=${MIN_PRICE}&\
+maxPrice=${MAX_PRICE}&\
 minAreaSize=${MIN_AREA}&\
 exact=false&\
 propertyType=apartment-condo,house,townhouse&\
@@ -54,9 +63,9 @@ async function run() {
   // await driver.navigate().refresh();
 
   if ((await isOnHomepage(driver)) === false) {
-    await type(USER, driver.findElement(By.name("email")));
-    await type(PASS, driver.findElement(By.name("pass")));
-    await click(driver.findElement(By.name("login")));
+    await fbType(driver, driver.findElement(By.name("email")), USER);
+    await fbType(driver, driver.findElement(By.name("pass")), PASS);
+    await fbClick(driver, driver.findElement(By.name("login")));
     await driver.wait(
       until.elementLocated(By.css('[aria-label="Search Facebook"]')),
       10 * 1000
@@ -74,7 +83,10 @@ async function run() {
         10 * 1000
       );
 
+      waitSeconds(Math.random() * 1 + 1);
+
       await setMarketplaceLocation(driver, "H2V", 13);
+      await marketplaceReady(driver);
 
       // scrape the items from the results page:
       const els = await Promise.all(
@@ -115,19 +127,32 @@ async function run() {
         ...seenItems,
       ]);
 
-      // send a notification for each new item:
-      console.log("🚀  newItems", newItems);
-      for (const { id, title, message } of newItems) {
-        await pushover(
-          {
-            id,
-            title: `🏘️ ${title} `,
-            message,
-            url: `fb://marketplace_product_details?id=${id}`,
-          },
-          `${id}.jpg`
+      if (newItems?.length) {
+        console.log(
+          `checked ${els.length} items, found ${newItems.length} new:, `,
+          newItems
         );
-        await waitSeconds(1);
+      } else {
+        console.log(`checked ${els.length} items, found 0 new.`);
+      }
+      // send a notification for each new item:
+      for (const item of newItems) {
+        const { id, title, message } = item;
+        if (
+          !BLACKLIST.some((b) => JSON.stringify(item).toLowerCase().includes(b))
+        ) {
+          // if (JSON.stringify(item).contain)
+          await pushover(
+            {
+              id,
+              title: `🏘️ ${title} `,
+              message,
+              url: `fb://marketplace_product_details?id=${id}`,
+            },
+            `${id}.jpg`
+          );
+          await waitSeconds(1);
+        }
       }
 
       // wait for a random interval between 1 and 2 minutes:

@@ -1,10 +1,14 @@
-import { WebDriver, WebElementPromise } from "selenium-webdriver";
+import { By, until, WebDriver, WebElementPromise } from "selenium-webdriver";
 import { readJSON, writeJSON } from "./io.js";
 
-export const type = async (string: string, element: WebElementPromise) => {
+export const type = async (element: WebElementPromise, string: string) => {
   for (let i = 0; i < string.length; i++) {
-    await new Promise((resolve) => setTimeout(resolve, Math.random() * 200));
-    element.sendKeys(string[i]);
+    await new Promise((resolve) =>
+      setTimeout(
+        () => element.sendKeys(string[i]).then(resolve),
+        Math.random() * 200
+      )
+    );
   }
 };
 export const click = async (element: WebElementPromise) => {
@@ -38,3 +42,14 @@ export const loadCookies = async (driver: WebDriver) => {
   // @ts-ignore
   await driver.sendDevToolsCommand("Network.disable");
 };
+
+export const elementShouldExist = async (
+  method: "xpath" | "css",
+  selector: string,
+  driver: WebDriver
+) =>
+  method === "xpath"
+    ? driver.wait(until.elementLocated(By.xpath(selector)), 10 * 1000)
+    : method === "css"
+    ? driver.wait(until.elementLocated(By.css(selector)), 10 * 1000)
+    : Promise.resolve();

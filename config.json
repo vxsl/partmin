@@ -7,6 +7,21 @@
       "min": 700,
       "max": 2200
     },
-    "minArea": 450
+    "minArea": 450,
+    "blacklist": [
+      "Saint-Eustache",
+      "Boisbriand",
+      "Roxboro",
+      "Pierrefonds",
+      "Bizard",
+      "Hochelaga",
+      "Maisonneuve",
+      "HOMA",
+      "Laval",
+      "Longueuil",
+      "Saint Lambert",
+      "Saint-Lambert",
+      "Dollard-Des-Ormeaux"
+    ]
   }
 }
