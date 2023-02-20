@@ -6,4 +6,4 @@ export function notUndefined<T>(value: T | undefined): value is T {
 }
 
 export const log = (...args: Parameters<typeof console.log>) =>
-  console.log(`${new Date().toLocaleTimeString("it-IT")}: `, ...args);
+  console.log(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
