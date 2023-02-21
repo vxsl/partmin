@@ -4,37 +4,84 @@ import { downloadImage, getConfigValue, readJSON, writeJSON } from "./io.js";
 import { log, notUndefined, waitSeconds } from "./misc.js";
 import { pushover } from "./pushover.js";
 
-const BLACKLIST: string[] = await getConfigValue((c) =>
-  c.search.blacklist.map((b: string) => b.toLowerCase())
-);
-
 export type MarketplaceItem = {
   id: string;
   title: string;
   message: string;
 };
 
+export const visitFacebook = async (driver: WebDriver) => {
+  await driver.get("https://facebook.com");
+};
+
+export const visitMarketplace = async (driver: WebDriver) => {
+  const vals = {
+    sortBy: "creation_time_descend",
+    exact: false,
+
+    propertyType: await getConfigValue((c) => c.search.propertyType),
+    minPrice: await getConfigValue((c) => c.search.price.min),
+    maxPrice: await getConfigValue((c) => c.search.price.max),
+    minAreaSize: await getConfigValue((c) => {
+      const n = c.search.minArea * 0.09290304;
+      if (n) {
+        return Math.floor(n * 100) / 100;
+      }
+    }),
+    latitude: await getConfigValue((c) => c.search.location.lat),
+    longitude: await getConfigValue((c) => c.search.location.lng),
+    radius:
+      (await getConfigValue((c) => c.search.location.radius)) +
+      Math.random() * 0.00000001 +
+      Math.random() * 0.0000001 +
+      Math.random() * 0.000001 +
+      Math.random() * 0.00001,
+
+    minBedrooms: await getConfigValue((c) => c.search.bedrooms.min),
+  };
+
+  let url = `https://facebook.com/marketplace/category/propertyrentals?`;
+  for (const [k, v] of Object.entries(vals)) {
+    if (v) {
+      url += `${k}=${v}&`;
+    }
+  }
+
+  await driver.get(url);
+  return url;
+};
+
 export const itemIsBlacklisted = (item: MarketplaceItem) =>
-  BLACKLIST.some((b) => JSON.stringify(item).toLowerCase().includes(b));
+  getConfigValue((c) =>
+    c.search.blacklist.map((b: string) => b.toLowerCase())
+  ).then((blacklist: string[]) =>
+    blacklist.some((b) => JSON.stringify(item).toLowerCase().includes(b))
+  );
 
 export const processItems = async (
   items: MarketplaceItem[],
   options: { log?: boolean } = {}
 ) => {
-  const seenItems = await readJSON("tmp/seen.json");
-  const [newItems, blacklistedNewItems] = items.reduce<
-    [n: MarketplaceItem[], b: MarketplaceItem[]]
-  >(
-    ([n, b], item) => {
-      if (!seenItems.includes(item.id)) {
-        (itemIsBlacklisted(item) ? b : n).push(item);
-      }
-      return [n, b];
-    },
-    [[], []]
-  );
+  const seenItems = (await readJSON<string[]>("tmp/seen.json")) ?? [];
+  const newItems = items.reduce<MarketplaceItem[]>((n, item) => {
+    if (!seenItems.includes(item.id)) {
+      // (itemIsBlacklisted(item) ? b : n).push(item);
+      n.push(item);
+    }
+    return n;
+  }, []);
 
-  writeJSON("tmp/seen.json", [
+  const blacklistedNewItems = [];
+  for (let i = 0; i < newItems.length; i++) {
+    const item = newItems[i];
+    if (await itemIsBlacklisted(item)) {
+      blacklistedNewItems.push(item);
+      newItems.splice(i, 1);
+      i--;
+    }
+  }
+
+  await writeJSON("tmp/seen.json", [
     ...newItems.map(({ id }) => id),
     ...blacklistedNewItems.map(({ id }) => id),
     ...seenItems,

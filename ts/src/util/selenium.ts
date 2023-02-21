@@ -18,10 +18,15 @@ export const click = async (element: WebElementPromise) =>
     }, Math.random() * 200);
   });
 
-export const saveCookies = async (driver: WebDriver) =>
+export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
   writeJSON(
     "tmp/cookies.json",
-    await driver.manage().getCookies()
+    await driver
+      .manage()
+      .getCookies()
+      .then((cookies) =>
+        cookies.filter((c) => (keys ? keys.includes(c.name) : true))
+      )
     // .map((c) => ({
     //   ...c,
     //   domain: "https://www.facebook.com",
@@ -29,17 +34,19 @@ export const saveCookies = async (driver: WebDriver) =>
   );
 
 export const loadCookies = async (driver: WebDriver) => {
-  const cookies: Object[] = await readJSON("tmp/cookies.json");
+  const cookies = await readJSON<Object[]>("tmp/cookies.json");
   await driver.manage().deleteAllCookies();
 
-  // @ts-ignore
-  await driver.sendDevToolsCommand("Network.enable");
-  for (const c of cookies) {
+  if (cookies?.length) {
     // @ts-ignore
-    await driver.sendDevToolsCommand("Network.setCookie", c);
+    await driver.sendDevToolsCommand("Network.enable");
+    for (const c of cookies) {
+      // @ts-ignore
+      await driver.sendDevToolsCommand("Network.setCookie", c);
+    }
+    // @ts-ignore
+    await driver.sendDevToolsCommand("Network.disable");
   }
-  // @ts-ignore
-  await driver.sendDevToolsCommand("Network.disable");
 };
 
 export const elementShouldExist = async (
