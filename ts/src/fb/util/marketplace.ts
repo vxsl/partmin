@@ -1,8 +1,13 @@
 import { By, WebDriver, WebElement } from "selenium-webdriver";
-import { MP_ITEM_XPATH } from "./fb.js";
-import { downloadImage, getConfigValue, readJSON, writeJSON } from "./io.js";
-import { log, notUndefined, waitSeconds } from "./misc.js";
-import { pushover } from "./pushover.js";
+import { MP_ITEM_XPATH } from "./index.js";
+import {
+  downloadImage,
+  getConfigValue,
+  readJSON,
+  writeJSON,
+} from "../../util/io.js";
+import { log, notUndefined, waitSeconds } from "../../util/misc.js";
+import { pushover } from "../../util/pushover.js";
 
 export type MarketplaceItem = {
   id: string;
