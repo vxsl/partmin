@@ -27,10 +27,6 @@ export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
       .then((cookies) =>
         cookies.filter((c) => (keys ? keys.includes(c.name) : true))
       )
-    // .map((c) => ({
-    //   ...c,
-    //   domain: "https://www.facebook.com",
-    // }))
   );
 
 export const loadCookies = async (driver: WebDriver) => {

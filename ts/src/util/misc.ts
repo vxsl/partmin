@@ -14,3 +14,33 @@ export const singleLineLog = (...args: Parameters<typeof singleLineStdOut>) =>
   singleLineStdOut(...args);
 
 export const clearSingleLineLog = () => singleLineStdOut.clear();
+
+export const randomWait = async () => {
+  const toWait = Math.round(Math.random() * 60 + 60);
+
+  // for toWait seconds, log the number of seconds left, but replace the last line instead of adding a new line:
+
+  var skip = false;
+
+  process.stdin.setRawMode(true);
+  process.stdin.resume();
+  process.stdin.on("data", () => {
+    skip = true;
+    process.stdin.pause();
+    process.stdin.setRawMode(false);
+  });
+  singleLineLog("\n");
+  for (let i = 0; i < toWait; i++) {
+    if (skip) break;
+    singleLineLog(
+      toWait - i === 1
+        ? ""
+        : `Waiting ${toWait - i} seconds. Press any key to skip wait.`
+    );
+    await waitSeconds(1);
+  }
+  process.stdin.setRawMode(false);
+  clearSingleLineLog();
+  clearSingleLineLog();
+  console.log("\n");
+};

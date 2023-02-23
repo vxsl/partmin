@@ -1,23 +1,9 @@
+import { Item, Platform } from "process.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
-import { MP_ITEM_XPATH } from "./index.js";
-import {
-  downloadImage,
-  getConfigValue,
-  readJSON,
-  writeJSON,
-} from "../../util/io.js";
-import { log, notUndefined, waitSeconds } from "../../util/misc.js";
+import { downloadImage, getConfigValue } from "../../util/io.js";
+import { notUndefined, waitSeconds } from "../../util/misc.js";
 import { pushover } from "../../util/pushover.js";
-
-export type MarketplaceItem = {
-  id: string;
-  title: string;
-  message: string;
-};
-
-export const visitFacebook = async (driver: WebDriver) => {
-  await driver.get("https://facebook.com");
-};
+import { MP_ITEM_XPATH } from "./index.js";
 
 export const visitMarketplace = async (driver: WebDriver) => {
   const vals = {
@@ -56,80 +42,9 @@ export const visitMarketplace = async (driver: WebDriver) => {
   return url;
 };
 
-export const itemIsBlacklisted = (item: MarketplaceItem) =>
-  getConfigValue((c) =>
-    c.search.blacklist.map((b: string) => b.toLowerCase())
-  ).then((blacklist: string[]) =>
-    blacklist.some((b) => JSON.stringify(item).toLowerCase().includes(b))
-  );
-
-export const processItems = async (
-  items: MarketplaceItem[],
-  options: { log?: boolean } = {}
-) => {
-  const seenItems = (await readJSON<string[]>("tmp/seen.json")) ?? [];
-  const newItems = items.reduce<MarketplaceItem[]>((n, item) => {
-    if (!seenItems.includes(item.id)) {
-      // (itemIsBlacklisted(item) ? b : n).push(item);
-      n.push(item);
-    }
-    return n;
-  }, []);
-
-  const blacklistedNewItems = [];
-  for (let i = 0; i < newItems.length; i++) {
-    const item = newItems[i];
-    if (await itemIsBlacklisted(item)) {
-      blacklistedNewItems.push(item);
-      newItems.splice(i, 1);
-      i--;
-    }
-  }
-
-  await writeJSON("tmp/seen.json", [
-    ...newItems.map(({ id }) => id),
-    ...blacklistedNewItems.map(({ id }) => id),
-    ...seenItems,
-  ]);
-
-  if (options.log) {
-    if (!newItems.length && !blacklistedNewItems.length) {
-      log(`No new items. (checked ${items.length})`);
-    } else {
-      console.log("\n=======================================================");
-
-      if (newItems.length) {
-        log(
-          `Checked ${items.length} item${
-            items.length === 1 ? "" : "s"
-          }, found ${newItems.length} new:`,
-          newItems
-        );
-        if (blacklistedNewItems.length) {
-          log(
-            `Also found ${blacklistedNewItems.length} new blacklisted item${
-              blacklistedNewItems.length === 1 ? "" : "s"
-            }`
-          );
-        }
-      } else {
-        log(
-          `Checked ${items.length} item${
-            items.length === 1 ? "" : "s"
-          }, found ${blacklistedNewItems.length} new blacklisted:`,
-          blacklistedNewItems
-        );
-      }
-      console.log("----------------------------------------\n");
-    }
-  }
-
-  return newItems;
-};
-
 export const scrapeItems = async (
   driver: WebDriver
-): Promise<MarketplaceItem[] | undefined> => {
+): Promise<Item[] | undefined> => {
   let els: WebElement[] = [];
   for (let i = 0; i < 10; i++) {
     els = await driver.findElements(By.xpath(MP_ITEM_XPATH));
@@ -155,31 +70,30 @@ export const scrapeItems = async (
           const imgSrc = await e
             .findElement(By.css("img"))
             .then((img) => img.getAttribute("src"));
-          await downloadImage(imgSrc, "tmp/images/" + id + ".jpg");
+          await downloadImage(imgSrc, "tmp/images/" + "fb-" + id + ".jpg");
 
           const SEP = " - ";
           const text = await e
             .getText()
             .then((t) =>
-              t.replace("\n", SEP).replace(/^C+/, "").replace("\n", SEP)
+              t.replace("\n", SEP).replace(/^C\$+/, "").replace("\n", SEP)
             );
           const tokens = text.split(SEP);
-          const price = tokens[0] ?? "ERROR_PRICE";
-          const loc = tokens[tokens.length - 1] ?? "ERROR_LOC";
-          const name =
-            tokens.slice(1, tokens.length - 1).join(SEP) ?? "ERROR_NAME";
+          const price =
+            tokens[0] !== undefined
+              ? parseInt(tokens[0].replace(",", ""))
+              : undefined;
+          const location = tokens[tokens.length - 1];
+          const title = tokens.slice(1, tokens.length - 1).join(SEP);
 
-          return { id, title: `${price} - ${loc}`, message: name };
+          return {
+            platform: "fb" as Platform, // TODO
+            id,
+            details: { title, price, location: location },
+            url: `fb://marketplace_product_details?id=${id}`,
+          };
         });
       })
     )
   ).filter(notUndefined);
-};
-
-export const newItemNotify = async (item: MarketplaceItem) => {
-  const { id, title, message } = item;
-  await pushover(
-    { title, message, url: `fb://marketplace_product_details?id=${id}` },
-    `${id}.jpg`
-  );
 };

@@ -4,6 +4,10 @@ import { click, elementShouldExist, type } from "../../util/selenium.js";
 
 export const MP_ITEM_XPATH = `.//a[contains(@href,'/marketplace/item/')]`;
 
+export const visitFacebook = async (driver: WebDriver) => {
+  await driver.get("https://facebook.com");
+};
+
 export const login = async (driver: WebDriver) => {
   const USER = process.env.FB_USER;
   const PASS = process.env.FB_PASS;
