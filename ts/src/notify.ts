@@ -13,7 +13,7 @@ export const notify = async (items: Item[]) =>
     await pushover(
       {
         url,
-        title: `${price} - ${location}`,
+        title: `$${price} - ${location}`,
         message: title ?? url,
       },
       `${platform}-${id}.jpg`

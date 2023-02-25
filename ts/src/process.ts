@@ -7,6 +7,7 @@ export type Item = {
   id: string;
   platform: Platform;
   url: string;
+  clickUrl?: string;
   details: Partial<{
     title: string;
     price: number;
@@ -84,7 +85,13 @@ export const processItems = async (
           `Checked ${items.length} item${
             items.length === 1 ? "" : "s"
           }, found ${blacklistedNewItems.length} new blacklisted:`,
-          blacklistedNewItems
+          blacklistedNewItems.map(
+            ({ details: { title, price }, clickUrl }) => ({
+              title,
+              price,
+              clickUrl,
+            })
+          )
         );
       }
       console.log("----------------------------------------\n");

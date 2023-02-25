@@ -91,6 +91,7 @@ export const scrapeItems = async (
             id,
             details: { title, price, location: location },
             url: `fb://marketplace_product_details?id=${id}`,
+            clickUrl: `https://facebook.com/marketplace/item/${id}`,
           };
         });
       })
