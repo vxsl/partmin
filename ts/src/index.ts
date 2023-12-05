@@ -1,12 +1,16 @@
 import dotenv from "dotenv";
-import { fbMain, fbPre } from "./fb/index.js";
 import { Builder, WebDriver } from "selenium-webdriver";
-import { pushover } from "./util/pushover.js";
-import { loadCookies } from "./util/selenium.js";
+import chrome from "selenium-webdriver/chrome.js";
+import { fbMain } from "./fb/index.js";
+import { notify } from "./notify.js";
 import { processItems } from "./process.js";
 import { log, randomWait } from "./util/misc.js";
-import { notify } from "./notify.js";
+import { pushover } from "./util/pushover.js";
+import { loadCookies } from "./util/selenium.js";
 
+const ops = new chrome.Options();
+ops.addArguments("--headless");
+ops.addArguments("--disable-gpu");
 dotenv.config();
 
 let notifyOnExit = true;
@@ -41,10 +45,14 @@ const runLoop = async (
 };
 
 const main = async () => {
-  const driver = await new Builder().forBrowser("chrome").build();
+  const driver = await new Builder()
+    .forBrowser("chrome")
+    .setChromeOptions(ops)
+    .build();
+
   await loadCookies(driver);
   try {
-    runLoop(driver, fbMain, fbPre);
+    runLoop(driver, fbMain);
   } catch (e) {
     if (notifyOnExit) {
       console.error(e);
