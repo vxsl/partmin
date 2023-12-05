@@ -1,7 +1,7 @@
 import { Item, Platform } from "process.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { downloadImage, getConfigValue } from "../../util/io.js";
-import { notUndefined, waitSeconds } from "../../util/misc.js";
+import { errorLog, notUndefined, waitSeconds } from "../../util/misc.js";
 import { pushover } from "../../util/pushover.js";
 import { MP_ITEM_XPATH } from "./index.js";
 
@@ -31,7 +31,12 @@ export const visitMarketplace = async (driver: WebDriver) => {
     minBedrooms: await getConfigValue((c) => c.search.bedrooms.min),
   };
 
-  let url = `https://facebook.com/marketplace/category/propertyrentals?`;
+  const city = await getConfigValue((c) => c.search.location.city);
+  if (!city) {
+    errorLog("Must provide search.location.city in config.json"); // TODO infer city
+    process.exit(1);
+  }
+  let url = `https://facebook.com/marketplace/${city}/propertyrentals?`;
   for (const [k, v] of Object.entries(vals)) {
     if (v) {
       url += `${k}=${v}&`;

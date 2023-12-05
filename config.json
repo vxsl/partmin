@@ -9,6 +9,7 @@
       "townhouse"
     ],
     "location": {
+      "city": "montreal",
       "lat": 45.520825,
       "lng": -73.612876,
       "radius": 20,

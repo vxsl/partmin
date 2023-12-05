@@ -3,7 +3,7 @@
 The input is a list of circles, each circle is a list of 3 elements:
     [radius, latitude, longitude]
 
-The output is a list of circles, each circle is a dictionary of 3 elements:
+The output is a list of circles, each circle is a dictionary of 4 elements:
     {'radius': radius, 'fsa': fsa, 'lat': latitude, 'lng': longitude}
 
 The input is a URL, the output is a JSON string."""

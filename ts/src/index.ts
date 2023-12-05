@@ -4,7 +4,7 @@ import chrome from "selenium-webdriver/chrome.js";
 import { fbMain } from "./fb/index.js";
 import { notify } from "./notify.js";
 import { processItems } from "./process.js";
-import { log, randomWait } from "./util/misc.js";
+import { errorLog, log, randomWait } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
 import { loadCookies } from "./util/selenium.js";
 
@@ -39,6 +39,7 @@ const runLoop = async (
       }
       await randomWait();
     } catch (err) {
+      errorLog(err);
       break;
     }
   }

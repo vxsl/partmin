@@ -4,26 +4,6 @@ import { click, elementShouldExist, type } from "../../util/selenium.js";
 
 export const MP_ITEM_XPATH = `.//a[contains(@href,'/marketplace/item/')]`;
 
-export const visitFacebook = async (driver: WebDriver) => {
-  await driver.get("https://facebook.com");
-};
-
-export const login = async (driver: WebDriver) => {
-  const USER = process.env.FB_USER;
-  const PASS = process.env.FB_PASS;
-  if (!USER || !PASS) throw new Error("Missing FB_USER or FB_PASS env var");
-
-  await fbType(driver, driver.findElement(By.name("email")), USER);
-  await fbType(driver, driver.findElement(By.name("pass")), PASS);
-  await fbClick(driver, driver.findElement(By.name("login")));
-  await elementShouldExist("css", '[aria-label="Search Facebook"]', driver);
-};
-
-export const marketplaceReady = async (driver: WebDriver) =>
-  await driver
-    .findElements(By.xpath(MP_ITEM_XPATH))
-    .then((els) => els.length > 0);
-
 export const isBlocked = async (driver: WebDriver) =>
   await driver
     // .findElements(By.xpath(`//span[(text()="You're Temporarily Blocked")]`))
@@ -60,11 +40,6 @@ export const fbType = async (
   await dismissBlock(driver);
   await type(element, text);
 };
-
-export const isOnHomepage = async (driver: WebDriver) =>
-  await driver
-    .findElements(By.css('[aria-label="Search Facebook"]'))
-    .then((els) => els.length > 0);
 
 export const setMarketplaceLocation = async (
   driver: WebDriver,

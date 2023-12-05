@@ -1,16 +1,8 @@
 import { WebDriver } from "selenium-webdriver";
 import { log, waitSeconds } from "../util/misc.js";
-import { isOnHomepage, login, visitFacebook } from "./util/index.js";
 import { scrapeItems, visitMarketplace } from "./util/marketplace.js";
 
 import { elementShouldExist, saveCookies } from "../util/selenium.js";
-
-export const fbPre = async (driver: WebDriver) => {
-  await visitFacebook(driver);
-  if ((await isOnHomepage(driver)) === false) {
-    await login(driver);
-  }
-};
 
 export const fbMain = async (driver: WebDriver) => {
   const url = await visitMarketplace(driver);
