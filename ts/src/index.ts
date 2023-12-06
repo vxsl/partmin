@@ -18,12 +18,9 @@ ops.addArguments("--disable-gpu");
 dotenv.config();
 
 let notifyOnExit = true;
-let sigintCount = 0;
 process.on("SIGINT", function () {
-  if (++sigintCount === 1) {
-    log("Caught interrupt signal");
-    notifyOnExit = false;
-  }
+  console.error("\n\nCaught interrupt signal");
+  process.exit();
 });
 
 const runLoop = async (
