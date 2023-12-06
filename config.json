@@ -1,5 +1,6 @@
 {
   "search": {
+    "parkingIncluded": true,
     "bedrooms": {
       "min": 2
     },

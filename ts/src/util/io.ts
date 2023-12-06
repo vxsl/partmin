@@ -1,8 +1,5 @@
 import axios from "axios";
-import { promises as fs, createWriteStream } from "fs";
-
-export const getConfigValue = async (fn: (data: any) => any) =>
-  await readJSON("config.json").then(fn);
+import { createWriteStream, promises as fs } from "fs";
 
 export const readJSON = async <T>(path: string): Promise<T | undefined> => {
   try {

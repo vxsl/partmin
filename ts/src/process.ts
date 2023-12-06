@@ -1,4 +1,5 @@
-import { getConfigValue, readJSON, writeJSON } from "./util/io.js";
+import { Config } from "types/config.js";
+import { readJSON, writeJSON } from "./util/io.js";
 import { log } from "./util/misc.js";
 
 export type Platform = "kijiji" | "fb";
@@ -18,17 +19,19 @@ export type Item = {
 
 type ItemDict = { [k in Platform]: string };
 
+let blacklist: string[] | undefined;
+
 export const itemIsBlacklisted = (item: Item) =>
-  getConfigValue((c) =>
-    c.search.blacklist.map((b: string) => b.toLowerCase())
-  ).then((blacklist: string[]) =>
-    blacklist.some((b) => JSON.stringify(item).toLowerCase().includes(b))
-  );
+  blacklist?.some((b) => JSON.stringify(item).toLowerCase().includes(b));
 
 export const processItems = async (
+  config: Config,
   items: Item[],
   options: { log?: boolean } = {}
 ) => {
+  if (!blacklist) {
+    blacklist = config.search.blacklist.map((b) => b.toLowerCase());
+  }
   const seenItems = await readJSON<ItemDict>("tmp/seen.json");
 
   const newItems = items.reduce<Item[]>((n, item) => {

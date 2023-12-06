@@ -1,12 +1,16 @@
 import dotenv from "dotenv";
 import { Builder, WebDriver } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
-import { fbMain } from "./fb/index.js";
+import { Config } from "types/config.js";
+import _config from "../../config.json";
+import { kijijiMain } from "./kijiji/index.js";
 import { notify } from "./notify.js";
-import { processItems } from "./process.js";
+import { Item, processItems } from "./process.js";
 import { errorLog, log, randomWait } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
 import { loadCookies } from "./util/selenium.js";
+
+const config = _config as Config; // TODO don't naively assert here
 
 const ops = new chrome.Options();
 ops.addArguments("--headless");
@@ -24,15 +28,15 @@ process.on("SIGINT", function () {
 
 const runLoop = async (
   driver: WebDriver,
-  handler: Function,
-  prepare?: (d: WebDriver) => Promise<void>
+  handler: (c: Config, d: WebDriver) => Promise<Item[] | undefined>,
+  prepare?: (c: Config, d: WebDriver) => Promise<void>
 ) => {
-  await (prepare?.(driver) ?? Promise.resolve());
+  await (prepare?.(config, driver) ?? Promise.resolve());
   while (true) {
     try {
-      const items = await handler(driver);
+      const items = await handler(config, driver);
       if (items?.length) {
-        const newItems = await processItems(items, { log: true });
+        const newItems = await processItems(config, items, { log: true });
         await notify(newItems);
       } else {
         log("Somehow there are no items.");
@@ -53,7 +57,8 @@ const main = async () => {
 
   await loadCookies(driver);
   try {
-    runLoop(driver, fbMain);
+    // runLoop(driver, fbMain);
+    runLoop(driver, kijijiMain);
   } catch (e) {
     if (notifyOnExit) {
       console.error(e);

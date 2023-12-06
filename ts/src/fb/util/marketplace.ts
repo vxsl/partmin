@@ -1,41 +1,33 @@
 import { Item, Platform } from "process.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
-import { downloadImage, getConfigValue } from "../../util/io.js";
-import { errorLog, notUndefined, waitSeconds } from "../../util/misc.js";
+import { Config } from "types/config.js";
+import { downloadImage } from "../../util/io.js";
+import { notUndefined, waitSeconds } from "../../util/misc.js";
 import { pushover } from "../../util/pushover.js";
 import { MP_ITEM_XPATH } from "./index.js";
 
-export const visitMarketplace = async (driver: WebDriver) => {
+export const visitMarketplace = async (config: Config, driver: WebDriver) => {
   const vals = {
     sortBy: "creation_time_descend",
     exact: false,
-
-    propertyType: await getConfigValue((c) => c.search.propertyType),
-    minPrice: await getConfigValue((c) => c.search.price.min),
-    maxPrice: await getConfigValue((c) => c.search.price.max),
-    minAreaSize: await getConfigValue((c) => {
-      const n = c.search.minArea * 0.09290304;
-      if (n) {
-        return Math.floor(n * 100) / 100;
-      }
-    }),
-    latitude: await getConfigValue((c) => c.search.location.lat),
-    longitude: await getConfigValue((c) => c.search.location.lng),
+    propertyType: config.search.propertyType,
+    minPrice: config.search.price.min,
+    maxPrice: config.search.price.max,
+    minAreaSize: config.search.minArea
+      ? Math.floor(config.search.minArea * 0.09290304 * 100) / 100
+      : undefined,
+    latitude: config.search.location.lat,
+    longitude: config.search.location.lng,
     radius:
-      (await getConfigValue((c) => c.search.location.radius)) +
+      config.search.location.radius +
       Math.random() * 0.00000001 +
       Math.random() * 0.0000001 +
       Math.random() * 0.000001 +
       Math.random() * 0.00001,
-
-    minBedrooms: await getConfigValue((c) => c.search.bedrooms.min),
+    minBedrooms: config.search.bedrooms.min,
   };
 
-  const city = await getConfigValue((c) => c.search.location.city);
-  if (!city) {
-    errorLog("Must provide search.location.city in config.json"); // TODO infer city
-    process.exit(1);
-  }
+  const city = config.search.location.city;
   let url = `https://facebook.com/marketplace/${city}/propertyrentals?`;
   for (const [k, v] of Object.entries(vals)) {
     if (v) {
