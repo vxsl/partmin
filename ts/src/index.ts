@@ -55,6 +55,8 @@ const main = async () => {
     .setChromeOptions(ops)
     .build();
 
+  driver.manage().setTimeouts({ implicit: 10000 });
+
   await loadCookies(driver);
   try {
     // runLoop(driver, fbMain);
