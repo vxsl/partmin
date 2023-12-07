@@ -12,10 +12,13 @@ import { loadCookies } from "./util/selenium.js";
 
 const config = _config as Config; // TODO don't naively assert here
 
+const headless = false;
+
 const ops = new chrome.Options();
-ops.addArguments("--headless");
-ops.addArguments("--disable-gpu");
-dotenv.config();
+if (headless) {
+  ops.addArguments("--headless");
+  ops.addArguments("--disable-gpu");
+}
 
 let notifyOnExit = true;
 process.on("SIGINT", function () {
