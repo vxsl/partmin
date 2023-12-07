@@ -1,7 +1,17 @@
-import { By, until, WebDriver, WebElementPromise } from "selenium-webdriver";
+import {
+  By,
+  Key,
+  WebDriver,
+  WebElement,
+  WebElementPromise,
+  until,
+} from "selenium-webdriver";
 import { readJSON, writeJSON } from "./io.js";
 
-export const type = async (element: WebElementPromise, string: string) => {
+export const type = async (
+  element: WebElementPromise | WebElement,
+  string: string
+) => {
   for (let i = 0; i < string.length; i++) {
     await new Promise((resolve) =>
       setTimeout(
@@ -11,7 +21,18 @@ export const type = async (element: WebElementPromise, string: string) => {
     );
   }
 };
-export const click = async (element: WebElementPromise) =>
+
+// for when .clear() doesn't work
+export const clearAlternate = async (el: WebElementPromise | WebElement) =>
+  await el.sendKeys(Key.chord(Key.CONTROL, "a", Key.DELETE));
+
+export const clickByXPath = async (driver: WebDriver, selector: string) => {
+  const el = await driver.findElement(By.xpath(selector));
+  await elementShouldBeInteractable(driver, el);
+  await click(el);
+};
+
+const click = async (element: WebElementPromise | WebElement) =>
   await new Promise((resolve) => {
     setTimeout(() => {
       return element.click().then(resolve);
@@ -43,6 +64,14 @@ export const loadCookies = async (driver: WebDriver) => {
     // @ts-ignore
     await driver.sendDevToolsCommand("Network.disable");
   }
+};
+
+export const elementShouldBeInteractable = async (
+  driver: WebDriver,
+  el: WebElement
+) => {
+  await driver.wait(until.elementIsVisible(el), 10 * 1000);
+  await driver.wait(until.elementIsEnabled(el), 10 * 1000);
 };
 
 export const elementShouldExist = async (
