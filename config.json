@@ -1,16 +1,17 @@
 {
   "search": {
+    "minArea": 123,
     "parkingIncluded": true,
     "bedrooms": {
       "min": 2
     },
-    "propertyType": [
-      "apartment-condo",
-      "house",
-      "townhouse"
-    ],
+    "basementOK": false,
+    "roommateOK": true,
+    "petFriendly": true,
+    "outdoorSpace": true,
     "location": {
       "city": "montreal",
+      "region": "QC",
       "lat": 45.520825,
       "lng": -73.612876,
       "radius": 20,

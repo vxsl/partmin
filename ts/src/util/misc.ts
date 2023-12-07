@@ -1,3 +1,4 @@
+import { DEBUG } from "../index.js";
 import { stdout as singleLineStdOut } from "single-line-log";
 
 export const waitSeconds = async (s: number) =>
@@ -7,9 +8,17 @@ export function notUndefined<T>(value: T | undefined): value is T {
   return value !== undefined;
 }
 
-export const fatalError = (...args: Parameters<typeof console.error>) => {
+export const fatalError = (
+  ...args: Parameters<typeof console.error>
+): never => {
   console.error(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
   throw new Error(args[0]);
+};
+
+export const debugLog = (msg?: any) => {
+  if (DEBUG) {
+    console.log(`${new Date().toLocaleTimeString("it-IT")}: ${msg}`);
+  }
 };
 
 export const errorLog = (...args: Parameters<typeof console.error>) =>

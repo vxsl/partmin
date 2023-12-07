@@ -50,22 +50,22 @@ export const processItems = async (
     }
   }
 
-  const kind = items[0].platform;
+  const platform = items[0].platform;
 
   await writeJSON("tmp/seen.json", {
     ...seenItems,
-    [kind]: [
+    [platform]: [
       ...new Set([
         ...newItems.map(({ id }) => id),
         ...blacklistedNewItems.map(({ id }) => id),
-        ...(seenItems?.[kind] ?? []),
+        ...(seenItems?.[platform] ?? []),
       ]),
     ],
   });
 
   if (options.log) {
     if (!newItems.length && !blacklistedNewItems.length) {
-      log(`No new items. (checked ${items.length})`);
+      log(`No new items on ${platform}. (checked ${items.length})`);
     } else {
       console.log("\n=======================================================");
 
@@ -73,21 +73,23 @@ export const processItems = async (
         log(
           `Checked ${items.length} item${
             items.length === 1 ? "" : "s"
-          }, found ${newItems.length} new:`,
+          } on ${platform}, found ${newItems.length} new:`,
           newItems
         );
         if (blacklistedNewItems.length) {
           log(
             `Also found ${blacklistedNewItems.length} new blacklisted item${
               blacklistedNewItems.length === 1 ? "" : "s"
-            }`
+            } on ${platform}`
           );
         }
       } else {
         log(
           `Checked ${items.length} item${
             items.length === 1 ? "" : "s"
-          }, found ${blacklistedNewItems.length} new blacklisted:`,
+          } on ${platform}, found ${
+            blacklistedNewItems.length
+          } new blacklisted:`,
           blacklistedNewItems.map(
             ({ details: { title, price }, clickUrl }) => ({
               title,
