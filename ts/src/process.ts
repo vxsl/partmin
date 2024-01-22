@@ -1,107 +1,170 @@
+import dotenv from "dotenv";
 import { Config } from "types/config.js";
+import { tmpDir } from "./constants.js";
+import { approxLocationLink } from "./util/geo.js";
 import { readJSON, writeJSON } from "./util/io.js";
-import { log } from "./util/misc.js";
+import { log, verboseLog } from "./util/misc.js";
+import config from "../../config.json" assert { type: "json" };
+
+dotenv.config();
 
 export type Platform = "kijiji" | "fb";
-
 export type Item = {
   id: string;
   platform: Platform;
   url: string;
-  clickUrl?: string;
-  details: Partial<{
+  details: {
     title: string;
-    price: number;
-    description: string;
-    location: string;
-  }>;
+    price?: number;
+    longDescription?: string;
+    location?: string;
+    lat?: number;
+    lon?: number;
+  };
+  computed?: {
+    locationLinkMD?: string;
+    bulletPoints?: string[];
+  };
+  imgURLs: string[];
+  videoURLs: string[];
 };
 
-type ItemDict = { [k in Platform]: string };
+interface SeenItemDict {
+  [k: string]: 1 | undefined;
+}
 
 let blacklist: string[] | undefined;
 
-export const itemIsBlacklisted = (item: Item) =>
-  blacklist?.some((b) => JSON.stringify(item).toLowerCase().includes(b));
+const findBlacklistedWords = (i: Item): string[] | null => {
+  const result: string[] = [];
 
-export const processItems = async (
-  config: Config,
-  items: Item[],
-  options: { log?: boolean } = {}
-) => {
-  if (!blacklist) {
-    blacklist = config.search.blacklist.map((b) => b.toLowerCase());
-  }
-  const seenItems = await readJSON<ItemDict>("tmp/seen.json");
+  if (
+    blacklist?.some((_b) => {
+      const b = _b.toLowerCase();
 
-  const newItems = items.reduce<Item[]>((n, item) => {
-    !(seenItems?.[item.platform] ?? ([] as string[])).includes(item.id) &&
-      n.push(item);
-    return n;
-  }, []);
-
-  const blacklistedNewItems = [];
-  for (let i = 0; i < newItems.length; i++) {
-    const item = newItems[i];
-    if (await itemIsBlacklisted(item)) {
-      blacklistedNewItems.push(item);
-      newItems.splice(i, 1);
-      i--;
-    }
-  }
-
-  const platform = items[0].platform;
-
-  await writeJSON("tmp/seen.json", {
-    ...seenItems,
-    [platform]: [
-      ...new Set([
-        ...newItems.map(({ id }) => id),
-        ...blacklistedNewItems.map(({ id }) => id),
-        ...(seenItems?.[platform] ?? []),
-      ]),
-    ],
-  });
-
-  if (options.log) {
-    if (!newItems.length && !blacklistedNewItems.length) {
-      log(`No new items on ${platform}. (checked ${items.length})`);
-    } else {
-      console.log("\n=======================================================");
-
-      if (newItems.length) {
-        log(
-          `Checked ${items.length} item${
-            items.length === 1 ? "" : "s"
-          } on ${platform}, found ${newItems.length} new:`,
-          newItems
-        );
-        if (blacklistedNewItems.length) {
-          log(
-            `Also found ${blacklistedNewItems.length} new blacklisted item${
-              blacklistedNewItems.length === 1 ? "" : "s"
-            } on ${platform}`
-          );
-        }
-      } else {
-        log(
-          `Checked ${items.length} item${
-            items.length === 1 ? "" : "s"
-          } on ${platform}, found ${
-            blacklistedNewItems.length
-          } new blacklisted:`,
-          blacklistedNewItems.map(
-            ({ details: { title, price }, clickUrl }) => ({
-              title,
-              price,
-              clickUrl,
-            })
-          )
-        );
+      const descriptionMatch = i.details.longDescription
+        ?.toLowerCase()
+        .includes(b);
+      if (descriptionMatch) {
+        result.push(`'${_b}' in item ${i.id}'s description`);
+        return true;
       }
-      console.log("----------------------------------------\n");
-    }
+
+      const titleMatch = i.details.title?.toLowerCase().includes(b);
+      if (titleMatch) {
+        result.push(`'${_b}' in item ${i.id}'s title`);
+        return true;
+      }
+
+      const locationMatch = i.details.location?.toLowerCase().includes(b);
+      if (locationMatch) {
+        result.push(`'${_b}' in item ${i.id}'s location`);
+        return true;
+      }
+
+      return false;
+    })
+  ) {
+    return result;
   }
 
-  return newItems;
+  return null;
+};
+
+export const loadSeenItems = async () => {
+  return await readJSON<SeenItemDict>(`${tmpDir}/seen.json`).then(
+    (arr) => arr ?? {}
+  );
+};
+
+export const saveSeenItems = async (v: SeenItemDict) => {
+  await writeJSON(`${tmpDir}/seen.json`, v);
+};
+
+export const withUnseenItems = async <T>(
+  items: Item[],
+  fn: (items: Item[]) => Promise<T>
+) => {
+  const seenItems = await loadSeenItems();
+  const unseenItems: Item[] = [];
+  for (const item of items) {
+    const k = `${item.platform}-${item.id}`;
+    if (seenItems[k]) {
+      continue;
+    }
+    seenItems[k] = 1;
+    unseenItems.push(item);
+  }
+
+  await saveSeenItems(seenItems);
+  log(
+    `${unseenItems.length} unseen item${
+      unseenItems.length !== 1 ? "s" : ""
+    } out of ${items.length}${config.verbose ? ":" : "."}`
+  );
+  verboseLog(unseenItems);
+
+  return await fn(unseenItems);
+};
+
+export const processItems = async (config: Config, unseenItems: Item[]) => {
+  // TODO sort based on time?
+  if (!blacklist) {
+    blacklist = config.search.blacklist?.map((b) => b.toLowerCase());
+  }
+  const blacklistLog: string[] = [];
+  const { targets, blacklisted } = await unseenItems.reduce<
+    Promise<{
+      targets: Item[];
+      blacklisted: Item[];
+    }>
+  >(
+    async (filteredPromises, item) => {
+      const result = await filteredPromises;
+
+      const blacklistOccurrences = findBlacklistedWords(item);
+      if (blacklistOccurrences) {
+        blacklistLog.push(...blacklistOccurrences);
+        result.blacklisted.push(item);
+      } else {
+        result.targets.push(item);
+      }
+      return result;
+    },
+    Promise.resolve({
+      targets: [],
+      blacklisted: [],
+    })
+  );
+
+  for (const item of targets) {
+    if (
+      item.computed?.locationLinkMD ||
+      !item.details.lat ||
+      !item.details.lon
+    ) {
+      continue;
+    }
+    item.computed = {
+      ...(item.computed ?? {}),
+      locationLinkMD: await approxLocationLink(
+        item.details.lat,
+        item.details.lon
+      ),
+    };
+  }
+
+  log(
+    `${targets.length} new result${targets.length !== 1 ? "s" : ""}${
+      config.verbose ? ":" : "."
+    }`
+  );
+  verboseLog(targets);
+  if (blacklisted.length) {
+    log(`${blacklisted.length} blacklisted:`);
+    log(blacklistLog.map((b) => `  - found ${b}`).join("\n"));
+  }
+  // TODO compute duplicates
+
+  return targets;
 };

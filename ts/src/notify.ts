@@ -1,22 +1,11 @@
-import { pushover } from "./util/pushover.js";
+import { WebDriver } from "selenium-webdriver";
+import { discordEmbed } from "./notifications/discord/index.js";
 import { Item } from "./process.js";
 import { waitSeconds } from "./util/misc.js";
 
-export const notify = async (items: Item[]) =>
-  items.forEach(async (item) => {
-    const {
-      platform,
-      id,
-      url,
-      details: { price, location, title },
-    } = item;
-    await pushover(
-      {
-        url,
-        title: `$${price} - ${location}`,
-        message: title ?? url,
-      },
-      `${platform}-${id}.jpg`
-    );
+export const notify = async (driver: WebDriver, items: Item[]) => {
+  for (const item of items) {
+    await discordEmbed(driver, item);
     await waitSeconds(0.5);
-  });
+  }
+};

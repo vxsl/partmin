@@ -1,21 +1,22 @@
 export type Config = {
+  testing?: boolean;
+  verbose?: boolean;
+  debug?: boolean;
+
   search: {
-    minArea?: number;
-    parkingIncluded?: boolean;
-    bedrooms: {
-      min: number;
-    };
+    // minArea?: number;
+    // parkingIncluded?: boolean;
+    // bedrooms: {
+    //   min: number;
+    // };
     outdoorSpace?: boolean;
     // propertyType: ["apartment-condo", "house", "townhouse"];
-    basementOK: boolean;
-    roommateOK: boolean;
+    basementNotAccepted?: true;
+    roommateNotAccepted?: true;
     petFriendly?: boolean;
     location: {
       city: string;
       region: string;
-      lat: number;
-      lng: number;
-      radius: number;
       mapDevelopersURL: string;
     };
     price: {

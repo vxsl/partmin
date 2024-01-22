@@ -106,7 +106,7 @@ export const setMarketplaceLocation = async (
   await elementShouldExist(
     "xpath",
     `//span[(text()="Within ${
-      radius > 1 ? `${radius} kilometers` : `${radius} kilometer`
+      radius !== 1 ? `${radius} kilometers` : `${radius} kilometer`
     }")]`,
     driver
   );

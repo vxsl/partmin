@@ -2,7 +2,6 @@
 node_modules
 .env
 images
-tmp
-todo.md
 .tmp
+todo.md
 scratchpad

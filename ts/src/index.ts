@@ -3,13 +3,18 @@ import { Builder, WebDriver } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { Config } from "types/config.js";
 import _config from "../../config.json" assert { type: "json" };
-import { kijijiMain, kijijiPre } from "./kijiji/index.js";
+import { fbMain, fbPerItem } from "./fb/index.js";
+import { kijijiMain, kijijiPerItem, kijijiPre } from "./kijiji/index.js";
 import { notify } from "./notify.js";
-import { Item, processItems } from "./process.js";
-import { errorLog, log, randomWait } from "./util/misc.js";
-import { pushover } from "./util/pushover.js";
-
-export const DEBUG = true; // TODO cli arg
+import { Item, Platform, processItems, withUnseenItems } from "./process.js";
+import {
+  discordLog,
+  errorLog,
+  log,
+  randomWait,
+  verboseLog,
+} from "./util/misc.js";
+import { startDiscordBot } from "./notifications/discord/index.js";
 
 process.title = "partmin";
 
@@ -17,7 +22,7 @@ dotenv.config();
 
 const config = _config as Config; // TODO don't naively assert here
 
-const headless = false;
+const headless = true;
 
 const ops = new chrome.Options();
 if (headless) {
@@ -33,19 +38,41 @@ let notifyOnExit = true;
 
 const runLoop = async (
   driver: WebDriver,
-  handler: (c: Config, d: WebDriver) => Promise<Item[] | undefined>,
-  prepare?: (c: Config, d: WebDriver) => Promise<void>
+  runners: Partial<{
+    [k in Platform]: {
+      main: (c: Config, d: WebDriver) => Promise<Item[] | undefined>;
+      pre?: (c: Config, d: WebDriver) => Promise<void>;
+      perItem?: (c: Config, d: WebDriver, i: Item) => Promise<void>;
+    };
+  }>
 ) => {
-  await (prepare?.(config, driver) ?? Promise.resolve());
+  for (const { pre } of Object.values(runners)) {
+    await (pre?.(config, driver) ?? Promise.resolve());
+  }
+
   while (true) {
     try {
-      const items = await handler(config, driver);
-      if (items?.length) {
-        const newItems = await processItems(config, items, { log: true });
-        await notify(newItems);
-      } else {
-        log("Somehow there are no items.");
+      for (const [platform, { main, perItem }] of Object.entries(runners)) {
+        log(
+          `\n=======================================================\n${platform}\n`
+        );
+        const items = await main(config, driver);
+        verboseLog({ items });
+        if (!items?.length) {
+          log(`Somehow there are no items upon visiting ${platform}.`);
+          continue;
+        }
+        await withUnseenItems(items, async (unseenItems) => {
+          for (const item of unseenItems) {
+            await perItem?.(config, driver, item);
+          }
+          await processItems(config, unseenItems).then((arr) =>
+            notify(driver, arr)
+          );
+        });
+        log("\n----------------------------------------\n");
       }
+
       await randomWait();
     } catch (err) {
       errorLog(err);
@@ -62,21 +89,25 @@ const main = async () => {
 
   driver.manage().setTimeouts({ implicit: 10000 });
 
-  // // Close the WebDriver when the Node.js process exits
-  // process.on("beforeExit", async () => {
-  //   console.log("HIII");
-  // });
+  await startDiscordBot();
 
   // await loadCookies(driver);
   try {
-    // runLoop(driver, fbMain);
-    await runLoop(driver, kijijiMain, kijijiPre);
+    await runLoop(driver, {
+      fb: {
+        main: fbMain,
+        perItem: fbPerItem,
+      },
+      kijiji: {
+        main: kijijiMain,
+        pre: kijijiPre,
+        perItem: kijijiPerItem,
+      },
+    });
   } catch (e) {
     if (notifyOnExit) {
-      console.error(e);
-      pushover({
-        message: `⚠️ Something went wrong. You will no longer receive notifications.`,
-      });
+      discordLog("Crashed.");
+      discordLog(e);
     }
   } finally {
     if (driver) {

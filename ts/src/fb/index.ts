@@ -1,15 +1,31 @@
 import { WebDriver } from "selenium-webdriver";
-import { log, waitSeconds } from "../util/misc.js";
-import { scrapeItems, visitMarketplace } from "./util/marketplace.js";
+import { decodeMapDevelopersURL } from "../util/geo.js";
+import { debugLog, waitSeconds } from "../util/misc.js";
+import {
+  scrapeItems,
+  visitMarketplace,
+  visitMarketplaceListing,
+} from "./util/marketplace.js";
 
-import { elementShouldExist, saveCookies } from "../util/selenium.js";
 import { Config } from "types/config.js";
+import { Item } from "../process.js";
 
 export const fbMain = async (config: Config, driver: WebDriver) => {
-  const url = await visitMarketplace(config, driver);
-  log(url);
-  saveCookies(driver, ["c_user", "xs"]);
-  await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
-  await waitSeconds(Math.random() * 1 + 1);
-  return await scrapeItems(driver);
+  const items: Item[] = [];
+  const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
+  for (const r of radii) {
+    debugLog(`visiting fb marketplace for radius ${JSON.stringify(r)}`);
+    await visitMarketplace(config, driver, r);
+    await scrapeItems(driver).then((arr) => items.push(...(arr ?? [])));
+    await waitSeconds(Math.random() * 3 + 1);
+  }
+  return items;
+};
+
+export const fbPerItem = async (
+  config: Config,
+  driver: WebDriver,
+  item: Item
+) => {
+  await visitMarketplaceListing(driver, item);
 };

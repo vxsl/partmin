@@ -1,53 +1,32 @@
 {
+  "testing": false,
+  "verbose": false,
+  "debug": true,
   "search": {
-    "minArea": 123,
-    "parkingIncluded": true,
-    "bedrooms": {
-      "min": 2
-    },
-    "basementOK": false,
-    "roommateOK": true,
+    "basementNotAccepted": true,
+    "roommateNotAccepted": true,
     "petFriendly": true,
     "outdoorSpace": true,
     "location": {
       "city": "montreal",
       "region": "QC",
-      "lat": 45.520825,
-      "lng": -73.612876,
-      "radius": 20,
-      "mapDevelopersURL": "https://www.mapdevelopers.com/draw-circle-tool.php?circles=%5B%5B2304.47%2C45.582431%2C-73.5638206%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B3669.3%2C45.4638679%2C-73.67955%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B1818.55%2C45.5589806%2C-73.5865902%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B3453.14%2C45.5313982%2C-73.6057921%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B2301.36%2C45.5441445%2C-73.6497262%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B2784.29%2C45.4346328%2C-73.6239777%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B3460.08%2C45.4743712%2C-73.5796885%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%5D"
+      "mapDevelopersURL": "https://www.mapdevelopers.com/draw-circle-tool.php?circles=%5B%5B1370.95%2C45.5501984%2C-73.630593%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B596.02%2C45.5265169%2C-73.5922184%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B1003.55%2C45.5240489%2C-73.6077625%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B786.03%2C45.5535669%2C-73.6553127%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B1370%2C45.5406434%2C-73.6051017%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B446.91%2C45.5527856%2C-73.6121398%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B740.73%2C45.5360744%2C-73.6205512%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%5D"
     },
     "price": {
-      "min": 700,
-      "max": 2200
+      "min": 800,
+      "max": 1390
     },
     "blacklist": [
-      "Saint-Eustache",
-      "St-Eustache",
-      "Boisbriand",
-      "Roxboro",
-      "Pierrefonds",
-      "Bizard",
-      "Hochelaga",
-      "Maisonneuve",
-      "HOMA",
-      "Laval",
-      "Longueuil",
-      "Saint Lambert",
-      "Saint-Lambert",
-      "St-Lambert",
-      "St Lambert",
-      "Dollard-Des-Ormeaux",
-      "Dollard-Des Ormeaux",
-      "Brossard",
-      "Châteauguay",
-      "La Prairie",
-      "St-Constant",
-      "Montréal-Est",
-      "Mascouche",
-      "Repentigny",
-      "Mirabel",
-      "Ste-Thérèse"
+      "swap",
+      "echange",
+      "échange",
+      "pas d'animaux",
+      "no animals",
+      "animaux non acceptés",
+      "animaux non permis",
+      "animals not allowed",
+      "no pets",
+      "no cats"
     ]
   }
 }

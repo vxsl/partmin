@@ -9,6 +9,15 @@ import {
 } from "selenium-webdriver";
 import { readJSON, writeJSON } from "./io.js";
 import { debugLog } from "./misc.js";
+import { tmpDir } from "../constants.js";
+
+export const clearBrowsingData = async (driver: WebDriver) => {
+  if (!(await driver.getCurrentUrl()).startsWith("data")) {
+    await driver.manage().deleteAllCookies();
+    await driver.executeScript("window.localStorage.clear();");
+    await driver.executeScript("window.sessionStorage.clear();");
+  }
+};
 
 export const waitUntilUrlChanges = async (
   driver: WebDriver,
@@ -126,7 +135,7 @@ export const click = async (element: WebElementPromise | WebElement) =>
 
 export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
   writeJSON(
-    "tmp/cookies.json",
+    `${tmpDir}/cookies.json`,
     await driver
       .manage()
       .getCookies()
@@ -136,7 +145,7 @@ export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
   );
 
 export const loadCookies = async (driver: WebDriver) => {
-  const cookies = await readJSON<Object[]>("tmp/cookies.json");
+  const cookies = await readJSON<Object[]>(`${tmpDir}/cookies.json`);
   await driver.manage().deleteAllCookies();
 
   if (cookies?.length) {
@@ -178,10 +187,34 @@ export const elementShouldExist = async (
     ? driver.wait(until.elementLocated(By.css(selector)), 10 * 1000)
     : Promise.resolve());
 
-export const withElement = async (
+export const withElements = async <F extends (els: WebElement[]) => any>(
+  getEls: () => Promise<WebElement[]>,
+  fn: F
+): Promise<ReturnType<F>> => {
+  let attempts = 0;
+  const maxAttempts = 3;
+  while (++attempts <= maxAttempts) {
+    if (attempts > 1) {
+      debugLog(
+        `Attempting action again (${attempts - 1} of ${maxAttempts - 1})`
+      );
+    }
+    try {
+      const els = await getEls();
+      return await fn(els);
+    } catch (e) {
+      debugLog(e);
+    }
+  }
+  throw new Error(
+    `Failed to execute action after ${maxAttempts} attempts at finding elements`
+  );
+};
+
+export const withElement = async <F extends (el: WebElement) => any>(
   getEl: () => WebElement | WebElementPromise,
-  fn: (el: WebElement) => {}
-) => {
+  fn: F
+): Promise<ReturnType<F>> => {
   let attempts = 0;
   const maxAttempts = 3;
   while (++attempts <= maxAttempts) {
@@ -192,10 +225,12 @@ export const withElement = async (
     }
     try {
       const el = await getEl();
-      await fn(el);
-      break;
+      return await fn(el);
     } catch (e) {
       debugLog(e);
     }
   }
+  throw new Error(
+    `Failed to execute action after ${maxAttempts} attempts at finding element`
+  );
 };
