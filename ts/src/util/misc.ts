@@ -1,4 +1,4 @@
-import { sendMessageToChannel } from "notifications/discord/index.js";
+import { sendMessageToChannel } from "../notifications/discord/index.js";
 import { DEBUG, VERBOSE } from "../index.js";
 import { stdout as singleLineStdOut } from "single-line-log";
 

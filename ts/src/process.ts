@@ -1,9 +1,8 @@
-import axios from "axios";
 import dotenv from "dotenv";
 import { Config } from "types/config.js";
 import { tmpDir } from "./constants.js";
 import { VERBOSE } from "./index.js";
-import { generateLocationLink, isWithinRadii } from "./util/geo.js";
+import { generateLocationLink } from "./util/geo.js";
 import { readJSON, writeJSON } from "./util/io.js";
 import { log, verboseLog } from "./util/misc.js";
 
@@ -39,84 +38,100 @@ let blacklist: string[] | undefined;
 export const itemIsBlacklisted = (item: Item) =>
   blacklist?.some((b) => JSON.stringify(item).toLowerCase().includes(b));
 
+interface SeenItemDict {
+  [k: string]: 1 | undefined;
+}
+
+export const loadSeenItems = async () => {
+  return await readJSON<SeenItemDict>(`${tmpDir}/seen.json`).then(
+    (arr) => arr ?? {}
+  );
+};
+
+export const saveSeenItems = async (v: SeenItemDict) => {
+  await writeJSON(`${tmpDir}/seen.json`, v);
+};
+
+export const withUnseenItems = async <T>(
+  items: Item[],
+  fn: (items: Item[]) => Promise<T>
+) => {
+  const seenItems = await loadSeenItems();
+  const unseenItems: Item[] = [];
+  for (const item of items) {
+    const k = `${item.platform}-${item.id}`;
+    if (seenItems[k]) {
+      continue;
+    }
+    seenItems[k] = 1;
+    unseenItems.push(item);
+  }
+
+  await saveSeenItems(seenItems);
+
+  log(
+    `Checked ${items.length} item${items.length === 1 ? "" : "s"}, found ${
+      unseenItems.length
+    } new${VERBOSE ? ":" : "."}`
+  );
+
+  return await fn(unseenItems);
+};
+
 export const processItems = async (config: Config, items: Item[]) => {
   if (!blacklist) {
     blacklist = config.search.blacklist.map((b) => b.toLowerCase());
   }
-  const seenItems = await readJSON<{ [k: string]: 1 | undefined }>(
-    `${tmpDir}/seen.json`
-  ).then((arr) => arr ?? {});
 
-  const { newItemIDs, validNewItems, blacklistedNewItems } = await items.reduce<
-    Promise<{
-      newItemIDs: string[];
-      validNewItems: Item[];
-      blacklistedNewItems: Item[];
-    }>
-  >(
-    async (filteredPromises, item) => {
-      const result = await filteredPromises;
-      const isBlacklisted = await itemIsBlacklisted(item);
-      const k = `${item.platform}-${item.id}`;
-      if (seenItems[k]) {
+  await withUnseenItems(items, async (unseenItems) => {
+    const { targets, blacklisted } = await unseenItems.reduce<
+      Promise<{
+        targets: Item[];
+        blacklisted: Item[];
+      }>
+    >(
+      async (filteredPromises, item) => {
+        const result = await filteredPromises;
+        const isBlacklisted = await itemIsBlacklisted(item);
+        if (isBlacklisted) {
+          result.blacklisted.push(item);
+        } else {
+          result.targets.push(item);
+        }
         return result;
-      }
-      seenItems[k] = 1;
-      result.newItemIDs.push(item.id);
-      if (isBlacklisted) {
-        result.blacklistedNewItems.push(item);
-      } else {
-        result.validNewItems.push(item);
-      }
-      return result;
-    },
-    Promise.resolve({
-      newItemIDs: [],
-      validNewItems: [],
-      blacklistedNewItems: [],
-    })
-  );
-
-  const platform = items[0].platform;
-
-  await writeJSON(`${tmpDir}/seen.json`, seenItems);
-
-  if (!newItemIDs.length) {
-    log(`No new items on ${platform}. (checked ${items.length})`);
-    return [];
-  }
-
-  for (const item of validNewItems) {
-    if (item.details.location || !item.details.lat || !item.details.lon)
-      continue;
-    item.details.location = await generateLocationLink(
-      item.details.lat,
-      item.details.lon
+      },
+      Promise.resolve({
+        targets: [],
+        blacklisted: [],
+      })
     );
-  }
 
-  log("\n=======================================================");
-  log(
-    `Checked ${items.length} item${
-      items.length === 1 ? "" : "s"
-    } on ${platform}, found ${newItemIDs.length} new${VERBOSE ? ":" : "."}`
-  );
-  log(
-    // TODO think of a better word than 'valid'
-    `${validNewItems.length} ${validNewItems.length > 1 ? "are" : "is"} valid${
-      VERBOSE ? ":" : "."
-    }`
-  );
-  verboseLog(validNewItems);
-  if (blacklistedNewItems.length) {
-    log(
-      `${blacklistedNewItems.length} ${
-        blacklistedNewItems.length === 1 ? "was" : "were"
-      } blacklisted.`
-    );
-  }
-  // TODO compute duplicates
-  log("----------------------------------------\n");
+    const platform = items[0].platform;
 
-  return validNewItems;
+    for (const item of targets) {
+      if (item.details.location || !item.details.lat || !item.details.lon)
+        continue;
+      item.details.location = await generateLocationLink(
+        item.details.lat,
+        item.details.lon
+      );
+    }
+
+    log("\n=======================================================");
+    log(`${platform}: ${targets.length} new results${VERBOSE ? ":" : "."}`);
+    verboseLog(targets);
+    if (blacklisted.length) {
+      log(
+        `${platform}: ${blacklisted.length} new but blacklisted${
+          VERBOSE ? ":" : "."
+        }`
+      );
+    }
+    // TODO compute duplicates
+    log("----------------------------------------\n");
+
+    process.exit();
+
+    return targets;
+  });
 };
