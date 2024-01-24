@@ -121,32 +121,32 @@ export const getFilterInteractions = (
       },
 
       // TODO verify whether this rules out options that don't have the value set
-      petFriendly: async () => {
-        const filterID = "petsallowed";
-        const filterXpath = getFilterXpath(filterID);
-        await ensureFilterIsOpen(filterID, driver);
-        const v = config.search.petFriendly;
-        if (v === undefined) {
-          return;
-        }
-        if (!v) {
-          await clickByXPath(driver, `//label[contains(text(), 'No')]`, {
-            parentXpath: `${filterXpath}/..`,
-          });
-          return;
-        }
-        await clickAllByXPath(driver, `//label[not(text()='No')]`, {
-          parentXpath: `${filterXpath}/..`,
-          afterClick: async () => {
-            debugLog("Waiting for URL change");
-            await waitUntilUrlChanges(driver);
-            debugLog("sleeping");
-            await driver.sleep(1000);
-            debugLog("ensuring filter is open");
-            await ensureFilterIsOpen(filterID, driver);
-          },
-        });
-      },
+      // petFriendly: async () => {
+      //   const filterID = "petsallowed";
+      //   const filterXpath = getFilterXpath(filterID);
+      //   await ensureFilterIsOpen(filterID, driver);
+      //   const v = config.search.petFriendly;
+      //   if (v === undefined) {
+      //     return;
+      //   }
+      //   if (!v) {
+      //     await clickByXPath(driver, `//label[contains(text(), 'No')]`, {
+      //       parentXpath: `${filterXpath}/..`,
+      //     });
+      //     return;
+      //   }
+      //   await clickAllByXPath(driver, `//label[not(text()='No')]`, {
+      //     parentXpath: `${filterXpath}/..`,
+      //     afterClick: async () => {
+      //       debugLog("Waiting for URL change");
+      //       await waitUntilUrlChanges(driver);
+      //       debugLog("sleeping");
+      //       await driver.sleep(1000);
+      //       debugLog("ensuring filter is open");
+      //       await ensureFilterIsOpen(filterID, driver);
+      //     },
+      //   });
+      // },
 
       // bedrooms: {
       //   min: async () => {
