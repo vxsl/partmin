@@ -139,6 +139,9 @@ export const visitMarketplace = async (
     sortBy: "creation_time_descend",
     exact: true,
     // propertyType: config.search.propertyType,
+    ...(config.search.roommateNotAccepted && {
+      propertyType: ["house", "townhouse", "apartment-condo"].join(","),
+    }),
     minPrice: config.search.price.min,
     maxPrice: config.search.price.max,
     // minBedrooms: config.search.bedrooms.min,

@@ -99,12 +99,12 @@ export const getFilterInteractions = (
       //   });
       // },
 
-      basementOK: async () => {
+      basementNotAccepted: async () => {
         const filterID = "unittype";
         const filterXpath = getFilterXpath(filterID);
         await ensureFilterIsOpen(filterID, driver);
-        const v = config.search.basementOK;
-        if (v) {
+        const v = config.search.basementNotAccepted;
+        if (!v) {
           return;
         }
         await clickAllByXPath(driver, `//label[not(text()='Basement')]`, {

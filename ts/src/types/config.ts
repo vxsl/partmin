@@ -7,8 +7,8 @@ export type Config = {
     // };
     outdoorSpace?: boolean;
     // propertyType: ["apartment-condo", "house", "townhouse"];
-    basementOK: boolean;
-    roommateOK: boolean;
+    basementNotAccepted?: true;
+    roommateNotAccepted?: true;
     petFriendly?: boolean;
     location: {
       city: string;
