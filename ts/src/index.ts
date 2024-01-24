@@ -10,6 +10,7 @@ import { errorLog, log, randomWait } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
 
 export const DEBUG = true; // TODO cli arg
+export const VERBOSE = false; // TODO cli arg
 
 process.title = "partmin";
 
