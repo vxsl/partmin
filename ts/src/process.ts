@@ -40,7 +40,9 @@ export const processItems = async (config: Config, items: Item[]) => {
   if (!blacklist) {
     blacklist = config.search.blacklist.map((b) => b.toLowerCase());
   }
-  const seenItems = await readJSON<ItemDict>(`${tmpDir}/seen.json`);
+  const seenItems = await readJSON<{ [k: string]: 1 | undefined }>(
+    `${tmpDir}/seen.json`
+  ).then((arr) => arr ?? {});
 
   const {
     newItemCount,
@@ -58,9 +60,11 @@ export const processItems = async (config: Config, items: Item[]) => {
     async (filteredPromises, item) => {
       const result = await filteredPromises;
       const isBlacklisted = await itemIsBlacklisted(item);
-      if ((seenItems?.[item.platform] ?? ([] as string[])).includes(item.id))
+      const k = `${item.platform}-${item.id}`;
+      if (seenItems[k]) {
         return result;
-      result.newItemCount++;
+      }
+      seenItems[k] = 1;
       if (isBlacklisted) {
         result.blacklistedNewItems.push(item);
       } else if (!withinRadii(item.details.lat, item.details.lon, config)) {
@@ -80,16 +84,7 @@ export const processItems = async (config: Config, items: Item[]) => {
 
   const platform = items[0].platform;
 
-  await writeJSON(`${tmpDir}/seen.json`, {
-    ...seenItems,
-    [platform]: [
-      ...new Set([
-        ...validNewItems.map(({ id }) => id),
-        ...blacklistedNewItems.map(({ id }) => id),
-        ...(seenItems?.[platform] ?? []),
-      ]),
-    ],
-  });
+  await writeJSON(`${tmpDir}/seen.json`, seenItems);
 
   if (!validNewItems.length && !blacklistedNewItems.length) {
     log(`No new items on ${platform}. (checked ${items.length})`);
