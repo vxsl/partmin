@@ -60,7 +60,7 @@ export const getGoogleMapsLink = (query: string) =>
     query
   )}`;
 
-export const generateLocationLink = async (lat: number, lon: number) => {
+export const approxLocationLink = async (lat: number, lon: number) => {
   const key = `${lat},${lon}`;
 
   const cached = await readJSON<{ [k: string]: [string, string] }>(

@@ -1,3 +1,4 @@
+import { notUndefined } from "../../util/misc.js";
 import { Item, Platform } from "../../process.js";
 import Discord from "discord.js";
 
@@ -10,11 +11,20 @@ export const convertItemToDiscordEmbed = (item: Item) =>
   new Discord.EmbedBuilder()
     .setTitle(item.details.title ?? null)
     .setDescription(
-      `${
-        item.details.price
-          ? `**$${parseFloat(`${item.details.price}`).toFixed(2)}** / `
-          : ""
-      }${item.details.location ?? `(${item.details.lat}, ${item.details.lon})`}`
+      [
+        `${
+          item.details.price
+            ? `**$${parseFloat(`${item.details.price}`).toFixed(2)}**`
+            : undefined
+        }`,
+        item.computed?.locationLinkMD ??
+          item.details.location ??
+          (item.details.lat && item.details.lon
+            ? `(${item.details.lat}, ${item.details.lon})`
+            : undefined),
+      ]
+        .filter(notUndefined)
+        .join(" / ")
     )
     .setURL(item.url)
     .setImage(item.imgURLs[0] ?? null)

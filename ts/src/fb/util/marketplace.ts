@@ -1,7 +1,7 @@
 import { Item } from "process.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { Config } from "types/config.js";
-import { Radius } from "../../util/geo.js";
+import { Radius, getGoogleMapsLink } from "../../util/geo.js";
 import {
   debugLog,
   discordLog,
@@ -54,9 +54,28 @@ export const visitMarketplaceListing = async (
   }
 
   try {
-    const description = productDetails.target.redacted_description.text;
-    if (description) {
-      item.details.description = description;
+    const desc = productDetails.target.redacted_description.text;
+    if (desc) {
+      item.details.description = desc;
+    }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const loc = productDetails.target.home_address.street;
+    if (loc) {
+      item.details.location = loc;
+      if (!item.computed) item.computed = {};
+      const full =
+        productDetails.target.pdp_display_sections
+          .find((s: any) => s.section_type === "UNIT_SUBTITLE")
+          .then((s: any) =>
+            s.pdp_fields.find((f: any) => f.icon_name === "pin")
+          )?.display_label ?? "";
+      item.computed.locationLinkMD = `[**${loc}**](${getGoogleMapsLink(
+        full.length > loc.length ? full : loc
+      )})`;
     }
   } catch {
     // TODO
@@ -195,7 +214,6 @@ export const scrapeItems = async (
             tokens[0] !== undefined
               ? parseInt(tokens[0].replace(",", ""))
               : undefined;
-          const location = tokens[tokens.length - 1];
           const title = tokens.slice(1, tokens.length - 1).join(SEP);
 
           const result: Item = {
@@ -204,7 +222,6 @@ export const scrapeItems = async (
             details: {
               title,
               price,
-              location,
             },
             url: `https://facebook.com/marketplace/item/${id}`,
             imgURLs: [primaryImg],

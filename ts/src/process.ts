@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { Config } from "types/config.js";
 import { tmpDir } from "./constants.js";
 import { VERBOSE } from "./index.js";
-import { generateLocationLink } from "./util/geo.js";
+import { approxLocationLink } from "./util/geo.js";
 import { readJSON, writeJSON } from "./util/io.js";
 import { log, verboseLog } from "./util/misc.js";
 
@@ -54,18 +54,13 @@ export type Item = {
     title: string;
     price?: number;
     description?: string;
-  } & (
-    | {
-        location: string;
-        lat?: number;
-        lon?: number;
-      }
-    | {
-        location?: string;
-        lat: number;
-        lon: number;
-      }
-  );
+    location?: string;
+    lat?: number;
+    lon?: number;
+  };
+  computed?: {
+    locationLinkMD?: string;
+  };
   imgURLs: string[];
 };
 
@@ -150,9 +145,14 @@ export const processItems = async (config: Config, items: Item[]) => {
       const platform = items[0].platform;
 
       for (const item of targets) {
-        if (item.details.location || !item.details.lat || !item.details.lon)
+        if (
+          item.computed?.locationLinkMD ||
+          !item.details.lat ||
+          !item.details.lon
+        )
           continue;
-        item.details.location = await generateLocationLink(
+        if (!item.computed) item.computed = {};
+        item.computed.locationLinkMD = await approxLocationLink(
           item.details.lat,
           item.details.lon
         );
