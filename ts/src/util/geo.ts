@@ -55,24 +55,42 @@ export const isWithinRadii = (lat: number, lon: number, config: Config) => {
   return result;
 };
 
-export const withinRadius = ({
-  lat,
-  lon,
-  radiusLat,
-  radiusLon,
-  radiusDiameterKm,
-}: {
-  lat: number;
-  lon: number;
-  radiusLat: number;
-  radiusLon: number;
-  radiusDiameterKm: number;
-}) => {
-  const distance = haversine(
-    { latitude: radiusLat, longitude: radiusLon },
-    { latitude: lat, longitude: lon },
-    { unit: "km" }
+export const generateLocationLink = async (lat: number, lon: number) => {
+  const googleMapsBaseURL = "https://www.google.com/maps/search/?api=1&query=";
+
+  const key = `${lat},${lon}`;
+
+  const cached = await readJSON<{ [k: string]: [string, string] }>(
+    `${tmpDir}/addresses.json`
   );
-  const result = distance <= radiusDiameterKm;
-  return result;
+  const cachedAddress = cached?.[key];
+  if (cachedAddress) {
+    const display = cachedAddress[0];
+    const query = encodeURIComponent(cachedAddress[1]);
+    const link = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    return `[${display}](${link})`;
+  }
+
+  const { data } = await axios.get(
+    `https://maps.googleapis.com/maps/api/geocode/json?latlng=\
+      ${lat},${lon}\
+      &key=${process.env.GOOGLE_MAPS_API_KEY}`
+  );
+  const comps = data.results[0].address_components;
+  const displayAddr =
+    comps.find((c: any) => c.types.includes("street_number"))?.short_name +
+    " " +
+    comps.find((c: any) => c.types.includes("route"))?.short_name +
+    ", " +
+    (comps.find((c: any) => c.types.includes("neighborhood"))?.short_name ??
+      comps.find((c: any) => c.types.includes("sublocality"))?.short_name);
+
+  await writeJSON(`${tmpDir}/addresses.json`, {
+    ...cached,
+    [key]: [displayAddr, data.results[0].formatted_address],
+  });
+
+  const query = encodeURIComponent(data.results[0].formatted_address);
+  const link = `${googleMapsBaseURL}${query}`;
+  return `[${displayAddr}](${link})`;
 };

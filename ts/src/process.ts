@@ -99,49 +99,10 @@ export const processItems = async (config: Config, items: Item[]) => {
   for (const item of validNewItems) {
     if (item.details.location || !item.details.lat || !item.details.lon)
       continue;
-
-    const key = `${item.details.lat},${item.details.lon}`;
-
-    const cached = await readJSON<{ [k: string]: [string, string] }>(
-      `${tmpDir}/addresses.json`
+    item.details.location = await generateLocationLink(
+      item.details.lat,
+      item.details.lon
     );
-    const cachedAddress = cached?.[key];
-    if (cachedAddress) {
-      const display = cachedAddress[0];
-      const query = encodeURIComponent(cachedAddress[1]);
-      const link = `https://www.google.com/maps/search/?api=1&query=${query}`;
-      item.details.location = `[${display}](${link})`;
-      continue;
-    }
-
-    await axios
-      .get(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=\
-      ${item.details.lat},${item.details.lon}\
-      &key=${process.env.GOOGLE_MAPS_API_KEY}`
-      )
-      .then(async ({ data }) => {
-        const comps = data.results[0].address_components;
-        const displayAddr =
-          comps.find((c: any) => c.types.includes("street_number"))
-            ?.short_name +
-          " " +
-          comps.find((c: any) => c.types.includes("route"))?.short_name +
-          ", " +
-          (comps.find((c: any) => c.types.includes("neighborhood"))
-            ?.short_name ??
-            comps.find((c: any) => c.types.includes("sublocality"))
-              ?.short_name);
-
-        await writeJSON(`${tmpDir}/addresses.json`, {
-          ...cached,
-          [key]: [displayAddr, data.results[0].formatted_address],
-        });
-
-        const query = encodeURIComponent(data.results[0].formatted_address);
-        const link = `${googleMapsBaseURL}${query}`;
-        item.details.location = `[${displayAddr}](${link})`;
-      });
   }
 
   log("\n=======================================================");
