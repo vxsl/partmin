@@ -46,3 +46,16 @@ export const attachVideosToEmbed = (
     );
   }
 };
+
+export const buildPrevImgButton = () =>
+  new Discord.ButtonBuilder()
+    .setCustomId("prevImg")
+    .setLabel("⬅")
+    .setStyle(Discord.ButtonStyle.Secondary)
+    .setDisabled(true);
+export const buildNextImgButton = () =>
+  new Discord.ButtonBuilder()
+    .setCustomId("nextImg")
+    .setLabel(`➡`)
+    .setStyle(Discord.ButtonStyle.Secondary)
+    .setDisabled(true);
