@@ -73,9 +73,12 @@ export const visitMarketplaceListing = async (
           .then((s: any) =>
             s.pdp_fields.find((f: any) => f.icon_name === "pin")
           )?.display_label ?? "";
-      item.computed.locationLinkMD = `[**${loc}**](${getGoogleMapsLink(
-        full.length > loc.length ? full : loc
-      )})`;
+      item.computed = {
+        ...(item.computed ?? {}),
+        locationLinkMD: `[**${loc}**](${getGoogleMapsLink(
+          full.length > loc.length ? full : loc
+        )})`,
+      };
     }
   } catch {
     // TODO
@@ -99,6 +102,26 @@ export const visitMarketplaceListing = async (
     if (imgs.length) {
       item.imgURLs = imgs;
     }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const points: string[] = productDetails.target.pdp_display_sections
+      .find((s: any) => s.section_type === "UNIT_SUBTITLE")
+      ?.pdp_fields.filter((f: any) => f.icon_name !== "pin")
+      .map(({ display_label }: { display_label: string }) =>
+        display_label.includes("Available ")
+          ? display_label.match(/Available (.+)/)?.[0] ?? display_label
+          : display_label.includes("Listed")
+          ? undefined
+          : display_label
+      )
+      .filter(notUndefined);
+    item.computed = {
+      ...(item.computed ?? {}),
+      bulletPoints: points,
+    };
   } catch {
     // TODO
   }

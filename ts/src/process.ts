@@ -62,6 +62,7 @@ export type Item = {
   };
   computed?: {
     locationLinkMD?: string;
+    bulletPoints?: string[];
   };
   imgURLs: string[];
 };
@@ -151,13 +152,16 @@ export const processItems = async (config: Config, items: Item[]) => {
           item.computed?.locationLinkMD ||
           !item.details.lat ||
           !item.details.lon
-        )
+        ) {
           continue;
-        if (!item.computed) item.computed = {};
-        item.computed.locationLinkMD = await approxLocationLink(
-          item.details.lat,
-          item.details.lon
-        );
+        }
+        item.computed = {
+          ...(item.computed ?? {}),
+          locationLinkMD: await approxLocationLink(
+            item.details.lat,
+            item.details.lon
+          ),
+        };
       }
 
       log("\n=======================================================");
