@@ -1,7 +1,13 @@
 import { Config } from "types/config.js";
-import { readJSON, writeJSON } from "./util/io.js";
-import { log } from "./util/misc.js";
 import { tmpDir } from "./constants.js";
+import { VERBOSE } from "./index.js";
+import { withinRadius } from "./util/geo.js";
+import { readJSON, writeJSON } from "./util/io.js";
+import { log, verboseLog } from "./util/misc.js";
+import dotenv from "dotenv";
+import axios from "axios";
+
+dotenv.config();
 
 export type Platform = "kijiji" | "fb";
 
@@ -10,12 +16,14 @@ export type Item = {
   platform: Platform;
   url: string;
   clickUrl?: string;
-  details: Partial<{
+  details: {
     title: string;
     price: number;
     description: string;
-    location: string;
-  }>;
+    location?: string;
+    lat: number;
+    lon: number;
+  };
   imgUrl?: string;
 };
 
@@ -26,31 +34,47 @@ let blacklist: string[] | undefined;
 export const itemIsBlacklisted = (item: Item) =>
   blacklist?.some((b) => JSON.stringify(item).toLowerCase().includes(b));
 
-export const processItems = async (
-  config: Config,
-  items: Item[],
-  options: { log?: boolean } = {}
-) => {
+export const processItems = async (config: Config, items: Item[]) => {
   if (!blacklist) {
     blacklist = config.search.blacklist.map((b) => b.toLowerCase());
   }
   const seenItems = await readJSON<ItemDict>(`${tmpDir}/seen.json`);
 
-  const newItems = items.reduce<Item[]>((n, item) => {
-    !(seenItems?.[item.platform] ?? ([] as string[])).includes(item.id) &&
-      n.push(item);
-    return n;
-  }, []);
-
-  const blacklistedNewItems = [];
-  for (let i = 0; i < newItems.length; i++) {
-    const item = newItems[i];
-    if (await itemIsBlacklisted(item)) {
-      blacklistedNewItems.push(item);
-      newItems.splice(i, 1);
-      i--;
-    }
-  }
+  const {
+    newItemCount,
+    validNewItems,
+    blacklistedNewItems,
+    outsideSearchNewItems,
+  } = await items.reduce<
+    Promise<{
+      newItemCount: number;
+      validNewItems: Item[];
+      blacklistedNewItems: Item[];
+      outsideSearchNewItems: Item[];
+    }>
+  >(
+    async (filteredPromises, item) => {
+      const result = await filteredPromises;
+      const isBlacklisted = await itemIsBlacklisted(item);
+      if ((seenItems?.[item.platform] ?? ([] as string[])).includes(item.id))
+        return result;
+      result.newItemCount++;
+      if (isBlacklisted) {
+        result.blacklistedNewItems.push(item);
+      } else if (!withinRadius(item.details.lat, item.details.lon, config)) {
+        result.outsideSearchNewItems.push(item);
+      } else {
+        result.validNewItems.push(item);
+      }
+      return result;
+    },
+    Promise.resolve({
+      newItemCount: 0,
+      validNewItems: [],
+      blacklistedNewItems: [],
+      outsideSearchNewItems: [],
+    })
+  );
 
   const platform = items[0].platform;
 
@@ -58,52 +82,41 @@ export const processItems = async (
     ...seenItems,
     [platform]: [
       ...new Set([
-        ...newItems.map(({ id }) => id),
+        ...validNewItems.map(({ id }) => id),
         ...blacklistedNewItems.map(({ id }) => id),
         ...(seenItems?.[platform] ?? []),
       ]),
     ],
   });
 
-  if (options.log) {
-    if (!newItems.length && !blacklistedNewItems.length) {
-      log(`No new items on ${platform}. (checked ${items.length})`);
-    } else {
-      console.log("\n=======================================================");
-
-      if (newItems.length) {
-        log(
-          `Checked ${items.length} item${
-            items.length === 1 ? "" : "s"
-          } on ${platform}, found ${newItems.length} new:`,
-          newItems
-        );
-        if (blacklistedNewItems.length) {
-          log(
-            `Also found ${blacklistedNewItems.length} new blacklisted item${
-              blacklistedNewItems.length === 1 ? "" : "s"
-            } on ${platform}`
-          );
-        }
-      } else {
-        log(
-          `Checked ${items.length} item${
-            items.length === 1 ? "" : "s"
-          } on ${platform}, found ${
-            blacklistedNewItems.length
-          } new blacklisted:`,
-          blacklistedNewItems.map(
-            ({ details: { title, price }, clickUrl }) => ({
-              title,
-              price,
-              clickUrl,
-            })
-          )
-        );
-      }
-      console.log("----------------------------------------\n");
-    }
+  log("\n=======================================================");
+  log(
+    `Checked ${items.length} item${
+      items.length === 1 ? "" : "s"
+    } on ${platform}, found ${newItemCount} new${VERBOSE ? ":" : "."}`
+  );
+  log(
+    // TODO think of a better word than 'valid'
+    `${validNewItems.length} ${validNewItems.length > 1 ? "are" : "is"} valid${
+      VERBOSE ? ":" : "."
+    }`
+  );
+  verboseLog(validNewItems);
+  if (blacklistedNewItems.length) {
+    log(
+      `${blacklistedNewItems.length} ${
+        blacklistedNewItems.length === 1 ? "was" : "were"
+      } blacklisted.`
+    );
   }
+  if (outsideSearchNewItems.length) {
+    log(
+      `${outsideSearchNewItems.length} ${
+        outsideSearchNewItems.length === 1 ? "was" : "were"
+      } outside the search radius.`
+    );
+  }
+  log("----------------------------------------\n");
 
-  return newItems;
+  return validNewItems;
 };

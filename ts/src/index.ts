@@ -42,7 +42,7 @@ const runLoop = async (
     try {
       const items = await handler(config, driver);
       if (items?.length) {
-        const newItems = await processItems(config, items, { log: true });
+        const newItems = await processItems(config, items);
         await notify(driver, newItems);
       } else {
         log("Somehow there are no items.");

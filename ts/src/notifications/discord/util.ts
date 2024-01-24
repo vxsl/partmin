@@ -10,9 +10,11 @@ export const convertItemToDiscordEmbed = (item: Item) =>
   new Discord.EmbedBuilder()
     .setTitle(item.details.title ?? null)
     .setDescription(
-      `- ${item.details.price ? `$${item.details.price}` : ""}\n- ${
-        item.details.location
-      }`
+      `${
+        item.details.price
+          ? `**$${parseFloat(`${item.details.price}`).toFixed(2)}** / `
+          : ""
+      }${item.details.location ?? `(${item.details.lat}, ${item.details.lon})`}`
     )
     .setURL(item.url)
     .setImage(item.imgUrl ?? null)

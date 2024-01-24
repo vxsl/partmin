@@ -18,5 +18,5 @@ export const kijijiPre = async (config: Config, driver: WebDriver) => {
 
 export const kijijiMain = async (config: Config, driver: WebDriver) => {
   if (!rssURL) throw new Error("No RSS feed found");
-  return await scrapeItems(rssURL);
+  return await scrapeItems(config, rssURL);
 };
