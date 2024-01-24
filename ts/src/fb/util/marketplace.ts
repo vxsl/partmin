@@ -110,7 +110,7 @@ export const scrapeItems = async (
             return;
           }
 
-          const imgURL = await e
+          const primaryImg = await e
             .findElement(By.css("img"))
             .then((img) => img.getAttribute("src"));
 
@@ -137,7 +137,7 @@ export const scrapeItems = async (
               location,
             },
             url: `https://facebook.com/marketplace/item/${id}`,
-            imgURL,
+            imgURLs: [primaryImg],
           };
           return result;
         });

@@ -67,15 +67,27 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
   const channel = await getChannel(channelId);
   const embed = convertItemToDiscordEmbed(item);
 
-  let prevImgButton: Discord.ButtonBuilder | undefined;
-  let nextImgButton: Discord.ButtonBuilder | undefined;
+  if (item.imgURLs.length <= 1) {
+    await channel.send({ embeds: [embed] });
+    return;
+  }
+
   const imgButton = new Discord.ButtonBuilder()
     .setCustomId("img")
-    .setLabel("📷️")
+    .setLabel(`️${1} / ${item.imgURLs.length}`)
     .setStyle(Discord.ButtonStyle.Secondary);
-
   const buttonRow = new Discord.ActionRowBuilder<Discord.ButtonBuilder>({
-    components: [imgButton],
+    components: [
+      new Discord.ButtonBuilder()
+        .setCustomId("prevImg")
+        .setLabel("⬅")
+        .setStyle(Discord.ButtonStyle.Secondary),
+      imgButton,
+      new Discord.ButtonBuilder()
+        .setCustomId("nextImg")
+        .setLabel(`➡`)
+        .setStyle(Discord.ButtonStyle.Secondary),
+    ],
   });
 
   const msg = await channel.send({
@@ -87,26 +99,22 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
     filter: (interaction) => {
       interaction.deferUpdate();
       return (
-        interaction.customId === "img" ||
-        interaction.customId === "nextImg" ||
-        interaction.customId === "prevImg"
+        interaction.customId === "nextImg" || interaction.customId === "prevImg"
       );
     },
     time: 24 * 3600000,
   });
 
-  let imgs = item.imgURL ? [item.imgURL] : [];
   let i = 0;
-  let imgsRetrieved = false;
 
   const navigateImg = async (backwards = false) => {
-    const len = imgs.length;
+    const len = item.imgURLs.length;
     i = (backwards ? i - 1 + len : i + 1) % len;
     imgButton.setLabel(`${i + 1} / ${len}`);
     if (len > 1) {
-      embed.setThumbnail(imgs[(i + 1) % len]);
+      embed.setThumbnail(item.imgURLs[(i + 1) % len]);
     }
-    embed.setImage(imgs[i]);
+    embed.setImage(item.imgURLs[i]);
     await msg.edit({ embeds: [embed], components: [buttonRow] });
   };
 
@@ -119,40 +127,29 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
       await navigateImg(true);
       return;
     }
-    if (imgsRetrieved) {
-      return;
-    }
-    imgsRetrieved = true;
 
-    imgButton.setDisabled(true).setLabel("Loading...");
-    prevImgButton = await buildPrevImgButton();
-    nextImgButton = await buildNextImgButton();
-    buttonRow.setComponents([prevImgButton, imgButton, nextImgButton]);
-    msg.edit({
-      components: [buttonRow],
-    });
-    await kijijiVisit(item.url, driver);
-    await clickByXPath(driver, `//div[@id='mainHeroImage']`);
-    let newImgs: string[];
-    try {
-      const els = await driver.findElements(
-        By.xpath('//div[contains(@class, "thumbnailList")]//img')
-      );
-      newImgs = await Promise.all(
-        els.map((element, i) => element.getAttribute("src"))
-      );
-      imgs.push(
-        ...newImgs.filter((src, i) => i > 0 && src && !imgs.includes(src))
-      );
-    } catch (error) {}
+    // await kijijiVisit(item.url, driver);
+    // await clickByXPath(driver, `//div[@id='mainHeroImage']`);
+    // let newImgs: string[];
+    // try {
+    //   const els = await driver.findElements(
+    //     By.xpath('//div[contains(@class, "thumbnailList")]//img')
+    //   );
+    //   newImgs = await Promise.all(
+    //     els.map((element, i) => element.getAttribute("src"))
+    //   );
+    //   imgs.push(
+    //     ...newImgs.filter((src, i) => i > 0 && src && !imgs.includes(src))
+    //   );
+    // } catch (error) {}
 
-    attachVideosToEmbed(embed, imgs);
+    // attachVideosToEmbed(embed, imgs);
 
-    imgButton.setDisabled(false);
-    prevImgButton.setDisabled(false).setStyle(Discord.ButtonStyle.Primary);
-    nextImgButton.setDisabled(false).setStyle(Discord.ButtonStyle.Primary);
-    await msg.edit({ components: [buttonRow] });
-    await navigateImg();
+    // imgButton.setDisabled(false);
+    // prevImgButton.setDisabled(false).setStyle(Discord.ButtonStyle.Primary);
+    // nextImgButton.setDisabled(false).setStyle(Discord.ButtonStyle.Primary);
+    // await msg.edit({ components: [buttonRow] });
+    // await navigateImg();
   });
 };
 

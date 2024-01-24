@@ -17,7 +17,8 @@ export const convertItemToDiscordEmbed = (item: Item) =>
       }${item.details.location ?? `(${item.details.lat}, ${item.details.lon})`}`
     )
     .setURL(item.url)
-    .setImage(item.imgURL ?? null)
+    .setImage(item.imgURLs[0] ?? null)
+    .setThumbnail(item.imgURLs[1] ?? null)
     .setFooter({
       text: item.platform,
       iconURL: platformIcons[item.platform],
@@ -48,16 +49,3 @@ export const attachVideosToEmbed = (
     );
   }
 };
-
-export const buildPrevImgButton = () =>
-  new Discord.ButtonBuilder()
-    .setCustomId("prevImg")
-    .setLabel("⬅")
-    .setStyle(Discord.ButtonStyle.Secondary)
-    .setDisabled(true);
-export const buildNextImgButton = () =>
-  new Discord.ButtonBuilder()
-    .setCustomId("nextImg")
-    .setLabel(`➡`)
-    .setStyle(Discord.ButtonStyle.Secondary)
-    .setDisabled(true);

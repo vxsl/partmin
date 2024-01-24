@@ -30,7 +30,7 @@ export type Item = {
         lon: number;
       }
   );
-  imgURL?: string;
+  imgURLs: string[];
 };
 
 let blacklist: string[] | undefined;

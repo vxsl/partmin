@@ -14,7 +14,7 @@ export const notify = async (driver: WebDriver, items: Item[]) => {
       id,
       url,
       details: { price, location, title },
-      imgURL: imgUrl,
+      imgURLs,
     } = item;
 
     await sendEmbedToChannel(driver, item);
