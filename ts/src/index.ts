@@ -113,17 +113,18 @@ const runLoop = async (
 };
 
 const main = async () => {
-  const driver = await new Builder()
-    .forBrowser("chrome")
-    .setChromeOptions(ops)
-    .build();
-
-  driver.manage().setTimeouts({ implicit: 10000 });
-
-  await startDiscordBot();
-
-  // await loadCookies(driver);
+  let driver;
   try {
+    driver = await new Builder()
+      .forBrowser("chrome")
+      .setChromeOptions(ops)
+      .build();
+
+    driver.manage().setTimeouts({ implicit: 10000 });
+
+    await startDiscordBot();
+
+    // await loadCookies(driver);
     await runLoop(driver, {
       fb: {
         main: fbMain,
