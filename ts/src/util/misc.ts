@@ -47,7 +47,10 @@ export const singleLineLog = (...args: Parameters<typeof singleLineStdOut>) =>
 
 export const clearSingleLineLog = () => singleLineStdOut.clear();
 
-export const randomWait = async (options?: { short?: true }) => {
+export const randomWait = async (options?: {
+  short?: true;
+  suppressLog?: boolean;
+}) => {
   const minShort = 2;
   const maxShort = 10;
   const minLong = 1 * 60;
@@ -62,13 +65,15 @@ export const randomWait = async (options?: { short?: true }) => {
     : Math.round(Math.random() * (maxLongNight - minLongNight) + minLongNight);
 
   const mins = Math.round(toWait / 60);
-  log(
-    `Waiting ${toWait} seconds${
-      mins < 2 ? "" : ` (${mins} minute${mins !== 1 ? "s" : ""})`
-    }`
-  );
+  !options?.suppressLog &&
+    log(
+      `Waiting ${toWait} seconds${
+        mins < 2 ? "" : ` (${mins} minute${mins !== 1 ? "s" : ""})`
+      }`
+    );
   for (let i = 0; i < toWait; i++) {
-    singleLineLog(toWait - i === 1 ? "" : `Waiting ${toWait - i} seconds`);
+    !options?.suppressLog &&
+      singleLineLog(toWait - i === 1 ? "" : `Waiting ${toWait - i} seconds`);
     await waitSeconds(1);
   }
 };

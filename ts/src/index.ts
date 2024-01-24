@@ -97,7 +97,7 @@ const runLoop = async (
         await withUnseenItems(items, async (unseenItems) => {
           for (const item of unseenItems) {
             await perItem?.(config, driver, item)?.then(() =>
-              randomWait({ short: true })
+              randomWait({ short: true, suppressLog: true })
             );
           }
           await processItems(config, unseenItems).then((arr) =>
