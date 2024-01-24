@@ -47,12 +47,20 @@ export const singleLineLog = (...args: Parameters<typeof singleLineStdOut>) =>
 
 export const clearSingleLineLog = () => singleLineStdOut.clear();
 
-export const randomWait = async () => {
-  // if it's between 5am and 8pm, wait between 1 and 3 minutes. Otherwise, wait between 10 and 20 minutes
-  const toWait =
-    new Date().getHours() >= 5 && new Date().getHours() < 20
-      ? Math.round(Math.random() * 120 + 60)
-      : Math.round(Math.random() * 600 + 600);
+export const randomWait = async (options?: { short?: true }) => {
+  const minShort = 2;
+  const maxShort = 10;
+  const minLong = 1 * 60;
+  const maxLong = 3 * 60;
+  const minLongNight = 10 * 60;
+  const maxLongNight = 20 * 60;
+
+  const toWait = options?.short
+    ? Math.round(Math.random() * (maxShort - minShort) + minShort)
+    : new Date().getHours() >= 5 && new Date().getHours() < 20
+    ? Math.round(Math.random() * (maxLong - minLong) + minLong)
+    : Math.round(Math.random() * (maxLongNight - minLongNight) + minLongNight);
+
   const mins = Math.round(toWait / 60);
   log(
     `Waiting ${toWait} seconds${

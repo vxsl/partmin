@@ -1,6 +1,6 @@
 import { WebDriver } from "selenium-webdriver";
 import { decodeMapDevelopersURL } from "../util/geo.js";
-import { debugLog, waitSeconds } from "../util/misc.js";
+import { debugLog, randomWait, waitSeconds } from "../util/misc.js";
 import {
   scrapeItems,
   visitMarketplace,
@@ -17,7 +17,7 @@ export const fbMain = async (config: Config, driver: WebDriver) => {
     debugLog(`visiting fb marketplace for radius ${JSON.stringify(r)}`);
     await visitMarketplace(config, driver, r);
     await scrapeItems(driver).then((arr) => items.push(...(arr ?? [])));
-    await waitSeconds(Math.random() * 3 + 1);
+    await randomWait({ short: true });
   }
   return items;
 };
