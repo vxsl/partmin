@@ -37,6 +37,12 @@ if (!channelId) {
 }
 
 client.on("ready", async () => {
+  // // delete all messages in channel:
+  // const channel = await getChannel(channelId);
+  // const messages = await channel.messages.fetch();
+  // await channel.bulkDelete(messages);
+  // process.exit();
+
   sendMessageToChannel(
     "I'm online! I'll send you a message when I find something."
   );
