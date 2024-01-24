@@ -8,7 +8,7 @@ import { notify } from "./notify.js";
 import { Item, Platform, processItems, withUnseenItems } from "./process.js";
 import { errorLog, log, randomWait } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
-import { fbMain } from "./fb/index.js";
+import { fbMain, fbPerItem } from "./fb/index.js";
 
 export const DEBUG = true; // TODO cli arg
 export const VERBOSE = false; // TODO cli arg
@@ -95,6 +95,7 @@ const main = async () => {
     await runLoop(driver, {
       fb: {
         main: fbMain,
+        perItem: fbPerItem,
       },
       // kijiji: {
       //   main: kijijiMain,

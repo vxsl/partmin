@@ -14,6 +14,76 @@ import {
   elementShouldExist,
 } from "../../util/selenium.js";
 import { MP_ITEM_XPATH } from "./index.js";
+import { findNestedProperty } from "../../util/data.js";
+
+export const visitMarketplaceListing = async (
+  driver: WebDriver,
+  item: Item
+) => {
+  await clearBrowsingData(driver);
+
+  let url = `https://facebook.com/marketplace/item/${item.id}`;
+  debugLog(`fb: ${url}`);
+
+  await driver.get(url);
+
+  const infoStringified = await driver
+    .findElements(
+      By.xpath(`//script[contains(text(), "marketplace_product_details_page")]`)
+    )
+    .then((els) => els[0])
+    .then((el) => el.getAttribute("innerHTML"));
+
+  const productDetails = findNestedProperty(
+    infoStringified,
+    "marketplace_product_details_page"
+  );
+
+  if (!productDetails) {
+    // TODO do something else.
+
+    // // if there's a <span> with text "See more", click it:
+    // await driver
+    //   .findElements(By.xpath(`//span[(text()="See more")]`))
+    //   .then(async (els) => {
+    //     if (els.length) {
+    //       await click(els[0]);
+    //     }
+    //   });
+    return;
+  }
+
+  try {
+    const description = productDetails.target.redacted_description.text;
+    if (description) {
+      item.details.description = description;
+    }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const lat = productDetails.target.location.latitude;
+    const lon = productDetails.target.location.longitude;
+    if (lat && lon) {
+      item.details.lat = lat;
+      item.details.lon = lon;
+    }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const imgs = productDetails.target.listing_photos
+      .map((p: any) => p?.image?.uri ?? undefined)
+      .filter(notUndefined);
+    if (imgs.length) {
+      item.imgURLs = imgs;
+    }
+  } catch {
+    // TODO
+  }
+};
 
 export const visitMarketplace = async (
   config: Config,

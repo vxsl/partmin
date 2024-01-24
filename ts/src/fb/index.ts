@@ -1,7 +1,11 @@
 import { WebDriver } from "selenium-webdriver";
 import { decodeMapDevelopersURL } from "../util/geo.js";
 import { debugLog, waitSeconds } from "../util/misc.js";
-import { scrapeItems, visitMarketplace } from "./util/marketplace.js";
+import {
+  scrapeItems,
+  visitMarketplace,
+  visitMarketplaceListing,
+} from "./util/marketplace.js";
 
 import { Config } from "types/config.js";
 import { Item } from "../process.js";
@@ -16,4 +20,12 @@ export const fbMain = async (config: Config, driver: WebDriver) => {
     await waitSeconds(Math.random() * 3 + 1);
   }
   return items;
+};
+
+export const fbPerItem = async (
+  config: Config,
+  driver: WebDriver,
+  item: Item
+) => {
+  await visitMarketplaceListing(driver, item);
 };
