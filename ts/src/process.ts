@@ -54,6 +54,9 @@ export const saveSeenItems = async (v: SeenItemDict) => {
 
 export const withUnseenItems = async <T>(
   items: Item[],
+  options: {
+    markAsSeen: boolean;
+  },
   fn: (items: Item[]) => Promise<T>
 ) => {
   const seenItems = await loadSeenItems();
@@ -67,7 +70,9 @@ export const withUnseenItems = async <T>(
     unseenItems.push(item);
   }
 
-  await saveSeenItems(seenItems);
+  if (options?.markAsSeen) {
+    await saveSeenItems(seenItems);
+  }
 
   log(
     `Checked ${items.length} item${items.length === 1 ? "" : "s"}, found ${

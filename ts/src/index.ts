@@ -5,7 +5,7 @@ import { Config } from "types/config.js";
 import _config from "../../config.json" assert { type: "json" };
 import { kijijiMain, kijijiPre } from "./kijiji/index.js";
 import { notify } from "./notify.js";
-import { Item, Platform, processItems } from "./process.js";
+import { Item, Platform, processItems, withUnseenItems } from "./process.js";
 import { errorLog, log, randomWait } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
 import { fbMain } from "./fb/index.js";
@@ -39,6 +39,7 @@ const runLoop = async (
     [k in Platform]: {
       main: (c: Config, d: WebDriver) => Promise<Item[] | undefined>;
       pre?: (c: Config, d: WebDriver) => Promise<void>;
+      perItem?: (c: Config, d: WebDriver, i: Item) => Promise<void>;
     };
   }>
 ) => {
@@ -49,9 +50,21 @@ const runLoop = async (
   while (true) {
     try {
       const newItems: Item[] = [];
-      for (const [platform, { main }] of Object.entries(runners)) {
+      for (const [platform, { main, perItem }] of Object.entries(runners)) {
         const items = await main(config, driver);
+
         if (items?.length) {
+          if (perItem) {
+            await withUnseenItems(
+              items,
+              { markAsSeen: false },
+              async (unseenItems) => {
+                for (const item of unseenItems) {
+                  await perItem(config, driver, item);
+                }
+              }
+            );
+          }
           await processItems(config, items).then((arr) =>
             newItems.push(...arr)
           );
