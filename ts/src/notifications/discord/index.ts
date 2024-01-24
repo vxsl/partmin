@@ -27,9 +27,11 @@ const token = process.env.DISCORD_BOT_TOKEN;
 
 const channelIDs = {
   main: config.testing
-    ? process.env.DISCORD_CHANNEL_ID_TEST
+    ? process.env.DISCORD_CHANNEL_ID_MAIN_TEST
     : process.env.DISCORD_CHANNEL_ID_MAIN,
-  logs: process.env.DISCORD_CHANNEL_ID_LOGS,
+  logs: config.testing
+    ? process.env.DISCORD_CHANNEL_ID_LOGS_TEST
+    : process.env.DISCORD_CHANNEL_ID_LOGS,
 } as Record<Channel, string>; // TODO remove assertion
 
 if (!token) {
@@ -37,7 +39,7 @@ if (!token) {
   process.exit(1);
 }
 if (!channelIDs.main) {
-  console.error("No DISCORD_CHANNEL_ID provided in .env");
+  console.error("No DISCORD_CHANNEL_ID_MAIN provided in .env");
   process.exit(1);
 }
 if (!channelIDs.logs) {
