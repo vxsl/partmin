@@ -53,7 +53,12 @@ export const randomWait = async () => {
     new Date().getHours() >= 5 && new Date().getHours() < 20
       ? Math.round(Math.random() * 120 + 60)
       : Math.round(Math.random() * 600 + 600);
-  log(`Waiting ${toWait} seconds (${Math.round(toWait / 60)} minutes)`);
+  const mins = Math.round(toWait / 60);
+  log(
+    `Waiting ${toWait} seconds${
+      mins < 2 ? "" : ` (${mins} minute${mins === 1 ? "s" : ""})`
+    }`
+  );
   for (let i = 0; i < toWait; i++) {
     singleLineLog(toWait - i === 1 ? "" : `Waiting ${toWait - i} seconds`);
     await waitSeconds(1);
