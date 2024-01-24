@@ -10,6 +10,7 @@ import {
 import { readJSON, writeJSON } from "./io.js";
 import { debugLog } from "./misc.js";
 import { tmpDir } from "../constants.js";
+import { Item } from "../process.js";
 
 export const clearBrowsingData = async (driver: WebDriver) => {
   if (!(await driver.getCurrentUrl()).startsWith("data")) {
@@ -187,28 +188,26 @@ export const elementShouldExist = async (
     ? driver.wait(until.elementLocated(By.css(selector)), 10 * 1000)
     : Promise.resolve());
 
-export const withElements = async <F extends (els: WebElement[]) => any>(
-  getEls: () => Promise<WebElement[]>,
-  fn: F
-): Promise<ReturnType<F>> => {
-  let attempts = 0;
-  const maxAttempts = 3;
-  while (++attempts <= maxAttempts) {
-    if (attempts > 1) {
-      debugLog(
-        `Attempting action again (${attempts - 1} of ${maxAttempts - 1})`
-      );
-    }
-    try {
-      const els = await getEls();
-      return await fn(els);
-    } catch (e) {
-      debugLog(e);
+export const withElementsByXpath = async <T>(
+  driver: WebDriver,
+  xpath: string,
+  fn: (el: WebElement) => Promise<T | undefined>
+): Promise<T[]> => {
+  const results = [];
+  for (
+    let i = 0;
+    i < (await driver.findElements(By.xpath(xpath))).length;
+    i++
+  ) {
+    const r = await withElement(
+      () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`)),
+      fn
+    );
+    if (r !== undefined) {
+      results.push(r);
     }
   }
-  throw new Error(
-    `Failed to execute action after ${maxAttempts} attempts at finding elements`
-  );
+  return results;
 };
 
 export const withElement = async <F extends (el: WebElement) => any>(

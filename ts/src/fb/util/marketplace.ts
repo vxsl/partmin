@@ -1,22 +1,16 @@
 import { Item } from "process.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { Config } from "types/config.js";
+import { findNestedProperty } from "../../util/data.js";
 import { Radius, getGoogleMapsLink } from "../../util/geo.js";
-import {
-  debugLog,
-  discordLog,
-  notUndefined,
-  waitSeconds,
-} from "../../util/misc.js";
+import { debugLog, discordLog, log, notUndefined } from "../../util/misc.js";
 import {
   clearBrowsingData,
-  click,
   elementShouldExist,
   withElement,
-  withElements,
+  withElementsByXpath,
 } from "../../util/selenium.js";
 import { MP_ITEM_XPATH } from "./index.js";
-import { findNestedProperty } from "../../util/data.js";
 
 export const visitMarketplaceListing = async (
   driver: WebDriver,
@@ -211,53 +205,47 @@ export const scrapeItems = async (
   driver: WebDriver
 ): Promise<Item[] | undefined> => {
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
+  return await withElementsByXpath(
+    driver,
+    MP_ITEM_XPATH,
+    async (e: WebElement): Promise<Item | undefined> => {
+      const href = await e.getAttribute("href");
+      const id = href.match(/\d+/)?.[0];
 
-  return await withElements(
-    () => driver.findElements(By.xpath(MP_ITEM_XPATH)),
-    async (els) =>
-      (
-        await Promise.all(
-          els.map((e) => {
-            return e.getAttribute("href").then(async (href) => {
-              const id = href.match(/\d+/)?.[0];
-              if (!id) {
-                debugLog(`No id found for element with href ${href}`);
-                return;
-              }
+      if (!id) {
+        log(`Unable to parse item ID from ${href}`);
+        return undefined;
+      }
 
-              const primaryImg = await withElement(
-                () => driver.findElement(By.css("img")),
-                (e) => e.getAttribute("src")
-              );
+      const thumb = await withElement(
+        () => e.findElement(By.css("img")),
+        (img) => img.getAttribute("src")
+      );
 
-              const SEP = " - ";
-              const text = await e
-                .getText()
-                .then((t) =>
-                  t.replace("\n", SEP).replace(/^C\$+/, "").replace("\n", SEP)
-                );
-              const tokens = text.split(SEP);
-              const price =
-                tokens[0] !== undefined
-                  ? parseInt(tokens[0].replace(",", ""))
-                  : undefined;
-              const title = tokens.slice(1, tokens.length - 1).join(SEP);
+      const SEP = " - ";
+      const text = await e
+        .getText()
+        .then((t) =>
+          t.replace("\n", SEP).replace(/^C\$+/, "").replace("\n", SEP)
+        );
+      const tokens = text.split(SEP);
+      const price =
+        tokens[0] !== undefined
+          ? parseInt(tokens[0].replace(",", ""))
+          : undefined;
+      const title = tokens.slice(1, tokens.length - 1).join(SEP);
 
-              const result: Item = {
-                platform: "fb",
-                id,
-                details: {
-                  title,
-                  price,
-                },
-                url: `https://facebook.com/marketplace/item/${id}`,
-                imgURLs: [primaryImg].filter(notUndefined),
-                videoURLs: [],
-              };
-              return result;
-            });
-          })
-        )
-      ).filter(notUndefined)
+      return {
+        platform: "fb",
+        id,
+        details: {
+          title,
+          price,
+        },
+        url: `https://facebook.com/marketplace/item/${id}`,
+        imgURLs: [thumb].filter(notUndefined),
+        videoURLs: [],
+      };
+    }
   );
 };
