@@ -1,6 +1,5 @@
-import { sendMessageToChannel } from "../notifications/discord/index.js";
-import { DEBUG, VERBOSE } from "../index.js";
 import { stdout as singleLineStdOut } from "single-line-log";
+import { discordMsg } from "../notifications/discord/index.js";
 import config from "../../../config.json" assert { type: "Config" };
 
 export const waitSeconds = async (s: number) =>
@@ -26,12 +25,15 @@ export const debugLog = (msg?: any) => {
 export const errorLog = (...args: Parameters<typeof console.error>) =>
   console.error(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
 
-export const log = (...args: Parameters<typeof console.log>) =>
-  console.log(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
+export const log = (message: any) => {
+  const date = new Date().toLocaleTimeString("it-IT");
+  console.log(`${date}:`, message);
+  return discordMsg("logs", `\`${date}: ${message}\``);
+};
 
 export const discordLog = (message: any) => {
   console.log(`${new Date().toLocaleTimeString("it-IT")}:`, message);
-  sendMessageToChannel(message);
+  discordMsg("main", message);
 };
 
 export const verboseLog = (...args: Parameters<typeof console.log>) => {

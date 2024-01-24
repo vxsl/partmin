@@ -1,14 +1,19 @@
 import Discord from "discord.js";
 import dotenv from "dotenv";
 import { WebDriver } from "selenium-webdriver";
+import config from "../../../../config.json" assert { type: "Config" };
 import { Item } from "../../process.js";
 import { convertItemToDiscordEmbed } from "./util.js";
+import { log } from "../../util/misc.js";
 
 dotenv.config();
 
 const client = new Discord.Client({ intents: 512 });
 
-const getChannel = async (id: string) => {
+type Channel = "main" | "logs";
+
+const getChannel = async (c: Channel) => {
+  const id = channelIDs[c];
   const result = (await (client.channels.cache.get(id) ??
     client.channels.fetch(id))) as Discord.TextChannel;
   if (!result) {
@@ -18,20 +23,30 @@ const getChannel = async (id: string) => {
 };
 
 const token = process.env.DISCORD_BOT_TOKEN;
-const channelId = process.env.DISCORD_CHANNEL_ID;
+
+const channelIDs = {
+  main: config.testing
+    ? process.env.DISCORD_CHANNEL_ID_TEST
+    : process.env.DISCORD_CHANNEL_ID_MAIN,
+  logs: process.env.DISCORD_CHANNEL_ID_LOGS,
+} as Record<Channel, string>; // TODO remove assertion
 
 if (!token) {
   console.error("No DISCORD_BOT_TOKEN provided in .env");
   process.exit(1);
 }
-if (!channelId) {
+if (!channelIDs.main) {
   console.error("No DISCORD_CHANNEL_ID provided in .env");
+  process.exit(1);
+}
+if (!channelIDs.logs) {
+  console.error("No DISCORD_CHANNEL_ID_LOGS provided in .env");
   process.exit(1);
 }
 
 client.on("ready", async () => {
   // // delete all messages in channel:
-  // const channel = await getChannel(channelId);
+  // const channel = await getChannel("main");
   // const messages = await channel.messages.fetch();
   // await channel.bulkDelete(messages);
   // process.exit();
@@ -75,26 +90,31 @@ client.on("ready", async () => {
     "🌺 Aloha! Ready to find a slice of paradise in your new home?",
   ];
 
-  sendMessageToChannel(greetings[Math.floor(Math.random() * greetings.length)]);
+  const g = greetings[Math.floor(Math.random() * greetings.length)];
+  discordMsg("main", g);
+  log(g);
 });
 
-process.on("uncaughtException", (err) => {
-  sendMessageToChannel(`**Crashed.**\n\`\`\`\n${err}\`\`\``);
+process.on("uncaughtException", async (err) => {
+  await log(`**Crashed.**\n\`\`\`\n${err}\`\`\``);
+  process.exit(1);
 });
 
-export const sendMessageToChannel = async (
+export const discordMsg = async (
+  c: Channel,
   ...args: Parameters<Discord.PartialTextBasedChannelFields["send"]>
 ) => {
-  const channel = await getChannel(channelId);
+  const channel = await getChannel(c);
   if (channel) {
     return channel.send(...args);
   } else {
-    console.error(`Channel with ID ${channelId} not found`);
+    console.error(`Channel with ID ${channelIDs[c]} not found`);
   }
 };
 
-export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
-  const channel = await getChannel(channelId);
+export const discordEmbed = async (driver: WebDriver, item: Item) => {
+  const channel = await getChannel("main");
+
   const embed = convertItemToDiscordEmbed(item);
 
   const descButton = new Discord.ButtonBuilder()
