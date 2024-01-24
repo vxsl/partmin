@@ -13,6 +13,7 @@ import {
   click,
   elementShouldExist,
   withElement,
+  withElements,
 } from "../../util/selenium.js";
 import { MP_ITEM_XPATH } from "./index.js";
 import { findNestedProperty } from "../../util/data.js";
@@ -211,55 +212,52 @@ export const scrapeItems = async (
 ): Promise<Item[] | undefined> => {
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
 
-  let els: WebElement[] = [];
-  for (let i = 0; i < 10; i++) {
-    els = await driver.findElements(By.xpath(MP_ITEM_XPATH));
-    if (els.length) break;
-    await waitSeconds(1);
-  }
-  if (!els.length) return undefined;
-  return (
-    await Promise.all(
-      els.map((e) => {
-        return e.getAttribute("href").then(async (href) => {
-          const id = href.match(/\d+/)?.[0];
-          if (!id) {
-            debugLog(`No id found for element with href ${href}`);
-            return;
-          }
+  return await withElements(
+    () => driver.findElements(By.xpath(MP_ITEM_XPATH)),
+    async (els) =>
+      (
+        await Promise.all(
+          els.map((e) => {
+            return e.getAttribute("href").then(async (href) => {
+              const id = href.match(/\d+/)?.[0];
+              if (!id) {
+                debugLog(`No id found for element with href ${href}`);
+                return;
+              }
 
-          const primaryImg = await withElement(
-            () => driver.findElement(By.css("img")),
-            (e) => e.getAttribute("src")
-          );
+              const primaryImg = await withElement(
+                () => driver.findElement(By.css("img")),
+                (e) => e.getAttribute("src")
+              );
 
-          const SEP = " - ";
-          const text = await e
-            .getText()
-            .then((t) =>
-              t.replace("\n", SEP).replace(/^C\$+/, "").replace("\n", SEP)
-            );
-          const tokens = text.split(SEP);
-          const price =
-            tokens[0] !== undefined
-              ? parseInt(tokens[0].replace(",", ""))
-              : undefined;
-          const title = tokens.slice(1, tokens.length - 1).join(SEP);
+              const SEP = " - ";
+              const text = await e
+                .getText()
+                .then((t) =>
+                  t.replace("\n", SEP).replace(/^C\$+/, "").replace("\n", SEP)
+                );
+              const tokens = text.split(SEP);
+              const price =
+                tokens[0] !== undefined
+                  ? parseInt(tokens[0].replace(",", ""))
+                  : undefined;
+              const title = tokens.slice(1, tokens.length - 1).join(SEP);
 
-          const result: Item = {
-            platform: "fb",
-            id,
-            details: {
-              title,
-              price,
-            },
-            url: `https://facebook.com/marketplace/item/${id}`,
-            imgURLs: [primaryImg].filter(notUndefined),
-            videoURLs: [],
-          };
-          return result;
-        });
-      })
-    )
-  ).filter(notUndefined);
+              const result: Item = {
+                platform: "fb",
+                id,
+                details: {
+                  title,
+                  price,
+                },
+                url: `https://facebook.com/marketplace/item/${id}`,
+                imgURLs: [primaryImg].filter(notUndefined),
+                videoURLs: [],
+              };
+              return result;
+            });
+          })
+        )
+      ).filter(notUndefined)
+  );
 };
