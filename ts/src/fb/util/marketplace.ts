@@ -5,6 +5,7 @@ import { downloadImage } from "../../util/io.js";
 import { notUndefined, waitSeconds } from "../../util/misc.js";
 import { pushover } from "../../util/pushover.js";
 import { MP_ITEM_XPATH } from "./index.js";
+import { imagesDir } from "../../constants.js";
 
 export const visitMarketplace = async (config: Config, driver: WebDriver) => {
   const vals = {
@@ -67,7 +68,7 @@ export const scrapeItems = async (
           const imgSrc = await e
             .findElement(By.css("img"))
             .then((img) => img.getAttribute("src"));
-          await downloadImage(imgSrc, "tmp/images/" + "fb-" + id + ".jpg");
+          await downloadImage(imgSrc, `${imagesDir}/fb-${id}.jpg`);
 
           const SEP = " - ";
           const text = await e

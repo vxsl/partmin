@@ -9,6 +9,7 @@ import {
 } from "selenium-webdriver";
 import { readJSON, writeJSON } from "./io.js";
 import { debugLog } from "./misc.js";
+import { tmpDir } from "../constants.js";
 
 export const waitUntilUrlChanges = async (
   driver: WebDriver,
@@ -126,7 +127,7 @@ export const click = async (element: WebElementPromise | WebElement) =>
 
 export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
   writeJSON(
-    "tmp/cookies.json",
+    `${tmpDir}/cookies.json`,
     await driver
       .manage()
       .getCookies()
@@ -136,7 +137,7 @@ export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
   );
 
 export const loadCookies = async (driver: WebDriver) => {
-  const cookies = await readJSON<Object[]>("tmp/cookies.json");
+  const cookies = await readJSON<Object[]>(`${tmpDir}/cookies.json`);
   await driver.manage().deleteAllCookies();
 
   if (cookies?.length) {

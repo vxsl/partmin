@@ -1,6 +1,7 @@
 import { Config } from "types/config.js";
 import { readJSON, writeJSON } from "./util/io.js";
 import { log } from "./util/misc.js";
+import { tmpDir } from "./constants.js";
 
 export type Platform = "kijiji" | "fb";
 
@@ -32,7 +33,7 @@ export const processItems = async (
   if (!blacklist) {
     blacklist = config.search.blacklist.map((b) => b.toLowerCase());
   }
-  const seenItems = await readJSON<ItemDict>("tmp/seen.json");
+  const seenItems = await readJSON<ItemDict>(`${tmpDir}/seen.json`);
 
   const newItems = items.reduce<Item[]>((n, item) => {
     !(seenItems?.[item.platform] ?? ([] as string[])).includes(item.id) &&
@@ -52,7 +53,7 @@ export const processItems = async (
 
   const platform = items[0].platform;
 
-  await writeJSON("tmp/seen.json", {
+  await writeJSON(`${tmpDir}/seen.json`, {
     ...seenItems,
     [platform]: [
       ...new Set([

@@ -2,6 +2,7 @@ import axios from "axios";
 import FormData from "form-data";
 import { promises as fs } from "fs";
 import dotenv from "dotenv";
+import { imagesDir } from "../constants.js";
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ export const pushover = async (_data: Object, imgName?: string) => {
   let img;
   try {
     if (imgName) {
-      img = await fs.readFile(`tmp/images/${imgName}`);
+      img = await fs.readFile(`${imagesDir}/${imgName}`);
       form.append("attachment", img, { filename: imgName });
     }
   } catch (e) {
