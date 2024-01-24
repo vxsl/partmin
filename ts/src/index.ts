@@ -7,7 +7,14 @@ import { fbMain, fbPerItem } from "./fb/index.js";
 import { kijijiMain, kijijiPerItem, kijijiPre } from "./kijiji/index.js";
 import { notify } from "./notify.js";
 import { Item, Platform, processItems, withUnseenItems } from "./process.js";
-import { discordLog, errorLog, log, randomWait } from "./util/misc.js";
+import {
+  discordLog,
+  errorLog,
+  log,
+  randomWait,
+  verboseLog,
+} from "./util/misc.js";
+import { startDiscordBot } from "./notifications/discord/index.js";
 
 process.title = "partmin";
 
@@ -46,23 +53,24 @@ const runLoop = async (
   while (true) {
     try {
       for (const [platform, { main, perItem }] of Object.entries(runners)) {
+        log(
+          `\n=======================================================\n${platform}\n`
+        );
         const items = await main(config, driver);
+        verboseLog({ items });
         if (!items?.length) {
           log(`Somehow there are no items upon visiting ${platform}.`);
           continue;
         }
-        if (perItem) {
-          await withUnseenItems(
-            items,
-            { markAsSeen: false },
-            async (unseenItems) => {
-              for (const item of unseenItems) {
-                await perItem(config, driver, item);
-              }
-            }
+        await withUnseenItems(items, async (unseenItems) => {
+          for (const item of unseenItems) {
+            await perItem?.(config, driver, item);
+          }
+          await processItems(config, unseenItems).then((arr) =>
+            notify(driver, arr)
           );
-        }
-        await processItems(config, items).then((arr) => notify(driver, arr));
+        });
+        log("\n----------------------------------------\n");
       }
       await randomWait();
     } catch (err) {

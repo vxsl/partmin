@@ -83,9 +83,6 @@ export const saveSeenItems = async (v: SeenItemDict) => {
 
 export const withUnseenItems = async <T>(
   items: Item[],
-  options: {
-    markAsSeen: boolean;
-  },
   fn: (items: Item[]) => Promise<T>
 ) => {
   const seenItems = await loadSeenItems();
@@ -99,10 +96,7 @@ export const withUnseenItems = async <T>(
     unseenItems.push(item);
   }
 
-  if (options?.markAsSeen) {
-    await saveSeenItems(seenItems);
-  }
-
+  await saveSeenItems(seenItems);
   log(
     `${unseenItems.length} unseen item${
       unseenItems.length !== 1 ? "s" : ""
@@ -113,76 +107,64 @@ export const withUnseenItems = async <T>(
   return await fn(unseenItems);
 };
 
-export const processItems = async (config: Config, items: Item[]) => {
+export const processItems = async (config: Config, unseenItems: Item[]) => {
   // TODO sort based on time?
   if (!blacklist) {
     blacklist = config.search.blacklist?.map((b) => b.toLowerCase());
   }
   const blacklistLog: string[] = [];
-  return await withUnseenItems(
-    items,
-    { markAsSeen: true },
-    async (unseenItems) => {
-      const { targets, blacklisted } = await unseenItems.reduce<
-        Promise<{
-          targets: Item[];
-          blacklisted: Item[];
-        }>
-      >(
-        async (filteredPromises, item) => {
-          const result = await filteredPromises;
+  const { targets, blacklisted } = await unseenItems.reduce<
+    Promise<{
+      targets: Item[];
+      blacklisted: Item[];
+    }>
+  >(
+    async (filteredPromises, item) => {
+      const result = await filteredPromises;
 
-          const blacklistOccurrences = findBlacklistedWords(item);
-          if (blacklistOccurrences) {
-            blacklistLog.push(...blacklistOccurrences);
-            result.blacklisted.push(item);
-          } else {
-            result.targets.push(item);
-          }
-          return result;
-        },
-        Promise.resolve({
-          targets: [],
-          blacklisted: [],
-        })
-      );
-
-      const platform = items[0].platform;
-
-      for (const item of targets) {
-        if (
-          item.computed?.locationLinkMD ||
-          !item.details.lat ||
-          !item.details.lon
-        ) {
-          continue;
-        }
-        item.computed = {
-          ...(item.computed ?? {}),
-          locationLinkMD: await approxLocationLink(
-            item.details.lat,
-            item.details.lon
-          ),
-        };
+      const blacklistOccurrences = findBlacklistedWords(item);
+      if (blacklistOccurrences) {
+        blacklistLog.push(...blacklistOccurrences);
+        result.blacklisted.push(item);
+      } else {
+        result.targets.push(item);
       }
-
-      log("\n=======================================================");
-      log(
-        `${platform}: ${targets.length} new results${
-          config.verbose ? ":" : "."
-        }`
-      );
-      verboseLog(targets);
-      if (blacklisted.length) {
-        log(`${blacklisted.length} blacklisted:`);
-        log(blacklistLog.map((b) => `  - found ${b}`).join("\n"));
-      }
-      // TODO compute duplicates
-      log("----------------------------------------\n");
-
-      // process.exit();
-
-      return targets;
-    }
+      return result;
+    },
+    Promise.resolve({
+      targets: [],
+      blacklisted: [],
+    })
   );
+
+  for (const item of targets) {
+    if (
+      item.computed?.locationLinkMD ||
+      !item.details.lat ||
+      !item.details.lon
+    ) {
+      continue;
+    }
+    item.computed = {
+      ...(item.computed ?? {}),
+      locationLinkMD: await approxLocationLink(
+        item.details.lat,
+        item.details.lon
+      ),
+    };
+  }
+
+  log(
+    `${targets.length} new result${targets.length !== 1 ? "s" : ""}${
+      config.verbose ? ":" : "."
+    }`
+  );
+  verboseLog(targets);
+  if (blacklisted.length) {
+    log(`${blacklisted.length} blacklisted:`);
+    log(blacklistLog.map((b) => `  - found ${b}`).join("\n"));
+  }
+  // TODO compute duplicates
+
+  return targets;
 };
