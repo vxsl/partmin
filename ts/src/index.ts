@@ -49,31 +49,25 @@ const runLoop = async (
 
   while (true) {
     try {
-      const newItems: Item[] = [];
       for (const [platform, { main, perItem }] of Object.entries(runners)) {
         const items = await main(config, driver);
-
-        if (items?.length) {
-          if (perItem) {
-            await withUnseenItems(
-              items,
-              { markAsSeen: false },
-              async (unseenItems) => {
-                for (const item of unseenItems) {
-                  await perItem(config, driver, item);
-                }
-              }
-            );
-          }
-          await processItems(config, items).then((arr) =>
-            newItems.push(...arr)
-          );
-        } else {
+        if (!items?.length) {
           log(`Somehow there are no items upon visiting ${platform}.`);
+          continue;
         }
+        if (perItem) {
+          await withUnseenItems(
+            items,
+            { markAsSeen: false },
+            async (unseenItems) => {
+              for (const item of unseenItems) {
+                await perItem(config, driver, item);
+              }
+            }
+          );
+        }
+        await processItems(config, items).then((arr) => notify(driver, arr));
       }
-      // TODO sort based on time
-      await notify(driver, newItems);
       await randomWait();
     } catch (err) {
       errorLog(err);
