@@ -1,4 +1,5 @@
 export type Config = {
+  headless?: boolean;
   testing?: boolean;
   verbose?: boolean;
   debug?: boolean;

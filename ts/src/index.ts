@@ -24,10 +24,8 @@ dotenv.config();
 
 const config = _config as Config; // TODO don't naively assert here
 
-const headless = false;
-
 const ops = new chrome.Options();
-if (headless) {
+if (config.headless) {
   ops.addArguments("--headless");
   ops.addArguments("--disable-gpu");
 }
