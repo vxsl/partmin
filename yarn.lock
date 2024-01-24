@@ -1384,6 +1384,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/haversine@^1.1.8":
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/@types/haversine/-/haversine-1.1.8.tgz#8a83a723a782f404e5323d4ea7798f642a50fdf4"
+  integrity sha512-t2loPC7vWBPGUlViZy0K5KeyHBL5FP7UPhdzQMI98ofy+D9/tv+2ciAB1eAhCSseMDMLqQvS4KNk8PSMC+TOHg==
+
 "@types/he@^1.2.0":
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@types/he/-/he-1.2.3.tgz#c33ca3096f30cbd5d68d78211572de3f9adff75a"
@@ -2837,6 +2842,11 @@ has@^1.0.3:
   integrity sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==
   dependencies:
     function-bind "^1.1.1"
+
+haversine@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/haversine/-/haversine-1.1.1.tgz#05b65e0445aca8f217b0db56877e4d637d3fc8ae"
+  integrity sha512-KW4MS8+krLIeiw8bF5z532CptG0ZyGGFj0UbKMxx25lKnnJ1hMUbuzQl+PXQjNiDLnl1bOyz23U6hSK10r4guw==
 
 he@^1.2.0:
   version "1.2.0"
