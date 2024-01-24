@@ -213,4 +213,6 @@ export const discordEmbed = async (driver: WebDriver, item: Item) => {
   });
 };
 
-client.login(token);
+export const startDiscordBot = async () => {
+  await client.login(token);
+};

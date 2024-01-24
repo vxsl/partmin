@@ -80,6 +80,8 @@ const main = async () => {
 
   driver.manage().setTimeouts({ implicit: 10000 });
 
+  await startDiscordBot();
+
   // await loadCookies(driver);
   try {
     await runLoop(driver, {
