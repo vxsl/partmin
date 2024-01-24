@@ -1,10 +1,10 @@
 export type Config = {
   search: {
-    minArea?: number;
-    parkingIncluded?: boolean;
-    bedrooms: {
-      min: number;
-    };
+    // minArea?: number;
+    // parkingIncluded?: boolean;
+    // bedrooms: {
+    //   min: number;
+    // };
     outdoorSpace?: boolean;
     // propertyType: ["apartment-condo", "house", "townhouse"];
     basementOK: boolean;
