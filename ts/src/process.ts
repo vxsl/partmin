@@ -8,6 +8,31 @@ import { log, verboseLog } from "./util/misc.js";
 
 dotenv.config();
 
+export type Platform = "kijiji" | "fb";
+export type Item = {
+  id: string;
+  platform: Platform;
+  url: string;
+  details: {
+    title: string;
+    price?: number;
+    longDescription?: string;
+    location?: string;
+    lat?: number;
+    lon?: number;
+  };
+  computed?: {
+    locationLinkMD?: string;
+    bulletPoints?: string[];
+  };
+  imgURLs: string[];
+  videoURLs: string[];
+};
+
+interface SeenItemDict {
+  [k: string]: 1 | undefined;
+}
+
 let blacklist: string[] | undefined;
 
 const findBlacklistedWords = (i: Item): string[] | null => {
@@ -45,31 +70,6 @@ const findBlacklistedWords = (i: Item): string[] | null => {
 
   return null;
 };
-
-export type Platform = "kijiji" | "fb";
-
-export type Item = {
-  id: string;
-  platform: Platform;
-  url: string;
-  details: {
-    title: string;
-    price?: number;
-    longDescription?: string;
-    location?: string;
-    lat?: number;
-    lon?: number;
-  };
-  computed?: {
-    locationLinkMD?: string;
-    bulletPoints?: string[];
-  };
-  imgURLs: string[];
-};
-
-interface SeenItemDict {
-  [k: string]: 1 | undefined;
-}
 
 export const loadSeenItems = async () => {
   return await readJSON<SeenItemDict>(`${tmpDir}/seen.json`).then(

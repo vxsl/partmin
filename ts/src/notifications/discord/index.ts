@@ -1,15 +1,8 @@
 import Discord from "discord.js";
 import dotenv from "dotenv";
-import { By, WebDriver } from "selenium-webdriver";
-import { kijijiVisit } from "../../kijiji/util/index.js";
+import { WebDriver } from "selenium-webdriver";
 import { Item } from "../../process.js";
-import { clickByXPath } from "../../util/selenium.js";
-import {
-  attachVideosToEmbed,
-  buildNextImgButton,
-  buildPrevImgButton,
-  convertItemToDiscordEmbed,
-} from "./util.js";
+import { convertItemToDiscordEmbed } from "./util.js";
 
 dotenv.config();
 
@@ -181,9 +174,9 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
 
         if (!descOpened) {
           embed.setDescription(
-            [origDesc, item.details.longDescription]
+            [origDesc, `\`\`\`\n${item.details.longDescription}\n\`\`\``]
               .filter(Boolean)
-              .join("\n---\n")
+              .join("\n")
           );
           descButton.setStyle(Discord.ButtonStyle.Primary);
           // TODO consider automatically closing the description after a minute or so
@@ -197,29 +190,6 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
         // await kijijiVisit(item.url, driver);
         break;
     }
-
-    // await kijijiVisit(item.url, driver);
-    // await clickByXPath(driver, `//div[@id='mainHeroImage']`);
-    // let newImgs: string[];
-    // try {
-    //   const els = await driver.findElements(
-    //     By.xpath('//div[contains(@class, "thumbnailList")]//img')
-    //   );
-    //   newImgs = await Promise.all(
-    //     els.map((element, i) => element.getAttribute("src"))
-    //   );
-    //   imgs.push(
-    //     ...newImgs.filter((src, i) => i > 0 && src && !imgs.includes(src))
-    //   );
-    // } catch (error) {}
-
-    // attachVideosToEmbed(embed, imgs);
-
-    // imgButton.setDisabled(false);
-    // prevImgButton.setDisabled(false).setStyle(Discord.ButtonStyle.Primary);
-    // nextImgButton.setDisabled(false).setStyle(Discord.ButtonStyle.Primary);
-    // await msg.edit({ components: [buttonRow] });
-    // await navigateImg();
   });
 };
 

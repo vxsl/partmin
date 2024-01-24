@@ -23,52 +23,37 @@ export const convertItemToDiscordEmbed = (item: Item) => {
     .filter(notUndefined)
     .join(" / ");
 
-  return (
-    new Discord.EmbedBuilder()
-      .setTitle(item.details.title ?? null)
-      .setDescription(
-        [
-          descriptionHeader,
-          item.computed?.bulletPoints?.map((p) => `- ${p}`).join("\n") ?? "",
-        ]
-          .filter(Boolean)
-          .join("\n")
-        // `${descriptionHeader}\n\n${
-        //   item.computed?.bulletPoints?.map((p) => `- ${p}`).join("\n") ?? ""
-        // }`
-      )
-      .setURL(item.url)
-      .setImage(item.imgURLs[0] ?? null)
-      // .setThumbnail(item.imgURLs[1] ?? null)
-      .setFooter({
-        text: item.platform,
-        iconURL: platformIcons[item.platform],
-      })
-      .setTimestamp(new Date())
-  );
-};
-
-export const attachVideosToEmbed = (
-  embed: Discord.EmbedBuilder,
-  imgUrls: string[]
-) => {
-  const videos = imgUrls
-    .filter((src) => src.startsWith("http://img.youtube"))
-    .map((thumb) => {
-      const match = thumb.match(/(?:\/vi\/|v=)([^&\/\?]+)/)?.[1];
-      return match ? `https://youtu.be/${match}` : "[error]";
-    });
-  if (videos.length) {
-    embed.addFields(
-      videos.length > 1
-        ? {
-            name: `🎥 Video${videos.length > 1 ? "s" : ""}`,
-            value: videos.join("\n"),
-          }
-        : {
-            name: `🎥 Video: ${videos[0]}`,
-            value: " ",
-          }
+  return new Discord.EmbedBuilder()
+    .setTitle(item.details.title ?? null)
+    .setDescription(
+      [
+        descriptionHeader,
+        item.computed?.bulletPoints?.map((p) => `- ${p}`).join("\n") ?? "",
+      ]
+        .filter(Boolean)
+        .join("\n")
+    )
+    .setURL(item.url)
+    .setImage(item.imgURLs[0] ?? null)
+    .setThumbnail(item.imgURLs[1] ?? null)
+    .setFooter({
+      text: item.platform,
+      iconURL: platformIcons[item.platform],
+    })
+    .setTimestamp(new Date())
+    .setFields(
+      !item.videoURLs.length
+        ? []
+        : [
+            item.videoURLs.length > 1
+              ? {
+                  name: `🎥 Video${item.videoURLs.length !== 1 ? "s" : ""}`,
+                  value: item.videoURLs.join("\n"),
+                }
+              : {
+                  name: `🎥 Video: ${item.videoURLs[0]}`,
+                  value: " ",
+                },
+          ]
     );
-  }
 };
