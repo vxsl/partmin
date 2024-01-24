@@ -15,16 +15,23 @@ export type Item = {
   id: string;
   platform: Platform;
   url: string;
-  clickUrl?: string;
   details: {
     title: string;
-    price: number;
-    description: string;
-    location?: string;
-    lat: number;
-    lon: number;
-  };
-  imgUrl?: string;
+    price?: number;
+    description?: string;
+  } & (
+    | {
+        location: string;
+        lat?: number;
+        lon?: number;
+      }
+    | {
+        location?: string;
+        lat: number;
+        lon: number;
+      }
+  );
+  imgURL?: string;
 };
 
 let blacklist: string[] | undefined;
