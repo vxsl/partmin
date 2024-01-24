@@ -98,21 +98,19 @@ client.on("ready", async () => {
   log(g);
 });
 
-process.on("uncaughtException", async (err) => {
-  await log(`**Crashed.**\n\`\`\`\n${err}\`\`\``);
-  process.exit(1);
-});
-
 export const discordMsg = async (
   c: Channel,
   ...args: Parameters<Discord.PartialTextBasedChannelFields["send"]>
 ) => {
   const channel = await getChannel(c);
+  if (!channel.client.isReady()) {
+    console.error(`Client for channel with ID ${channelIDs[c]} not ready`);
+    return;
+  }
   if (channel) {
     return channel.send(...args);
-  } else {
-    console.error(`Channel with ID ${channelIDs[c]} not found`);
   }
+  console.error(`Channel with ID ${channelIDs[c]} not found`);
 };
 
 export const discordEmbed = async (driver: WebDriver, item: Item) => {
@@ -221,4 +219,5 @@ export const discordEmbed = async (driver: WebDriver, item: Item) => {
 
 export const startDiscordBot = async () => {
   await client.login(token);
+  return client;
 };

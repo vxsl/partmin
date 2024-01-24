@@ -115,7 +115,7 @@ const runLoop = async (
 };
 
 const main = async () => {
-  let driver;
+  let driver, discordClient;
   try {
     driver = await new Builder()
       .forBrowser("chrome")
@@ -124,7 +124,7 @@ const main = async () => {
 
     driver.manage().setTimeouts({ implicit: 10000 });
 
-    await startDiscordBot();
+    discordClient = await startDiscordBot();
 
     // await loadCookies(driver);
     await runLoop(driver, {
@@ -140,8 +140,13 @@ const main = async () => {
     });
   } catch (e) {
     if (notifyOnExit) {
-      discordLog("Crashed.");
-      discordLog(e);
+      if (discordClient?.isReady()) {
+        discordLog("Crashed.");
+        discordLog(e);
+      } else {
+        log("Crashed.");
+        log(e);
+      }
     }
   } finally {
     if (driver) {
