@@ -176,7 +176,7 @@ export const visitMarketplace = async (
     return state === "complete";
   });
 
-  await driver.sleep(2000);
+  await elementShouldExist("xpath", MP_ITEM_XPATH, driver);
 
   // ensure facebook didn't ignore our requested radius:
   // TODO ensure lat and lon as well?

@@ -1,6 +1,6 @@
 import { WebDriver } from "selenium-webdriver";
 import { decodeMapDevelopersURL } from "../util/geo.js";
-import { debugLog, randomWait, waitSeconds } from "../util/misc.js";
+import { debugLog, randomWait } from "../util/misc.js";
 import {
   scrapeItems,
   visitMarketplace,
@@ -9,6 +9,7 @@ import {
 
 import { Config } from "types/config.js";
 import { Item } from "../process.js";
+import { withDOMChangesBlocked } from "../util/selenium.js";
 
 export const fbMain = async (config: Config, driver: WebDriver) => {
   const items: Item[] = [];
@@ -16,7 +17,9 @@ export const fbMain = async (config: Config, driver: WebDriver) => {
   for (const r of radii) {
     debugLog(`visiting fb marketplace for radius ${JSON.stringify(r)}`);
     await visitMarketplace(config, driver, r);
-    await scrapeItems(driver).then((arr) => items.push(...(arr ?? [])));
+    await withDOMChangesBlocked(driver, async () => {
+      await scrapeItems(driver).then((arr) => items.push(...(arr ?? [])));
+    });
     await randomWait({ short: true, suppressLog: true });
   }
   return items;

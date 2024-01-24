@@ -237,3 +237,28 @@ export const withElement = async <F extends (el: WebElement) => any>(
     `Failed to execute action after ${maxAttempts} attempts at finding element`
   );
 };
+export const withDOMChangesBlocked = async (
+  driver: WebDriver,
+  fn: Function
+) => {
+  await driver.executeScript(`
+    window.ogAppendChild = Node.prototype.appendChild;
+    window.ogRemoveChild = Node.prototype.removeChild;
+    window.ogInsertBefore = Node.prototype.insertBefore;
+    Node.prototype.appendChild = function () {};
+    Node.prototype.removeChild = function () {};
+    Node.prototype.insertBefore = function () {};
+  `);
+
+  try {
+    await fn();
+  } finally {
+    await driver.executeScript(
+      `
+      Node.prototype.appendChild = window.ogAppendChild;
+      Node.prototype.removeChild = window.ogRemoveChild;
+      Node.prototype.insertBefore = window.ogInsertBefore;
+    `
+    );
+  }
+};
