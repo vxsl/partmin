@@ -3,6 +3,7 @@ export type Config = {
   testing?: boolean;
   verbose?: boolean;
   debug?: boolean;
+  skipGreeting?: boolean;
 
   search: {
     // minArea?: number;
