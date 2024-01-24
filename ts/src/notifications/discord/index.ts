@@ -43,9 +43,46 @@ client.on("ready", async () => {
   // await channel.bulkDelete(messages);
   // process.exit();
 
-  sendMessageToChannel(
-    "I'm online! I'll send you a message when I find something."
-  );
+  const greetings = [
+    "👋 Hey there! I'm ready to help you find the perfect apartment!",
+    "🏠 Welcome! Let's embark on this apartment hunting adventure together!",
+    "🌟 Greetings! Ready to dive into the world of cozy living spaces?",
+    "🚀 Hey! I'm on a mission to find your dream apartment. Let's get started!",
+    "🔍 Searching for the ideal apartment? I've got your back!",
+    "🎉 Woohoo! I'm here to make apartment hunting as exciting as possible!",
+    "🌈 Hello! Let's make finding your new home a colorful experience!",
+    "💼 Time to upgrade your living situation! Let's find that perfect pad.",
+    "🌆 Welcome, urban explorer! Let's discover the best apartments in town!",
+    "🚪 Knock, knock! Who's ready to open the door to their new home?",
+    "🎈 Greetings, seeker of sanctuary! Let's find your happy place.",
+    "💫 Hey! Ready to turn your apartment dreams into reality?",
+    "🏰 Welcome to the kingdom of apartments! Your castle awaits.",
+    "🌺 Aloha! Let's find an apartment that feels like a tropical paradise.",
+    "🎊 It's apartment-hunting time! Get ready for some fun discoveries!",
+    "🕵️‍♂️ Agent Apartment at your service! Let the hunt begin!",
+    "🌠 Greetings, stargazer! Let's find a home that's out of this world.",
+    "🛋️ Ready to cozy up in a new place? Let's find the perfect spot!",
+    "🚪 Opening doors to new opportunities! Let's find your dream apartment.",
+    "🎁 Surprise! I'm here to unwrap the best apartment options for you.",
+    "🏙️ City slicker or suburban explorer? Let's find your ideal habitat!",
+    "🔑 Unlocking the door to your next adventure! Let's find a great apartment.",
+    "🏡 Home is where the heart is. Let's find the perfect place for yours!",
+    "🌟 Starship Apartment, ready for liftoff! Let's explore the housing galaxy.",
+    "🍀 Luck be your guide on this apartment hunting journey! Let's find gold!",
+    "🌈 Rainbow of possibilities awaits! Let's find your perfect color.",
+    "🎮 Game on! Ready to level up your living situation?",
+    "🎵 Cue the apartment hunting anthem! Let's find your harmonious home.",
+    "🌌 Welcome to the cosmic quest for the perfect apartment! Let's explore.",
+    "🏰 Castle or condo? Let's find the fortress that suits you best!",
+    "🌆 City lights or countryside charm? Let's discover your dream setting!",
+    "🛌 Dreaming of the perfect sleep sanctuary? Let's make it a reality!",
+    "🌠 Starry-eyed for a new home? Let's make your wish come true!",
+    "🏠 Knock, knock! Who's ready to open the door to happiness?",
+    "🚀 Blast off into the world of fantastic apartments! Let's explore together.",
+    "🌺 Aloha! Ready to find a slice of paradise in your new home?",
+  ];
+
+  sendMessageToChannel(greetings[Math.floor(Math.random() * greetings.length)]);
 });
 
 process.on("uncaughtException", (err) => {
