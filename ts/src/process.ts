@@ -94,6 +94,8 @@ export const withUnseenItems = async <T>(
     unseenItems.push(item);
   }
 
+  const result = await fn(unseenItems);
+
   await saveSeenItems(seenItems);
   log(
     `${unseenItems.length} unseen item${
@@ -102,7 +104,7 @@ export const withUnseenItems = async <T>(
   );
   verboseLog(unseenItems);
 
-  return await fn(unseenItems);
+  return result;
 };
 
 export const processItems = async (config: Config, unseenItems: Item[]) => {
