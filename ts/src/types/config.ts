@@ -13,9 +13,6 @@ export type Config = {
     location: {
       city: string;
       region: string;
-      lat: number;
-      lng: number;
-      radius: number;
       mapDevelopersURL: string;
     };
     price: {

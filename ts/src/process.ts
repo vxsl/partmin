@@ -1,11 +1,11 @@
+import axios from "axios";
+import dotenv from "dotenv";
 import { Config } from "types/config.js";
 import { tmpDir } from "./constants.js";
 import { VERBOSE } from "./index.js";
-import { withinRadius } from "./util/geo.js";
+import { withinRadii } from "./util/geo.js";
 import { readJSON, writeJSON } from "./util/io.js";
 import { log, verboseLog } from "./util/misc.js";
-import dotenv from "dotenv";
-import axios from "axios";
 
 dotenv.config();
 
@@ -63,7 +63,7 @@ export const processItems = async (config: Config, items: Item[]) => {
       result.newItemCount++;
       if (isBlacklisted) {
         result.blacklistedNewItems.push(item);
-      } else if (!withinRadius(item.details.lat, item.details.lon, config)) {
+      } else if (!withinRadii(item.details.lat, item.details.lon, config)) {
         result.outsideSearchNewItems.push(item);
       } else {
         result.validNewItems.push(item);

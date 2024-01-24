@@ -2,22 +2,69 @@ import haversine from "haversine";
 import { Config } from "../types/config.js";
 import { verboseLog } from "./misc.js";
 
-export const withinRadius = (lat: number, lon: number, config: Config) => {
-  verboseLog(
-    `checking if ${lat}, ${lon} is within ${config.search.location.radius}km radius of ${config.search.location.lat}, ${config.search.location.lng}`
-  );
-  const center = {
-    latitude: config.search.location.lat,
-    longitude: config.search.location.lng,
-  };
-  const target = { latitude: lat, longitude: lon };
-  const distance = haversine(center, target, { unit: "km" });
-  const result = distance <= config.search.location.radius;
+const decodeMapDevelopersURL = (
+  url: string
+): { lat: number; lon: number; radius: number }[] => {
+  const circlesParam = url.match(/circles=([^&]*)/)?.[1];
+  if (!circlesParam) {
+    throw new Error("Error parsing mapDevelopersURL");
+  }
+  const decodedCirclesParam = decodeURIComponent(circlesParam);
+  const circleData = JSON.parse(decodedCirclesParam);
+  return circleData.map((circle: string) => {
+    const [radius, lat, lon] = circle;
+    return {
+      lat: parseFloat(lat),
+      lon: parseFloat(lon),
+      radius: parseFloat(radius) / 1000,
+    };
+  });
+};
 
+export const withinRadii = (lat: number, lon: number, config: Config) => {
+  const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
+  verboseLog(`checking if ${lat}, ${lon} is within ${radii.length} radii:`);
+  verboseLog(radii);
+  let success: { lat: number; lon: number } | undefined;
+  const result = radii.some((radius) => {
+    const result = withinRadius({
+      lat,
+      lon,
+      radiusLat: radius.lat,
+      radiusLon: radius.lon,
+      radiusDiameterKm: radius.radius,
+    });
+    if (result) {
+      success = radius;
+    }
+    return result;
+  });
   verboseLog(
-    `(${lat}, ${lon}) is${!result ? " NOT" : ""} within radius (${
-      config.search.location.lat
-    }, ${config.search.location.lng})`
+    success
+      ? `(${lat}, ${lon}) is within (${success.lat}, ${success.lon})`
+      : `(${lat}, ${lon}) is not within any of the ${radii.length} radii`
   );
+  return result;
+};
+
+export const withinRadius = ({
+  lat,
+  lon,
+  radiusLat,
+  radiusLon,
+  radiusDiameterKm,
+}: {
+  lat: number;
+  lon: number;
+  radiusLat: number;
+  radiusLon: number;
+  radiusDiameterKm: number;
+}) => {
+  const distance = haversine(
+    { latitude: radiusLat, longitude: radiusLon },
+    { latitude: lat, longitude: lon },
+    { unit: "km" }
+  );
+  const result = distance <= radiusDiameterKm;
   return result;
 };
