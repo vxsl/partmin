@@ -6,7 +6,7 @@ import _config from "../../config.json" assert { type: "json" };
 import { kijijiMain, kijijiPre } from "./kijiji/index.js";
 import { notify } from "./notify.js";
 import { Item, Platform, processItems, withUnseenItems } from "./process.js";
-import { errorLog, log, randomWait } from "./util/misc.js";
+import { discordLog, errorLog, log, randomWait } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
 import { fbMain, fbPerItem } from "./fb/index.js";
 
@@ -104,10 +104,8 @@ const main = async () => {
     });
   } catch (e) {
     if (notifyOnExit) {
-      console.error(e);
-      pushover({
-        message: `⚠️ Something went wrong. You will no longer receive notifications.`,
-      });
+      discordLog("Crashed.");
+      discordLog(e);
     }
   } finally {
     if (driver) {

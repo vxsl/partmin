@@ -104,8 +104,17 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
   const channel = await getChannel(channelId);
   const embed = convertItemToDiscordEmbed(item);
 
+  const descButton = new Discord.ButtonBuilder()
+    .setCustomId("desc")
+    .setLabel(`📄`)
+    .setStyle(Discord.ButtonStyle.Secondary);
+
+  const buttonRow = new Discord.ActionRowBuilder<Discord.ButtonBuilder>({
+    components: [descButton],
+  });
+
   if (item.imgURLs.length <= 1) {
-    await channel.send({ embeds: [embed] });
+    await channel.send({ embeds: [embed], components: [buttonRow] });
     return;
   }
 
@@ -113,19 +122,18 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
     .setCustomId("img")
     .setLabel(`️${1} / ${item.imgURLs.length}`)
     .setStyle(Discord.ButtonStyle.Secondary);
-  const buttonRow = new Discord.ActionRowBuilder<Discord.ButtonBuilder>({
-    components: [
-      new Discord.ButtonBuilder()
-        .setCustomId("prevImg")
-        .setLabel("⬅")
-        .setStyle(Discord.ButtonStyle.Secondary),
-      imgButton,
-      new Discord.ButtonBuilder()
-        .setCustomId("nextImg")
-        .setLabel(`➡`)
-        .setStyle(Discord.ButtonStyle.Secondary),
-    ],
-  });
+  buttonRow.setComponents([
+    new Discord.ButtonBuilder()
+      .setCustomId("prevImg")
+      .setLabel("⬅")
+      .setStyle(Discord.ButtonStyle.Secondary),
+    imgButton,
+    new Discord.ButtonBuilder()
+      .setCustomId("nextImg")
+      .setLabel(`➡`)
+      .setStyle(Discord.ButtonStyle.Secondary),
+    descButton,
+  ]);
 
   const msg = await channel.send({
     embeds: [embed],
@@ -136,13 +144,17 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
     filter: (interaction) => {
       interaction.deferUpdate();
       return (
-        interaction.customId === "nextImg" || interaction.customId === "prevImg"
+        interaction.customId === "nextImg" ||
+        interaction.customId === "prevImg" ||
+        interaction.customId === "desc"
       );
     },
     time: 24 * 3600000,
   });
 
   let i = 0;
+  let descOpened = false;
+  let origDesc = embed.data.description ?? null;
 
   const navigateImg = async (backwards = false) => {
     const len = item.imgURLs.length;
@@ -156,13 +168,34 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
   };
 
   collector.on("collect", async (interaction) => {
-    if (interaction.customId === "nextImg") {
-      await navigateImg();
-      return;
-    }
-    if (interaction.customId === "prevImg") {
-      await navigateImg(true);
-      return;
+    switch (interaction.customId) {
+      case "nextImg":
+        await navigateImg();
+        break;
+      case "prevImg":
+        await navigateImg(true);
+        break;
+      case "desc":
+        descButton.setDisabled(true);
+        msg.edit({ components: [buttonRow] });
+
+        if (!descOpened) {
+          embed.setDescription(
+            [origDesc, item.details.longDescription]
+              .filter(Boolean)
+              .join("\n---\n")
+          );
+          descButton.setStyle(Discord.ButtonStyle.Primary);
+          // TODO consider automatically closing the description after a minute or so
+        } else {
+          embed.setDescription(origDesc);
+          descButton.setStyle(Discord.ButtonStyle.Secondary);
+        }
+        descOpened = !descOpened;
+        descButton.setDisabled(false);
+        await msg.edit({ embeds: [embed], components: [buttonRow] });
+        // await kijijiVisit(item.url, driver);
+        break;
     }
 
     // await kijijiVisit(item.url, driver);

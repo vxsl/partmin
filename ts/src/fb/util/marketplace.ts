@@ -12,6 +12,7 @@ import {
   clearBrowsingData,
   click,
   elementShouldExist,
+  withElement,
 } from "../../util/selenium.js";
 import { MP_ITEM_XPATH } from "./index.js";
 import { findNestedProperty } from "../../util/data.js";
@@ -66,7 +67,6 @@ export const visitMarketplaceListing = async (
     const loc = productDetails.target.home_address.street;
     if (loc) {
       item.details.location = loc;
-      if (!item.computed) item.computed = {};
       const full =
         productDetails.target.pdp_display_sections
           .find((s: any) => s.section_type === "UNIT_SUBTITLE")
@@ -222,9 +222,10 @@ export const scrapeItems = async (
             return;
           }
 
-          const primaryImg = await e
-            .findElement(By.css("img"))
-            .then((img) => img.getAttribute("src"));
+          const primaryImg = await withElement(
+            () => driver.findElement(By.css("img")),
+            (e) => e.getAttribute("src")
+          );
 
           const SEP = " - ";
           const text = await e
@@ -247,7 +248,7 @@ export const scrapeItems = async (
               price,
             },
             url: `https://facebook.com/marketplace/item/${id}`,
-            imgURLs: [primaryImg],
+            imgURLs: [primaryImg].filter(notUndefined),
           };
           return result;
         });
