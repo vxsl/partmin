@@ -17,7 +17,9 @@ const findBlacklistedWords = (i: Item): string[] | null => {
     blacklist?.some((_b) => {
       const b = _b.toLowerCase();
 
-      const descriptionMatch = i.details.description?.toLowerCase().includes(b);
+      const descriptionMatch = i.details.longDescription
+        ?.toLowerCase()
+        .includes(b);
       if (descriptionMatch) {
         result.push(`'${_b}' in item ${i.id}'s description`);
         return true;
@@ -53,7 +55,7 @@ export type Item = {
   details: {
     title: string;
     price?: number;
-    description?: string;
+    longDescription?: string;
     location?: string;
     lat?: number;
     lon?: number;

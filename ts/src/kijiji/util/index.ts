@@ -74,7 +74,7 @@ export const scrapeItems = (config: Config, rssUrl: string): Promise<Item[]> =>
         id,
         details: {
           title: item.title ? he.decode(item.title) : id,
-          description: item.contentSnippet,
+          longDescription: item.contentSnippet,
           price: item.price,
           lat: item.lat,
           lon: item.lon,

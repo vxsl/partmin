@@ -56,7 +56,7 @@ export const visitMarketplaceListing = async (
   try {
     const desc = productDetails.target.redacted_description.text;
     if (desc) {
-      item.details.description = desc;
+      item.details.longDescription = desc;
     }
   } catch {
     // TODO
