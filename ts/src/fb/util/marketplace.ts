@@ -85,6 +85,8 @@ export const visitMarketplace = async (
 export const scrapeItems = async (
   driver: WebDriver
 ): Promise<Item[] | undefined> => {
+  await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
+
   let els: WebElement[] = [];
   for (let i = 0; i < 10; i++) {
     els = await driver.findElements(By.xpath(MP_ITEM_XPATH));
