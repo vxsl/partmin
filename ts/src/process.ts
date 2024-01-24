@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { Config } from "types/config.js";
 import { tmpDir } from "./constants.js";
 import { VERBOSE } from "./index.js";
-import { withinRadii } from "./util/geo.js";
+import { generateLocationLink, isWithinRadii } from "./util/geo.js";
 import { readJSON, writeJSON } from "./util/io.js";
 import { log, verboseLog } from "./util/misc.js";
 
@@ -27,10 +27,6 @@ export type Item = {
   imgUrl?: string;
 };
 
-const googleMapsBaseURL = "https://www.google.com/maps/search/?api=1&query=";
-
-type ItemDict = { [k in Platform]: string };
-
 let blacklist: string[] | undefined;
 
 export const itemIsBlacklisted = (item: Item) =>
@@ -44,17 +40,11 @@ export const processItems = async (config: Config, items: Item[]) => {
     `${tmpDir}/seen.json`
   ).then((arr) => arr ?? {});
 
-  const {
-    newItemCount,
-    validNewItems,
-    blacklistedNewItems,
-    outsideSearchNewItems,
-  } = await items.reduce<
+  const { newItemIDs, validNewItems, blacklistedNewItems } = await items.reduce<
     Promise<{
-      newItemCount: number;
+      newItemIDs: string[];
       validNewItems: Item[];
       blacklistedNewItems: Item[];
-      outsideSearchNewItems: Item[];
     }>
   >(
     async (filteredPromises, item) => {
@@ -65,20 +55,18 @@ export const processItems = async (config: Config, items: Item[]) => {
         return result;
       }
       seenItems[k] = 1;
+      result.newItemIDs.push(item.id);
       if (isBlacklisted) {
         result.blacklistedNewItems.push(item);
-      } else if (!withinRadii(item.details.lat, item.details.lon, config)) {
-        result.outsideSearchNewItems.push(item);
       } else {
         result.validNewItems.push(item);
       }
       return result;
     },
     Promise.resolve({
-      newItemCount: 0,
+      newItemIDs: [],
       validNewItems: [],
       blacklistedNewItems: [],
-      outsideSearchNewItems: [],
     })
   );
 
@@ -86,7 +74,7 @@ export const processItems = async (config: Config, items: Item[]) => {
 
   await writeJSON(`${tmpDir}/seen.json`, seenItems);
 
-  if (!validNewItems.length && !blacklistedNewItems.length) {
+  if (!newItemIDs.length) {
     log(`No new items on ${platform}. (checked ${items.length})`);
     return [];
   }
@@ -104,7 +92,7 @@ export const processItems = async (config: Config, items: Item[]) => {
   log(
     `Checked ${items.length} item${
       items.length === 1 ? "" : "s"
-    } on ${platform}, found ${newItemCount} new${VERBOSE ? ":" : "."}`
+    } on ${platform}, found ${newItemIDs.length} new${VERBOSE ? ":" : "."}`
   );
   log(
     // TODO think of a better word than 'valid'
@@ -120,13 +108,7 @@ export const processItems = async (config: Config, items: Item[]) => {
       } blacklisted.`
     );
   }
-  if (outsideSearchNewItems.length) {
-    log(
-      `${outsideSearchNewItems.length} ${
-        outsideSearchNewItems.length === 1 ? "was" : "were"
-      } outside the search radius.`
-    );
-  }
+  // TODO compute duplicates
   log("----------------------------------------\n");
 
   return validNewItems;
