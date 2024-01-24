@@ -71,15 +71,13 @@ const findBlacklistedWords = (i: Item): string[] | null => {
   return null;
 };
 
-export const loadSeenItems = async () => {
-  return await readJSON<SeenItemDict>(`${tmpDir}/seen.json`).then(
-    (arr) => arr ?? {}
-  );
-};
-
-export const saveSeenItems = async (v: SeenItemDict) => {
-  await writeJSON(`${tmpDir}/seen.json`, v);
-};
+const seenPath = config.testing
+  ? `${tmpDir}/test-seen.json`
+  : `${tmpDir}/seen.json`;
+export const loadSeenItems = async () =>
+  await readJSON<SeenItemDict>(seenPath).then((arr) => arr ?? {});
+export const saveSeenItems = async (v: SeenItemDict) =>
+  await writeJSON(seenPath, v);
 
 export const withUnseenItems = async <T>(
   items: Item[],
