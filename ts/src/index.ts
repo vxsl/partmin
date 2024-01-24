@@ -15,6 +15,8 @@ import {
   verboseLog,
 } from "./util/misc.js";
 import { startDiscordBot } from "./notifications/discord/index.js";
+import { tmpDir } from "./constants.js";
+import fs from "fs";
 
 process.title = "partmin";
 
@@ -41,13 +43,44 @@ const runLoop = async (
   runners: Partial<{
     [k in Platform]: {
       main: (c: Config, d: WebDriver) => Promise<Item[] | undefined>;
-      pre?: (c: Config, d: WebDriver) => Promise<void>;
+      pre?: (c: Config, d: WebDriver, configChanged?: boolean) => Promise<void>;
       perItem?: (c: Config, d: WebDriver, i: Item) => Promise<void>;
     };
   }>
 ) => {
+  // TODO don't do all this crap
+  const tmpDirExists = await fs.promises
+    .access(tmpDir)
+    .then(() => true)
+    .catch(() => false);
+  if (!tmpDirExists) {
+    await fs.promises.mkdir(tmpDir);
+  }
+  const configExists = await fs.promises
+    .access(`${tmpDir}/config.json`)
+    .then(() => true)
+    .catch(() => false);
+  if (!configExists) {
+    await fs.promises.writeFile(`${tmpDir}/config.json`, JSON.stringify({}));
+  }
+
+  const cachedConfig = await fs.promises.readFile(
+    `${tmpDir}/config.json`,
+    "utf-8"
+  );
+  let configChanged =
+    JSON.stringify(JSON.parse(cachedConfig)?.search, null, 2) !==
+    JSON.stringify(config.search, null, 2);
+
+  if (configChanged) {
+    log("Config change detected.");
+    await fs.promises.writeFile(
+      `${tmpDir}/config.json`,
+      JSON.stringify(config, null, 2)
+    );
+  }
   for (const { pre } of Object.values(runners)) {
-    await (pre?.(config, driver) ?? Promise.resolve());
+    await (pre?.(config, driver, configChanged) ?? Promise.resolve());
   }
 
   while (true) {
