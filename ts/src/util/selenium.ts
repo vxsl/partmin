@@ -187,10 +187,10 @@ export const elementShouldExist = async (
     ? driver.wait(until.elementLocated(By.css(selector)), 10 * 1000)
     : Promise.resolve());
 
-export const withElement = async (
+export const withElement = async <F extends (el: WebElement) => any>(
   getEl: () => WebElement | WebElementPromise,
-  fn: (el: WebElement) => {}
-) => {
+  fn: F
+): Promise<ReturnType<F>> => {
   let attempts = 0;
   const maxAttempts = 3;
   while (++attempts <= maxAttempts) {
@@ -201,10 +201,12 @@ export const withElement = async (
     }
     try {
       const el = await getEl();
-      await fn(el);
-      break;
+      return await fn(el);
     } catch (e) {
       debugLog(e);
     }
   }
+  throw new Error(
+    `Failed to execute action after ${maxAttempts} attempts at finding element`
+  );
 };
