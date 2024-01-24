@@ -1,31 +1,42 @@
-import { Item, Platform } from "process.js";
+import { Item } from "process.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { Config } from "types/config.js";
-import { downloadImage } from "../../util/io.js";
-import { notUndefined, waitSeconds } from "../../util/misc.js";
-import { pushover } from "../../util/pushover.js";
+import { Radius } from "../../util/geo.js";
+import {
+  debugLog,
+  discordLog,
+  notUndefined,
+  waitSeconds,
+} from "../../util/misc.js";
+import { elementShouldExist } from "../../util/selenium.js";
 import { MP_ITEM_XPATH } from "./index.js";
-import { imagesDir } from "../../constants.js";
 
-export const visitMarketplace = async (config: Config, driver: WebDriver) => {
+export const visitMarketplace = async (
+  config: Config,
+  driver: WebDriver,
+  radius: Radius,
+  tries: number = 0
+) => {
   const vals = {
     sortBy: "creation_time_descend",
-    exact: false,
-    propertyType: config.search.propertyType,
+    exact: true,
+    // propertyType: config.search.propertyType,
     minPrice: config.search.price.min,
     maxPrice: config.search.price.max,
-    minAreaSize: config.search.minArea
-      ? Math.floor(config.search.minArea * 0.09290304 * 100) / 100
-      : undefined,
-    latitude: config.search.location.lat,
-    longitude: config.search.location.lng,
+    // minBedrooms: config.search.bedrooms.min,
+
+    // minAreaSize: config.search.minArea
+    //   ? Math.floor(config.search.minArea * 0.09290304 * 100) / 100
+    //   : undefined,
+
+    latitude: radius.lat,
+    longitude: radius.lon,
     radius:
-      config.search.location.radius +
+      radius.diam +
       Math.random() * 0.00000001 +
       Math.random() * 0.0000001 +
       Math.random() * 0.000001 +
       Math.random() * 0.00001,
-    minBedrooms: config.search.bedrooms.min,
   };
 
   const city = config.search.location.city;
@@ -35,9 +46,40 @@ export const visitMarketplace = async (config: Config, driver: WebDriver) => {
       url += `${k}=${v}&`;
     }
   }
+  debugLog(`fb: ${url}`);
 
   await driver.get(url);
-  return url;
+
+  await driver.wait(async () => {
+    const state = (await driver.executeScript(
+      "return document.readyState"
+    )) as string;
+    return state === "complete";
+  });
+
+  await driver.sleep(2000);
+
+  // ensure facebook didn't ignore our requested radius:
+  // TODO ensure lat and lon as well?
+  const urlRadius = await driver
+    .getCurrentUrl()
+    .then((url) => url.match(/radius=([^&]+)/)?.[1])
+    .then((r) => parseFloat(r ?? "0"));
+  if (urlRadius === undefined) {
+    throw new Error("Could not find radius in url");
+  }
+  const minRadius = radius.diam * 0.9;
+  const maxRadius = radius.diam * 1.1;
+  if (urlRadius < minRadius || urlRadius > maxRadius) {
+    const maxTries = 3;
+    if (++tries < maxTries) {
+      visitMarketplace(config, driver, radius, tries);
+    } else {
+      discordLog(
+        `Facebook Marketplace is misbehaving by refusing to correctly load ${url}.`
+      );
+    }
+  }
 };
 
 export const scrapeItems = async (
