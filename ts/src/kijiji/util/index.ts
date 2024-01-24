@@ -7,11 +7,11 @@ import { debugLog, waitSeconds } from "../../util/misc.js";
 import { clearAlternate, clickByXPath, type } from "../../util/selenium.js";
 import { baseURL } from "./constants.js";
 import { setKijijiFilters } from "./filter-interactions.js";
+import { isWithinRadii } from "../../util/geo.js";
 
 const parser = new Parser({
   customFields: {
     item: [
-      // ["g-core:location", "location"],
       ["g-core:price", "price"],
       ["geo:lat", "lat"],
       ["geo:long", "lon"],
@@ -66,7 +66,7 @@ export const scrapeItems = (config: Config, rssUrl: string): Promise<Item[]> =>
     output.items.reduce((acc, item) => {
       const url = item.link;
       const id = url?.split("/").pop();
-      if (!url || !id) {
+      if (!url || !id || !isWithinRadii(item.lat, item.lon, config)) {
         return acc;
       }
       const result: Item = {
@@ -74,12 +74,11 @@ export const scrapeItems = (config: Config, rssUrl: string): Promise<Item[]> =>
         id,
         details: {
           title: item.title ? he.decode(item.title) : id,
-          description: item.contentSnippet ?? "",
+          description: item.contentSnippet,
           price: item.price,
           lat: item.lat,
           lon: item.lon,
         },
-        clickUrl: url,
         url,
         imgURL: item.enclosure?.url,
       };
