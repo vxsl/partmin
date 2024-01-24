@@ -5,9 +5,10 @@ import { Config } from "types/config.js";
 import _config from "../../config.json" assert { type: "json" };
 import { kijijiMain, kijijiPre } from "./kijiji/index.js";
 import { notify } from "./notify.js";
-import { Item, processItems } from "./process.js";
+import { Item, Platform, processItems } from "./process.js";
 import { errorLog, log, randomWait } from "./util/misc.js";
 import { pushover } from "./util/pushover.js";
+import { fbMain } from "./fb/index.js";
 
 export const DEBUG = true; // TODO cli arg
 export const VERBOSE = false; // TODO cli arg
@@ -34,19 +35,32 @@ let notifyOnExit = true;
 
 const runLoop = async (
   driver: WebDriver,
-  handler: (c: Config, d: WebDriver) => Promise<Item[] | undefined>,
-  prepare?: (c: Config, d: WebDriver) => Promise<void>
+  runners: Partial<{
+    [k in Platform]: {
+      main: (c: Config, d: WebDriver) => Promise<Item[] | undefined>;
+      pre?: (c: Config, d: WebDriver) => Promise<void>;
+    };
+  }>
 ) => {
-  await (prepare?.(config, driver) ?? Promise.resolve());
+  for (const { pre } of Object.values(runners)) {
+    await (pre?.(config, driver) ?? Promise.resolve());
+  }
+
   while (true) {
     try {
-      const items = await handler(config, driver);
-      if (items?.length) {
-        const newItems = await processItems(config, items);
-        await notify(driver, newItems);
-      } else {
-        log("Somehow there are no items.");
+      const newItems: Item[] = [];
+      for (const [platform, { main }] of Object.entries(runners)) {
+        const items = await main(config, driver);
+        if (items?.length) {
+          await processItems(config, items).then((arr) =>
+            newItems.push(...arr)
+          );
+        } else {
+          log(`Somehow there are no items upon visiting ${platform}.`);
+        }
       }
+      // TODO sort based on time
+      await notify(driver, newItems);
       await randomWait();
     } catch (err) {
       errorLog(err);
@@ -63,15 +77,17 @@ const main = async () => {
 
   driver.manage().setTimeouts({ implicit: 10000 });
 
-  // // Close the WebDriver when the Node.js process exits
-  // process.on("beforeExit", async () => {
-  //   console.log("HIII");
-  // });
-
   // await loadCookies(driver);
   try {
-    // runLoop(driver, fbMain);
-    await runLoop(driver, kijijiMain, kijijiPre);
+    await runLoop(driver, {
+      fb: {
+        main: fbMain,
+      },
+      // kijiji: {
+      //   main: kijijiMain,
+      //   pre: kijijiPre,
+      // },
+    });
   } catch (e) {
     if (notifyOnExit) {
       console.error(e);
