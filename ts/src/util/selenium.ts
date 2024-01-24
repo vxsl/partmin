@@ -7,10 +7,9 @@ import {
   WebElementPromise,
   until,
 } from "selenium-webdriver";
-import { readJSON, writeJSON } from "./io.js";
-import { debugLog } from "./misc.js";
 import { tmpDir } from "../constants.js";
-import { Item } from "../process.js";
+import { readJSON, writeJSON } from "./io.js";
+import { debugLog, verboseLog, waitSeconds } from "./misc.js";
 
 export const clearBrowsingData = async (driver: WebDriver) => {
   if (!(await driver.getCurrentUrl()).startsWith("data")) {
@@ -194,11 +193,11 @@ export const withElementsByXpath = async <T>(
   fn: (el: WebElement) => Promise<T | undefined>
 ): Promise<T[]> => {
   const results = [];
-  for (
-    let i = 0;
-    i < (await driver.findElements(By.xpath(xpath))).length;
-    i++
-  ) {
+  const len = await driver
+    .findElements(By.xpath(xpath))
+    .then((els) => els.length);
+  for (let i = 0; i < len; i++) {
+    verboseLog(`withElementsByXpath (${i + 1}/${len}): ${xpath}`);
     const r = await withElement(
       () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`)),
       fn
@@ -221,10 +220,15 @@ export const withElement = async <F extends (el: WebElement) => any>(
       debugLog(
         `Attempting action again (${attempts - 1} of ${maxAttempts - 1})`
       );
+      await waitSeconds(2);
     }
     try {
       const el = await getEl();
-      return await fn(el);
+      const res = await fn(el);
+      if (attempts > 1) {
+        debugLog("Action completed successfully.");
+      }
+      return res;
     } catch (e) {
       debugLog(e);
     }
