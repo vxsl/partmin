@@ -1,15 +1,23 @@
+import he from "he";
 import { Item, Platform } from "process.js";
 import Parser from "rss-parser";
-import he from "he";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { Config } from "types/config.js";
-import { downloadImage } from "../../util/io.js";
 import { notUndefined, waitSeconds } from "../../util/misc.js";
 import { clearAlternate, clickByXPath, type } from "../../util/selenium.js";
 import { baseURL } from "./constants.js";
 import { setKijijiFilters } from "./filter-interactions.js";
 
-const parser = new Parser();
+const parser = new Parser({
+  customFields: {
+    item: [
+      // ["g-core:location", "location"],
+      ["g-core:price", "price"],
+      ["geo:lat", "lat"],
+      ["geo:long", "lon"],
+    ],
+  },
+});
 
 export const getKijijiRSS = async (config: Config, driver: WebDriver) => {
   await driver.get(baseURL);
@@ -46,24 +54,28 @@ export const scrapeItems = (rssUrl: string): Promise<Item[]> =>
   parser.parseURL(rssUrl).then((output) =>
     output.items
       .map((item) => {
+        // item.pub;
+        console.log("🚀  item:", item);
         const url = item.link;
         const id = url?.split("/").pop();
         if (!url || !id) return undefined;
 
-        const imgUrl = item.enclosure?.url;
-        if (imgUrl) {
-          downloadImage(imgUrl, "tmp/images/" + "kijiji-" + id + ".webp");
-        }
-        return {
+        const result: Item = {
           platform: "kijiji" as Platform,
           id,
           details: {
             title: item.title ? he.decode(item.title) : id,
             description: item.contentSnippet,
+            price: item.price,
+            // location: item["g-core:location"],
+            // location: `(${item["geo:lat"]}, ${item["geo:long"]})`,
+            location: `(${item.lat}, ${item.lon})`,
           },
           clickUrl: url,
           url,
+          imgUrl: item.enclosure?.url,
         };
+        return result;
       })
       .filter(notUndefined)
   );

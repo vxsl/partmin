@@ -16,6 +16,7 @@ export type Item = {
     description: string;
     location: string;
   }>;
+  imgUrl?: string;
 };
 
 type ItemDict = { [k in Platform]: string };
