@@ -1,3 +1,4 @@
+import { sendMessageToChannel } from "notifications/discord/index.js";
 import { DEBUG, VERBOSE } from "../index.js";
 import { stdout as singleLineStdOut } from "single-line-log";
 
@@ -26,6 +27,11 @@ export const errorLog = (...args: Parameters<typeof console.error>) =>
 
 export const log = (...args: Parameters<typeof console.log>) =>
   console.log(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
+
+export const discordLog = (message: any) => {
+  console.log(`${new Date().toLocaleTimeString("it-IT")}:`, message);
+  sendMessageToChannel(message);
+};
 
 export const verboseLog = (...args: Parameters<typeof console.log>) => {
   if (VERBOSE) {
