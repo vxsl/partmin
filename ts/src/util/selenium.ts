@@ -11,6 +11,14 @@ import { readJSON, writeJSON } from "./io.js";
 import { debugLog } from "./misc.js";
 import { tmpDir } from "../constants.js";
 
+export const clearBrowsingData = async (driver: WebDriver) => {
+  if (!(await driver.getCurrentUrl()).startsWith("data")) {
+    await driver.manage().deleteAllCookies();
+    await driver.executeScript("window.localStorage.clear();");
+    await driver.executeScript("window.sessionStorage.clear();");
+  }
+};
+
 export const waitUntilUrlChanges = async (
   driver: WebDriver,
   compareTo?: string

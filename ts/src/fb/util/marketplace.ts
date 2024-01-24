@@ -8,7 +8,11 @@ import {
   notUndefined,
   waitSeconds,
 } from "../../util/misc.js";
-import { elementShouldExist } from "../../util/selenium.js";
+import {
+  clearBrowsingData,
+  click,
+  elementShouldExist,
+} from "../../util/selenium.js";
 import { MP_ITEM_XPATH } from "./index.js";
 
 export const visitMarketplace = async (
@@ -17,6 +21,8 @@ export const visitMarketplace = async (
   radius: Radius,
   tries: number = 0
 ) => {
+  await clearBrowsingData(driver);
+
   const vals = {
     sortBy: "creation_time_descend",
     exact: true,

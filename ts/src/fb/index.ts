@@ -12,13 +12,7 @@ export const fbMain = async (config: Config, driver: WebDriver) => {
   for (const r of radii) {
     debugLog(`visiting fb marketplace for radius ${JSON.stringify(r)}`);
     await visitMarketplace(config, driver, r);
-
     await scrapeItems(driver).then((arr) => items.push(...(arr ?? [])));
-
-    await driver.manage().deleteAllCookies();
-    await driver.executeScript("window.localStorage.clear();");
-    await driver.executeScript("window.sessionStorage.clear();");
-
     await waitSeconds(Math.random() * 3 + 1);
   }
   return items;
