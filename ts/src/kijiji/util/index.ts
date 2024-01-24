@@ -81,7 +81,7 @@ export const scrapeItems = (config: Config, rssUrl: string): Promise<Item[]> =>
         },
         clickUrl: url,
         url,
-        imgUrl: item.enclosure?.url,
+        imgURL: item.enclosure?.url,
       };
       acc.push(result);
       return acc;

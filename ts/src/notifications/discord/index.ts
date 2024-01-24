@@ -95,7 +95,7 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
     time: 24 * 3600000,
   });
 
-  let imgs = item.imgUrl ? [item.imgUrl] : [];
+  let imgs = item.imgURL ? [item.imgURL] : [];
   let i = 0;
   let imgsRetrieved = false;
 

@@ -56,19 +56,13 @@ export const scrapeItems = async (
         return e.getAttribute("href").then(async (href) => {
           const id = href.match(/\d+/)?.[0];
           if (!id) {
-            pushover({
-              title: "ERROR",
-              message: href,
-              url: href,
-              id: href,
-            });
+            debugLog(`No id found for element with href ${href}`);
             return;
           }
 
-          const imgSrc = await e
+          const imgURL = await e
             .findElement(By.css("img"))
             .then((img) => img.getAttribute("src"));
-          await downloadImage(imgSrc, `${imagesDir}/fb-${id}.jpg`);
 
           const SEP = " - ";
           const text = await e
@@ -84,13 +78,18 @@ export const scrapeItems = async (
           const location = tokens[tokens.length - 1];
           const title = tokens.slice(1, tokens.length - 1).join(SEP);
 
-          return {
-            platform: "fb" as Platform, // TODO
+          const result: Item = {
+            platform: "fb",
             id,
-            details: { title, price, location: location },
-            url: `fb://marketplace_product_details?id=${id}`,
-            clickUrl: `https://facebook.com/marketplace/item/${id}`,
+            details: {
+              title,
+              price,
+              location,
+            },
+            url: `https://facebook.com/marketplace/item/${id}`,
+            imgURL,
           };
+          return result;
         });
       })
     )

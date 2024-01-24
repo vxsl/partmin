@@ -17,7 +17,7 @@ export const convertItemToDiscordEmbed = (item: Item) =>
       }${item.details.location ?? `(${item.details.lat}, ${item.details.lon})`}`
     )
     .setURL(item.url)
-    .setImage(item.imgUrl ?? null)
+    .setImage(item.imgURL ?? null)
     .setFooter({
       text: item.platform,
       iconURL: platformIcons[item.platform],
