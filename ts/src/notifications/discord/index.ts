@@ -1,15 +1,15 @@
 import Discord from "discord.js";
 import dotenv from "dotenv";
+import { By, WebDriver } from "selenium-webdriver";
+import { kijijiVisit } from "../../kijiji/util/index.js";
+import { Item } from "../../process.js";
+import { clickByXPath } from "../../util/selenium.js";
 import {
   attachVideosToEmbed,
   buildNextImgButton,
   buildPrevImgButton,
   convertItemToDiscordEmbed,
 } from "./util.js";
-import { By, WebDriver, until } from "selenium-webdriver";
-import { kijijiVisit } from "../../kijiji/util/index.js";
-import { Item } from "../../process.js";
-import { clickByXPath } from "../../util/selenium.js";
 
 dotenv.config();
 
@@ -127,25 +127,18 @@ export const sendEmbedToChannel = async (driver: WebDriver, item: Item) => {
     });
     await kijijiVisit(item.url, driver);
     await clickByXPath(driver, `//div[@id='mainHeroImage']`);
-    const newImgs = await driver
-      .wait(
-        until.elementLocated(
-          By.xpath('//div[contains(@class, "thumbnailList")]')
-        ),
-        5000
-      )
-      .then(() =>
-        driver.findElements(
-          By.xpath('//div[contains(@class, "thumbnailList")]//img')
-        )
-      )
-      .then((elements) =>
-        Promise.all(elements.map((element, i) => element.getAttribute("src")))
+    let newImgs: string[];
+    try {
+      const els = await driver.findElements(
+        By.xpath('//div[contains(@class, "thumbnailList")]//img')
       );
-
-    imgs.push(
-      ...newImgs.filter((src, i) => i > 0 && src && !imgs.includes(src))
-    );
+      newImgs = await Promise.all(
+        els.map((element, i) => element.getAttribute("src"))
+      );
+      imgs.push(
+        ...newImgs.filter((src, i) => i > 0 && src && !imgs.includes(src))
+      );
+    } catch (error) {}
 
     attachVideosToEmbed(embed, imgs);
 
