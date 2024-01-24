@@ -5,6 +5,7 @@ import config from "../../../../config.json" assert { type: "Config" };
 import { Item } from "../../process.js";
 import { convertItemToDiscordEmbed } from "./util.js";
 import { log } from "../../util/misc.js";
+import { mdQuote } from "../../util/data.js";
 
 dotenv.config();
 
@@ -120,7 +121,8 @@ export const discordEmbed = async (driver: WebDriver, item: Item) => {
   const descButton = new Discord.ButtonBuilder()
     .setCustomId("desc")
     .setLabel(`📄`)
-    .setStyle(Discord.ButtonStyle.Secondary);
+    .setStyle(Discord.ButtonStyle.Secondary)
+    .setDisabled(item.details.longDescription === undefined);
 
   const buttonRow = new Discord.ActionRowBuilder<Discord.ButtonBuilder>({
     components: [descButton],
@@ -173,10 +175,7 @@ export const discordEmbed = async (driver: WebDriver, item: Item) => {
     const len = item.imgURLs.length;
     i = (backwards ? i - 1 + len : i + 1) % len;
     imgButton.setLabel(`${i + 1} / ${len}`);
-    if (len > 1) {
-      embed.setThumbnail(item.imgURLs[(i + 1) % len]);
-    }
-    embed.setImage(item.imgURLs[i]);
+    embed.setImage(item.imgURLs[i]).setThumbnail(null);
     await msg.edit({ embeds: [embed], components: [buttonRow] });
   };
 
@@ -189,15 +188,20 @@ export const discordEmbed = async (driver: WebDriver, item: Item) => {
         await navigateImg(true);
         break;
       case "desc":
+        if (item.details.longDescription === undefined) {
+          break;
+        }
         descButton.setDisabled(true);
         msg.edit({ components: [buttonRow] });
 
         if (!descOpened) {
-          embed.setDescription(
-            [origDesc, `\`\`\`\n${item.details.longDescription}\n\`\`\``]
-              .filter(Boolean)
-              .join("\n")
-          );
+          embed
+            .setDescription(
+              [origDesc, mdQuote(item.details.longDescription)]
+                .filter(Boolean)
+                .join("\n")
+            )
+            .setThumbnail(null);
           descButton.setStyle(Discord.ButtonStyle.Primary);
           // TODO consider automatically closing the description after a minute or so
         } else {
