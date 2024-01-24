@@ -1,4 +1,8 @@
 export type Config = {
+  testing?: boolean;
+  verbose?: boolean;
+  debug?: boolean;
+
   search: {
     // minArea?: number;
     // parkingIncluded?: boolean;

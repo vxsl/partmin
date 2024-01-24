@@ -1,6 +1,7 @@
 import { sendMessageToChannel } from "../notifications/discord/index.js";
 import { DEBUG, VERBOSE } from "../index.js";
 import { stdout as singleLineStdOut } from "single-line-log";
+import config from "../../../config.json" assert { type: "Config" };
 
 export const waitSeconds = async (s: number) =>
   await new Promise((resolve) => setTimeout(resolve, s * 1000));
@@ -17,7 +18,7 @@ export const fatalError = (
 };
 
 export const debugLog = (msg?: any) => {
-  if (DEBUG) {
+  if (config.debug) {
     console.log(`${new Date().toLocaleTimeString("it-IT")}: ${msg}`);
   }
 };
@@ -34,7 +35,7 @@ export const discordLog = (message: any) => {
 };
 
 export const verboseLog = (...args: Parameters<typeof console.log>) => {
-  if (VERBOSE) {
+  if (config.verbose) {
     console.log(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
   }
 };

@@ -8,8 +8,6 @@ import { kijijiMain, kijijiPerItem, kijijiPre } from "./kijiji/index.js";
 import { notify } from "./notify.js";
 import { Item, Platform, processItems, withUnseenItems } from "./process.js";
 import { discordLog, errorLog, log, randomWait } from "./util/misc.js";
-export const DEBUG = true; // TODO cli arg
-export const VERBOSE = false; // TODO cli arg
 
 process.title = "partmin";
 

@@ -1,10 +1,10 @@
 import dotenv from "dotenv";
 import { Config } from "types/config.js";
 import { tmpDir } from "./constants.js";
-import { VERBOSE } from "./index.js";
 import { approxLocationLink } from "./util/geo.js";
 import { readJSON, writeJSON } from "./util/io.js";
 import { log, verboseLog } from "./util/misc.js";
+import config from "../../config.json" assert { type: "json" };
 
 dotenv.config();
 
@@ -106,7 +106,7 @@ export const withUnseenItems = async <T>(
   log(
     `${unseenItems.length} unseen item${
       unseenItems.length !== 1 ? "s" : ""
-    } out of ${items.length}${VERBOSE ? ":" : "."}`
+    } out of ${items.length}${config.verbose ? ":" : "."}`
   );
   verboseLog(unseenItems);
 
@@ -167,7 +167,11 @@ export const processItems = async (config: Config, items: Item[]) => {
       }
 
       log("\n=======================================================");
-      log(`${platform}: ${targets.length} new results${VERBOSE ? ":" : "."}`);
+      log(
+        `${platform}: ${targets.length} new results${
+          config.verbose ? ":" : "."
+        }`
+      );
       verboseLog(targets);
       if (blacklisted.length) {
         log(`${blacklisted.length} blacklisted:`);
