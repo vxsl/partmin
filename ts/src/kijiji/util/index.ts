@@ -19,7 +19,7 @@ const parser = new Parser({
   },
 });
 
-export const kijijiVisit = async (url: string, driver: WebDriver) => {
+export const kijijiGet = async (url: string, driver: WebDriver) => {
   await driver.get(url);
   const xpath = "//button[contains(@class, 'cookieBannerCloseButton')]";
   await driver
@@ -31,7 +31,7 @@ export const kijijiVisit = async (url: string, driver: WebDriver) => {
 };
 
 export const getKijijiRSS = async (config: Config, driver: WebDriver) => {
-  await kijijiVisit(baseURL, driver);
+  await kijijiGet(baseURL, driver);
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
 
   await waitSeconds(2); // TODO don't arbitrary wait. Figure out the multiple renders of this element
@@ -81,6 +81,7 @@ export const scrapeItems = (config: Config, rssUrl: string): Promise<Item[]> =>
         },
         url,
         imgURLs: item.enclosure?.url ? [item.enclosure.url] : [],
+        videoURLs: [],
       };
       acc.push(result);
       return acc;

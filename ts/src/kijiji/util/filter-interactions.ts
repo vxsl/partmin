@@ -120,6 +120,7 @@ export const getFilterInteractions = (
         });
       },
 
+      // TODO verify whether this rules out options that don't have the value set
       petFriendly: async () => {
         const filterID = "petsallowed";
         const filterXpath = getFilterXpath(filterID);

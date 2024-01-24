@@ -87,7 +87,7 @@ export const sendMessageToChannel = async (
 ) => {
   const channel = await getChannel(channelId);
   if (channel) {
-    channel.send(...args);
+    return channel.send(...args);
   } else {
     console.error(`Channel with ID ${channelId} not found`);
   }

@@ -24,7 +24,7 @@ export const visitMarketplaceListing = async (
   await clearBrowsingData(driver);
 
   let url = `https://facebook.com/marketplace/item/${item.id}`;
-  debugLog(`fb: ${url}`);
+  debugLog(url);
 
   await driver.get(url);
 
@@ -41,6 +41,9 @@ export const visitMarketplaceListing = async (
   );
 
   if (!productDetails) {
+    discordLog(
+      `Warning: couldn't find marketplace_product_details_page for ${url}.`
+    );
     // TODO do something else.
 
     // // if there's a <span> with text "See more", click it:
@@ -97,7 +100,7 @@ export const visitMarketplaceListing = async (
 
   try {
     const imgs = productDetails.target.listing_photos
-      .map((p: any) => p?.image?.uri ?? undefined)
+      .map((p: any) => p?.image?.uri)
       .filter(notUndefined);
     if (imgs.length) {
       item.imgURLs = imgs;
@@ -163,11 +166,11 @@ export const visitMarketplace = async (
   const city = config.search.location.city;
   let url = `https://facebook.com/marketplace/${city}/propertyrentals?`;
   for (const [k, v] of Object.entries(vals)) {
-    if (v) {
+    if (v !== undefined && v !== null) {
       url += `${k}=${v}&`;
     }
   }
-  debugLog(`fb: ${url}`);
+  debugLog(url);
 
   await driver.get(url);
 
@@ -252,6 +255,7 @@ export const scrapeItems = async (
             },
             url: `https://facebook.com/marketplace/item/${id}`,
             imgURLs: [primaryImg].filter(notUndefined),
+            videoURLs: [],
           };
           return result;
         });

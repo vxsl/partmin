@@ -1,11 +1,7 @@
-import { pushover } from "./util/pushover.js";
-import { Item, Platform } from "./process.js";
-import { waitSeconds } from "./util/misc.js";
 import { WebDriver } from "selenium-webdriver";
-import {
-  sendEmbedToChannel,
-  sendMessageToChannel,
-} from "./notifications/discord/index.js";
+import { discordEmbed } from "./notifications/discord/index.js";
+import { Item } from "./process.js";
+import { waitSeconds } from "./util/misc.js";
 
 export const notify = async (driver: WebDriver, items: Item[]) => {
   for (const item of items) {
@@ -17,8 +13,7 @@ export const notify = async (driver: WebDriver, items: Item[]) => {
       imgURLs,
     } = item;
 
-    await sendEmbedToChannel(driver, item);
-
+    await discordEmbed(driver, item);
     await waitSeconds(0.5);
   }
 };

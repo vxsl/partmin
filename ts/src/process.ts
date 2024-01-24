@@ -104,15 +104,17 @@ export const withUnseenItems = async <T>(
   }
 
   log(
-    `Checked ${items.length} item${items.length === 1 ? "" : "s"}, found ${
-      unseenItems.length
-    } new${VERBOSE ? ":" : "."}`
+    `${unseenItems.length} unseen item${
+      unseenItems.length !== 1 ? "s" : ""
+    } out of ${items.length}${VERBOSE ? ":" : "."}`
   );
+  verboseLog(unseenItems);
 
   return await fn(unseenItems);
 };
 
 export const processItems = async (config: Config, items: Item[]) => {
+  // TODO sort based on time?
   if (!blacklist) {
     blacklist = config.search.blacklist?.map((b) => b.toLowerCase());
   }
