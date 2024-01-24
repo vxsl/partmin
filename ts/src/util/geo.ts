@@ -55,9 +55,12 @@ export const isWithinRadii = (lat: number, lon: number, config: Config) => {
   return result;
 };
 
-export const generateLocationLink = async (lat: number, lon: number) => {
-  const googleMapsBaseURL = "https://www.google.com/maps/search/?api=1&query=";
+export const getGoogleMapsLink = (query: string) =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    query
+  )}`;
 
+export const generateLocationLink = async (lat: number, lon: number) => {
   const key = `${lat},${lon}`;
 
   const cached = await readJSON<{ [k: string]: [string, string] }>(
@@ -68,7 +71,7 @@ export const generateLocationLink = async (lat: number, lon: number) => {
     const display = cachedAddress[0];
     const query = encodeURIComponent(cachedAddress[1]);
     const link = `https://www.google.com/maps/search/?api=1&query=${query}`;
-    return `[${display}](${link})`;
+    return `[*${display} **(approx.)***](${link})`;
   }
 
   const { data } = await axios.get(
@@ -90,7 +93,6 @@ export const generateLocationLink = async (lat: number, lon: number) => {
     [key]: [displayAddr, data.results[0].formatted_address],
   });
 
-  const query = encodeURIComponent(data.results[0].formatted_address);
-  const link = `${googleMapsBaseURL}${query}`;
-  return `[${displayAddr}](${link})`;
+  const query = data.results[0].formatted_address;
+  return `[*${displayAddr} **(approx.)***](${getGoogleMapsLink(query)})`;
 };
