@@ -46,3 +46,5 @@ export const trimAddress = (config: Config, address: string): string => {
   }
   return result;
 };
+
+export const mdQuote = (s: string) => `> ${s.replace(/\n/g, "\n> ")}`;
