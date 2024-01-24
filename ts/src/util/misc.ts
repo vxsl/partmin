@@ -64,7 +64,7 @@ export const randomWait = async (options?: { short?: true }) => {
   const mins = Math.round(toWait / 60);
   log(
     `Waiting ${toWait} seconds${
-      mins < 2 ? "" : ` (${mins} minute${mins === 1 ? "s" : ""})`
+      mins < 2 ? "" : ` (${mins} minute${mins !== 1 ? "s" : ""})`
     }`
   );
   for (let i = 0; i < toWait; i++) {
