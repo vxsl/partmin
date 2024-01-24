@@ -3,11 +3,12 @@ import { Item, Platform } from "process.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { Config } from "types/config.js";
-import { debugLog, waitSeconds } from "../../util/misc.js";
+import { debugLog, notUndefined, waitSeconds } from "../../util/misc.js";
 import { clearAlternate, clickByXPath, type } from "../../util/selenium.js";
 import { baseURL } from "./constants.js";
 import { setKijijiFilters } from "./filter-interactions.js";
-import { isWithinRadii } from "../../util/geo.js";
+import { getGoogleMapsLink, isWithinRadii } from "../../util/geo.js";
+import { trimAddress } from "../../util/data.js";
 
 const parser = new Parser({
   customFields: {
@@ -28,6 +29,62 @@ export const kijijiGet = async (url: string, driver: WebDriver) => {
     .catch((e) => {
       debugLog(e);
     });
+};
+
+export const visitKijijiListing = async (
+  config: Config,
+  driver: WebDriver,
+  item: Item
+) => {
+  await kijijiGet(item.url, driver);
+  const data: any = await driver.executeScript("return window.__data;");
+  if (!data || typeof data !== "object") {
+    // TODO do something else.
+    return;
+  }
+
+  try {
+    const imgs = data.viewItemPage.viewItemData.media
+      .map((p: any) => p?.href)
+      .filter(notUndefined);
+    if (imgs.length) {
+      item.imgURLs = imgs;
+    }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const vids = data.viewItemPage.viewItemData.media
+      .filter((p: any) => p?.type === "video")
+      .map((p: any) => p?.href)
+      .filter(notUndefined);
+    if (vids.length) {
+      item.videoURLs = vids;
+    }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const loc = data.viewItemPage.viewItemData.adLocation.mapAddress;
+    if (loc) {
+      item.details.location = trimAddress(config, loc);
+      item.computed = {
+        ...(item.computed ?? {}),
+        locationLinkMD: `[**${item.details.location}**](${getGoogleMapsLink(
+          loc
+        )})`,
+      };
+    }
+  } catch {
+    // TODO
+  }
+  item.details.longDescription = await driver
+    .findElement(
+      By.xpath(`//*[starts-with(@class, 'descriptionContainer')]//div`)
+    )
+    .getAttribute("innerText");
 };
 
 export const getKijijiRSS = async (config: Config, driver: WebDriver) => {

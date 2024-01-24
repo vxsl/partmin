@@ -3,13 +3,11 @@ import { Builder, WebDriver } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { Config } from "types/config.js";
 import _config from "../../config.json" assert { type: "json" };
-import { kijijiMain, kijijiPre } from "./kijiji/index.js";
+import { fbMain, fbPerItem } from "./fb/index.js";
+import { kijijiMain, kijijiPerItem, kijijiPre } from "./kijiji/index.js";
 import { notify } from "./notify.js";
 import { Item, Platform, processItems, withUnseenItems } from "./process.js";
 import { discordLog, errorLog, log, randomWait } from "./util/misc.js";
-import { pushover } from "./util/pushover.js";
-import { fbMain, fbPerItem } from "./fb/index.js";
-
 export const DEBUG = true; // TODO cli arg
 export const VERBOSE = false; // TODO cli arg
 
@@ -91,10 +89,11 @@ const main = async () => {
         main: fbMain,
         perItem: fbPerItem,
       },
-      // kijiji: {
-      //   main: kijijiMain,
-      //   pre: kijijiPre,
-      // },
+      kijiji: {
+        main: kijijiMain,
+        pre: kijijiPre,
+        perItem: kijijiPerItem,
+      },
     });
   } catch (e) {
     if (notifyOnExit) {
