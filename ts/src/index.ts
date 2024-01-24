@@ -29,6 +29,7 @@ if (headless) {
   ops.addArguments("--headless");
   ops.addArguments("--disable-gpu");
 }
+ops.addArguments("--no-sandbox");
 
 let notifyOnExit = true;
 // process.on("SIGINT", function () {
