@@ -3,7 +3,7 @@ import { Item, Platform } from "process.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { Config } from "types/config.js";
-import { notUndefined, waitSeconds } from "../../util/misc.js";
+import { debugLog, notUndefined, waitSeconds } from "../../util/misc.js";
 import { clearAlternate, clickByXPath, type } from "../../util/selenium.js";
 import { baseURL } from "./constants.js";
 import { setKijijiFilters } from "./filter-interactions.js";
@@ -19,8 +19,19 @@ const parser = new Parser({
   },
 });
 
+export const kijijiVisit = async (url: string, driver: WebDriver) => {
+  await driver.get(url);
+  const xpath = "//button[contains(@class, 'cookieBannerCloseButton')]";
+  await driver
+    .wait(until.elementLocated(By.xpath(xpath)), 1000)
+    .then((el) => el && clickByXPath(driver, xpath))
+    .catch((e) => {
+      debugLog(e);
+    });
+};
+
 export const getKijijiRSS = async (config: Config, driver: WebDriver) => {
-  await driver.get(baseURL);
+  await kijijiVisit(baseURL, driver);
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
 
   await waitSeconds(2); // TODO don't arbitrary wait. Figure out the multiple renders of this element
