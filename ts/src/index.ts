@@ -104,7 +104,7 @@ const runLoop = async (
           }
         } catch (e) {
           discordLog(`Error while visiting ${platform}:`);
-          discordLog(e);
+          discordLog(e, { monospace: true });
           continue;
         }
 
@@ -128,7 +128,7 @@ const runLoop = async (
           });
         } catch (e) {
           discordLog(`Error while processing items from ${platform}:`);
-          discordLog(e);
+          discordLog(e, { monospace: true });
         }
         log("\n----------------------------------------\n");
       }

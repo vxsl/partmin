@@ -31,9 +31,9 @@ export const log = (message: any) => {
   return discordMsg("logs", `\`${date}: ${message}\``);
 };
 
-export const discordLog = (message: any) => {
+export const discordLog = (message: any, options?: { monospace?: true }) => {
   console.log(`${new Date().toLocaleTimeString("it-IT")}:`, message);
-  discordMsg("main", message);
+  discordMsg("main", String(options?.monospace ? `\`${message}\`` : message));
 };
 
 export const verboseLog = (...args: Parameters<typeof console.log>) => {
