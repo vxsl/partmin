@@ -86,51 +86,44 @@ export const withUnseenItems = async <T>(
 };
 
 export const processItems = async (config: Config, unseenItems: Item[]) => {
-  // TODO sort based on time?
   if (!blacklist) {
     blacklist = config.search.blacklist?.map((b) => b.toLowerCase());
   }
-  const blacklistLog: string[] = [];
-  const { targets, blacklisted } = await unseenItems.reduce<
-    Promise<{
-      targets: Item[];
-      blacklisted: Item[];
-    }>
-  >(
-    async (filteredPromises, item) => {
-      const result = await filteredPromises;
 
-      const blacklistOccurrences = findBlacklistedWords(item);
-      if (blacklistOccurrences) {
-        blacklistLog.push(...blacklistOccurrences);
-        result.blacklisted.push(item);
-      } else {
-        result.targets.push(item);
-      }
-      return result;
-    },
-    Promise.resolve({
-      targets: [],
-      blacklisted: [],
-    })
-  );
+  // process items:
+  const [targets, blacklistLogs] = await unseenItems.reduce<
+    Promise<[Item[], string[]]>
+  >(async (promises, item) => {
+    const [_targets, _blacklistLog] = await promises;
 
-  for (const item of targets) {
-    if (
-      item.computed?.locationLinkMD ||
-      !item.details.lat ||
-      !item.details.lon
-    ) {
-      continue;
+    // 1. check for blacklisted words:
+    const logs = findBlacklistedWords(item);
+    if (logs) {
+      _blacklistLog.push(...logs);
+      return [_targets, _blacklistLog];
     }
-    item.computed = {
-      ...(item.computed ?? {}),
-      locationLinkMD: await approxLocationLink(
-        item.details.lat,
-        item.details.lon
-      ),
-    };
-  }
+
+    // 2. if necessary and possible, compute the location link:
+    if (
+      !item.computed?.locationLinkMD &&
+      item.details.lat &&
+      item.details.lon
+    ) {
+      item.computed = {
+        ...(item.computed ?? {}),
+        locationLinkMD: await approxLocationLink(
+          item.details.lat,
+          item.details.lon
+        ),
+      };
+    }
+
+    _targets.push(item);
+    return [_targets, _blacklistLog];
+  }, Promise.resolve([[], []]));
+
+  // TODO sort based on time?
+  // TODO compute duplicates?
 
   log(
     `${targets.length} new result${targets.length !== 1 ? "s" : ""}${
@@ -138,11 +131,10 @@ export const processItems = async (config: Config, unseenItems: Item[]) => {
     }`
   );
   verboseLog(targets);
-  if (blacklisted.length) {
-    log(`${blacklisted.length} blacklisted:`);
-    log(blacklistLog.map((b) => `  - found ${b}`).join("\n"));
+  if (blacklistLogs.length) {
+    log(`${blacklistLogs.length} blacklisted:`);
+    log(blacklistLogs.map((b) => `  - found ${b}`).join("\n"));
   }
-  // TODO compute duplicates
 
   return targets;
 };

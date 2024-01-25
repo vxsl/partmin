@@ -2,8 +2,8 @@ import config from "config.js";
 import { tmpDir } from "constants.js";
 import dotenv from "dotenv";
 import fs from "fs";
+import { sendEmbedWithButtons } from "notifications/discord/embed.js";
 import { startDiscordBot } from "notifications/discord/index.js";
-import { notify } from "notify.js";
 import fb from "platforms/fb/index.js";
 import kijiji from "platforms/kijiji/index.js";
 import {
@@ -22,6 +22,7 @@ import {
   log,
   randomWait,
   verboseLog,
+  waitSeconds,
 } from "util/misc.js";
 
 process.title = "partmin";
@@ -111,9 +112,12 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
                 randomWait({ short: true, suppressLog: true })
               );
             }
-            await processItems(config, unseenItems).then((arr) =>
-              notify(driver, arr)
-            );
+            await processItems(config, unseenItems).then(async (arr) => {
+              for (const item of arr) {
+                await sendEmbedWithButtons(item);
+                await waitSeconds(0.5);
+              }
+            });
           });
         } catch (e) {
           discordLog(`Error while processing items from ${platform}:`);

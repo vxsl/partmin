@@ -1,7 +1,8 @@
-import { notUndefined } from "util/misc.js";
+import Discord from "discord.js";
+import { ChannelKey, getChannel } from "notifications/discord/index.js";
 import { Item } from "types/item.js";
 import { PlatformKey } from "types/platform.js";
-import Discord from "discord.js";
+import { notUndefined } from "util/misc.js";
 
 const platformIcons: Record<PlatformKey, string> = {
   kijiji: "https://www.kijiji.ca/favicon.ico",
@@ -57,4 +58,111 @@ export const convertItemToDiscordEmbed = (item: Item) => {
                 },
           ]
     );
+};
+
+export const sendEmbedWithButtons = async (
+  item: Item,
+  c: ChannelKey = "main"
+) => {
+  const channel = await getChannel(c);
+
+  const embed = convertItemToDiscordEmbed(item);
+
+  const descButton = new Discord.ButtonBuilder()
+    .setCustomId("desc")
+    .setLabel(`📄`)
+    .setStyle(Discord.ButtonStyle.Secondary)
+    .setDisabled(item.details.longDescription === undefined);
+
+  const buttonRow = new Discord.ActionRowBuilder<Discord.ButtonBuilder>({
+    components: [descButton],
+  });
+
+  if (item.imgURLs.length <= 1) {
+    await channel.send({ embeds: [embed], components: [buttonRow] });
+    return;
+  }
+
+  const imgButton = new Discord.ButtonBuilder()
+    .setCustomId("img")
+    .setLabel(`️${1} / ${item.imgURLs.length}`)
+    .setStyle(Discord.ButtonStyle.Secondary);
+  buttonRow.setComponents([
+    new Discord.ButtonBuilder()
+      .setCustomId("prevImg")
+      .setLabel("⬅")
+      .setStyle(Discord.ButtonStyle.Secondary),
+    imgButton,
+    new Discord.ButtonBuilder()
+      .setCustomId("nextImg")
+      .setLabel(`➡`)
+      .setStyle(Discord.ButtonStyle.Secondary),
+    descButton,
+  ]);
+
+  const msg = await channel.send({
+    embeds: [embed],
+    components: [buttonRow],
+  });
+
+  const collector = msg.createMessageComponentCollector({
+    filter: (interaction) => {
+      interaction.deferUpdate();
+      return (
+        interaction.customId === "nextImg" ||
+        interaction.customId === "prevImg" ||
+        interaction.customId === "desc"
+      );
+    },
+    time: 24 * 3600000,
+  });
+
+  let i = 0;
+  let descOpened = false;
+  let origDesc = embed.data.description ?? null;
+
+  const navigateImg = async (backwards = false) => {
+    const len = item.imgURLs.length;
+    i = (backwards ? i - 1 + len : i + 1) % len;
+    imgButton.setLabel(`${i + 1} / ${len}`);
+    embed.setImage(item.imgURLs[i]).setThumbnail(null);
+    await msg.edit({ embeds: [embed], components: [buttonRow] });
+  };
+
+  collector.on("collect", async (interaction) => {
+    switch (interaction.customId) {
+      case "nextImg":
+        await navigateImg();
+        break;
+      case "prevImg":
+        await navigateImg(true);
+        break;
+      case "desc":
+        if (item.details.longDescription === undefined) {
+          break;
+        }
+        descButton.setDisabled(true);
+        msg.edit({ components: [buttonRow] });
+
+        if (!descOpened) {
+          embed
+            .setDescription(
+              [origDesc, mdQuote(item.details.longDescription)]
+                .filter(Boolean)
+                .join("\n")
+            )
+            .setThumbnail(null);
+          descButton.setStyle(Discord.ButtonStyle.Primary);
+          // TODO consider automatically closing the description after a minute or so
+        } else {
+          embed.setDescription(origDesc);
+          descButton.setStyle(Discord.ButtonStyle.Secondary);
+        }
+        descOpened = !descOpened;
+        descButton.setDisabled(false);
+        await msg.edit({ embeds: [embed], components: [buttonRow] });
+        // await kijijiVisit(item.url, driver);
+        break;
+    }
+  });
 };

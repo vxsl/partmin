@@ -1,18 +1,14 @@
+import config from "config.js";
 import Discord from "discord.js";
 import dotenv from "dotenv";
-import { WebDriver } from "selenium-webdriver";
-import { Item } from "types/item.js";
-import config from "config.js";
-import { mdQuote } from "util/data.js";
-import { errorLog, log } from "util/misc.js";
 import { greetings } from "notifications/discord/chat.js";
-import { convertItemToDiscordEmbed } from "notifications/discord/embed.js";
+import { errorLog, log } from "util/misc.js";
 
 dotenv.config();
 
 const client = new Discord.Client({ intents: 512 });
 
-type Channel = "main" | "logs";
+export type ChannelKey = "main" | "logs";
 
 const token = process.env.DISCORD_BOT_TOKEN;
 
@@ -26,7 +22,7 @@ const channelIDs = (
         main: process.env.DISCORD_CHANNEL_ID_MAIN,
         logs: process.env.DISCORD_CHANNEL_ID_LOGS,
       }
-) as Record<Channel, string>;
+) as Record<ChannelKey, string>;
 
 if (!token) {
   console.error("No DISCORD_BOT_TOKEN provided in .env");
@@ -41,7 +37,7 @@ if (!channelIDs.logs) {
   process.exit(1);
 }
 
-const getChannel = async (c: Channel) => {
+export const getChannel = async (c: ChannelKey) => {
   const id = channelIDs[c];
   const result = (await (client.channels.cache.get(id) ??
     client.channels.fetch(id))) as Discord.TextChannel;
@@ -66,7 +62,7 @@ client.on("ready", () => {
 });
 
 export const discordMsg = async (
-  c: Channel,
+  c: ChannelKey,
   ...args: Parameters<Discord.PartialTextBasedChannelFields["send"]>
 ) => {
   try {
@@ -83,110 +79,6 @@ export const discordMsg = async (
     errorLog(`Error while sending message to Discord:`);
     errorLog(e);
   }
-};
-
-export const discordEmbed = async (driver: WebDriver, item: Item) => {
-  const channel = await getChannel("main");
-
-  const embed = convertItemToDiscordEmbed(item);
-
-  const descButton = new Discord.ButtonBuilder()
-    .setCustomId("desc")
-    .setLabel(`📄`)
-    .setStyle(Discord.ButtonStyle.Secondary)
-    .setDisabled(item.details.longDescription === undefined);
-
-  const buttonRow = new Discord.ActionRowBuilder<Discord.ButtonBuilder>({
-    components: [descButton],
-  });
-
-  if (item.imgURLs.length <= 1) {
-    await channel.send({ embeds: [embed], components: [buttonRow] });
-    return;
-  }
-
-  const imgButton = new Discord.ButtonBuilder()
-    .setCustomId("img")
-    .setLabel(`️${1} / ${item.imgURLs.length}`)
-    .setStyle(Discord.ButtonStyle.Secondary);
-  buttonRow.setComponents([
-    new Discord.ButtonBuilder()
-      .setCustomId("prevImg")
-      .setLabel("⬅")
-      .setStyle(Discord.ButtonStyle.Secondary),
-    imgButton,
-    new Discord.ButtonBuilder()
-      .setCustomId("nextImg")
-      .setLabel(`➡`)
-      .setStyle(Discord.ButtonStyle.Secondary),
-    descButton,
-  ]);
-
-  const msg = await channel.send({
-    embeds: [embed],
-    components: [buttonRow],
-  });
-
-  const collector = msg.createMessageComponentCollector({
-    filter: (interaction) => {
-      interaction.deferUpdate();
-      return (
-        interaction.customId === "nextImg" ||
-        interaction.customId === "prevImg" ||
-        interaction.customId === "desc"
-      );
-    },
-    time: 24 * 3600000,
-  });
-
-  let i = 0;
-  let descOpened = false;
-  let origDesc = embed.data.description ?? null;
-
-  const navigateImg = async (backwards = false) => {
-    const len = item.imgURLs.length;
-    i = (backwards ? i - 1 + len : i + 1) % len;
-    imgButton.setLabel(`${i + 1} / ${len}`);
-    embed.setImage(item.imgURLs[i]).setThumbnail(null);
-    await msg.edit({ embeds: [embed], components: [buttonRow] });
-  };
-
-  collector.on("collect", async (interaction) => {
-    switch (interaction.customId) {
-      case "nextImg":
-        await navigateImg();
-        break;
-      case "prevImg":
-        await navigateImg(true);
-        break;
-      case "desc":
-        if (item.details.longDescription === undefined) {
-          break;
-        }
-        descButton.setDisabled(true);
-        msg.edit({ components: [buttonRow] });
-
-        if (!descOpened) {
-          embed
-            .setDescription(
-              [origDesc, mdQuote(item.details.longDescription)]
-                .filter(Boolean)
-                .join("\n")
-            )
-            .setThumbnail(null);
-          descButton.setStyle(Discord.ButtonStyle.Primary);
-          // TODO consider automatically closing the description after a minute or so
-        } else {
-          embed.setDescription(origDesc);
-          descButton.setStyle(Discord.ButtonStyle.Secondary);
-        }
-        descOpened = !descOpened;
-        descButton.setDisabled(false);
-        await msg.edit({ embeds: [embed], components: [buttonRow] });
-        // await kijijiVisit(item.url, driver);
-        break;
-    }
-  });
 };
 
 export const startDiscordBot = async () => {
