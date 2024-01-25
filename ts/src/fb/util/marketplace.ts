@@ -57,7 +57,8 @@ export const visitMarketplaceListing = async (
     if (desc) {
       item.details.longDescription = desc;
     }
-  } catch {
+  } catch (e) {
+    log(e);
     // TODO
   }
 
@@ -68,9 +69,8 @@ export const visitMarketplaceListing = async (
       const full =
         productDetails.target.pdp_display_sections
           .find((s: any) => s.section_type === "UNIT_SUBTITLE")
-          .then((s: any) =>
-            s.pdp_fields.find((f: any) => f.icon_name === "pin")
-          )?.display_label ?? "";
+          .pdp_fields.find((f: any) => f.icon_name === "pin")?.display_label ??
+        "";
       item.computed = {
         ...(item.computed ?? {}),
         locationLinkMD: `[**${loc}**](${getGoogleMapsLink(
@@ -78,7 +78,8 @@ export const visitMarketplaceListing = async (
         )})`,
       };
     }
-  } catch {
+  } catch (e) {
+    log(e);
     // TODO
   }
 
@@ -89,7 +90,8 @@ export const visitMarketplaceListing = async (
       item.details.lat = lat;
       item.details.lon = lon;
     }
-  } catch {
+  } catch (e) {
+    log(e);
     // TODO
   }
 
@@ -100,7 +102,8 @@ export const visitMarketplaceListing = async (
     if (imgs.length) {
       item.imgURLs = imgs;
     }
-  } catch {
+  } catch (e) {
+    log(e);
     // TODO
   }
 
@@ -120,7 +123,8 @@ export const visitMarketplaceListing = async (
       ...(item.computed ?? {}),
       bulletPoints: points,
     };
-  } catch {
+  } catch (e) {
+    log(e);
     // TODO
   }
 };
