@@ -18,7 +18,9 @@ export const fbMain = async (config: Config, driver: WebDriver) => {
     debugLog(`visiting fb marketplace for radius ${JSON.stringify(r)}`);
     await visitMarketplace(config, driver, r);
     await withDOMChangesBlocked(driver, async () => {
-      await scrapeItems(driver).then((arr) => items.push(...(arr ?? [])));
+      await scrapeItems(config, driver).then((arr) =>
+        items.push(...(arr ?? []))
+      );
     });
     await randomWait({ short: true, suppressLog: true });
   }

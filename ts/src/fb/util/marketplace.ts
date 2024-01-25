@@ -206,6 +206,7 @@ export const visitMarketplace = async (
 };
 
 export const scrapeItems = async (
+  config: Config,
   driver: WebDriver
 ): Promise<Item[] | undefined> => {
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
@@ -238,6 +239,16 @@ export const scrapeItems = async (
           ? parseInt(tokens[0].replace(",", ""))
           : undefined;
       const title = tokens.slice(1, tokens.length - 1).join(SEP);
+
+      // sometimes facebook will show a private room for rent
+      // even when the search parameters exclude "room only":
+      if (
+        config.search.params.roommateNotAccepted &&
+        ["Private room for rent", "Chambre privée à louer"].includes(title)
+      ) {
+        log(`Skipping room-only listing: ${title}`);
+        return undefined;
+      }
 
       return {
         platform: "fb",
