@@ -197,7 +197,7 @@ export const withElementsByXpath = async <T>(
     .findElements(By.xpath(xpath))
     .then((els) => els.length);
   for (let i = 0; i < len; i++) {
-    verboseLog(`withElementsByXpath (${i + 1}/${len}): ${xpath}`);
+    // verboseLog(`withElementsByXpath (${i + 1}/${len}): ${xpath}`);
     const r = await withElement(
       () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`)),
       fn
