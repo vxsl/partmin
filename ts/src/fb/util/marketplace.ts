@@ -1,4 +1,4 @@
-import { Item } from "process.js";
+import { Item, Platform } from "process.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { Config } from "types/config.js";
 import { findNestedProperty } from "../../util/data.js";
@@ -11,6 +11,8 @@ import {
   withElementsByXpath,
 } from "../../util/selenium.js";
 import { MP_ITEM_XPATH } from "./index.js";
+
+const platform: Platform = "fb";
 
 export const visitMarketplaceListing = async (
   driver: WebDriver,
@@ -251,7 +253,7 @@ export const scrapeItems = async (
       }
 
       return {
-        platform: "fb",
+        platform,
         id,
         details: {
           title,

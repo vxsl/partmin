@@ -29,7 +29,7 @@ export type Item = {
   videoURLs: string[];
 };
 
-interface SeenItemDict {
+export interface SeenItemDict {
   [k: string]: 1 | undefined;
 }
 
@@ -78,6 +78,8 @@ export const loadSeenItems = async () =>
   await readJSON<SeenItemDict>(seenPath).then((arr) => arr ?? {});
 export const saveSeenItems = async (v: SeenItemDict) =>
   await writeJSON(seenPath, v);
+export const getSeenKey = (platform: string, id: string) => `${platform}-${id}`;
+const getSeenItemKey = (item: Item) => getSeenKey(item.platform, item.id);
 
 export const withUnseenItems = async <T>(
   items: Item[],
@@ -86,7 +88,7 @@ export const withUnseenItems = async <T>(
   const seenItems = await loadSeenItems();
   const unseenItems: Item[] = [];
   for (const item of items) {
-    const k = `${item.platform}-${item.id}`;
+    const k = getSeenItemKey(item);
     if (seenItems[k]) {
       continue;
     }
@@ -175,7 +177,7 @@ export const excludeItemsOutsideSearchArea = (config: Config, items: Item[]) =>
       return true;
     const v = isWithinRadii(item.details.lat, item.details.lon, config);
     if (!v) {
-      log(`Item ${item.platform}-${item.id} is outside of the search area:`);
+      log(`Item ${getSeenItemKey(item)} is outside of the search area:`);
       log(item);
     }
     return v;
