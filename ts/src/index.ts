@@ -72,14 +72,12 @@ const runLoop = async (
     );
   }
 
-  const cachedConfig = await fs.promises.readFile(
+  const cachedParams = await fs.promises.readFile(
     `${tmpDir}/configSearchParams.json`,
     "utf-8"
   );
   let configChanged =
-    JSON.stringify(JSON.parse(cachedConfig)?.search?.params ?? {}, null, 2) !==
-    JSON.stringify(config.search.params, null, 2);
-
+    cachedParams !== JSON.stringify(config.search.params, null, 2);
   if (configChanged) {
     log("Config change detected.");
   }
