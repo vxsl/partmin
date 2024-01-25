@@ -95,29 +95,41 @@ const runLoop = async (
         log(
           `\n=======================================================\n${platform}\n`
         );
-        const allItems = await main(config, driver);
-        if (!allItems?.length) {
-          log(`Somehow there are no items upon visiting ${platform}.`);
-          continue;
-        }
-
-        const items = excludeItemsOutsideSearchArea(config, allItems);
-        if (!items.length) {
-          log(`No items found within the search area.`);
-          continue;
-        }
-        verboseLog({ items });
-
-        await withUnseenItems(items, async (unseenItems) => {
-          for (const item of unseenItems) {
-            await perItem?.(config, driver, item)?.then(() =>
-              randomWait({ short: true, suppressLog: true })
-            );
+        let allItems: Item[] | undefined;
+        try {
+          allItems = await main(config, driver);
+          if (!allItems?.length) {
+            log(`Somehow there are no items upon visiting ${platform}.`);
+            continue;
           }
-          await processItems(config, unseenItems).then((arr) =>
-            notify(driver, arr)
-          );
-        });
+        } catch (e) {
+          discordLog(`Error while visiting ${platform}:`);
+          discordLog(e);
+          continue;
+        }
+
+        try {
+          const items = excludeItemsOutsideSearchArea(config, allItems);
+          if (!items.length) {
+            log(`No items found within the search area.`);
+            continue;
+          }
+          verboseLog({ items });
+
+          await withUnseenItems(items, async (unseenItems) => {
+            for (const item of unseenItems) {
+              await perItem?.(config, driver, item)?.then(() =>
+                randomWait({ short: true, suppressLog: true })
+              );
+            }
+            await processItems(config, unseenItems).then((arr) =>
+              notify(driver, arr)
+            );
+          });
+        } catch (e) {
+          discordLog(`Error while processing items from ${platform}:`);
+          discordLog(e);
+        }
         log("\n----------------------------------------\n");
       }
       await randomWait();
