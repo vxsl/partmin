@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { Config } from "types/config.js";
 import { tmpDir } from "./constants.js";
-import { approxLocationLink } from "./util/geo.js";
+import { approxLocationLink, isWithinRadii } from "./util/geo.js";
 import { readJSON, writeJSON } from "./util/io.js";
 import { log, verboseLog } from "./util/misc.js";
 import config from "../../config.json" assert { type: "json" };
@@ -168,3 +168,15 @@ export const processItems = async (config: Config, unseenItems: Item[]) => {
 
   return targets;
 };
+
+export const excludeItemsOutsideSearchArea = (config: Config, items: Item[]) =>
+  items.filter((item) => {
+    if (item.details.lat === undefined || item.details.lon === undefined)
+      return true;
+    const v = isWithinRadii(item.details.lat, item.details.lon, config);
+    if (!v) {
+      log(`Item ${item.platform}-${item.id} is outside of the search area:`);
+      log(item);
+    }
+    return v;
+  });

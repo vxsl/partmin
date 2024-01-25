@@ -1,12 +1,21 @@
 import dotenv from "dotenv";
+import fs from "fs";
 import { Builder, WebDriver } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { Config } from "types/config.js";
 import _config from "../../config.json" assert { type: "json" };
+import { tmpDir } from "./constants.js";
 import { fbMain, fbPerItem } from "./fb/index.js";
 import { kijijiMain, kijijiPerItem, kijijiPre } from "./kijiji/index.js";
+import { startDiscordBot } from "./notifications/discord/index.js";
 import { notify } from "./notify.js";
-import { Item, Platform, processItems, withUnseenItems } from "./process.js";
+import {
+  Item,
+  Platform,
+  excludeItemsOutsideSearchArea,
+  processItems,
+  withUnseenItems,
+} from "./process.js";
 import {
   discordLog,
   errorLog,
@@ -14,9 +23,6 @@ import {
   randomWait,
   verboseLog,
 } from "./util/misc.js";
-import { startDiscordBot } from "./notifications/discord/index.js";
-import { tmpDir } from "./constants.js";
-import fs from "fs";
 
 process.title = "partmin";
 
@@ -91,12 +97,19 @@ const runLoop = async (
         log(
           `\n=======================================================\n${platform}\n`
         );
-        const items = await main(config, driver);
-        verboseLog({ items });
-        if (!items?.length) {
+        const allItems = await main(config, driver);
+        if (!allItems?.length) {
           log(`Somehow there are no items upon visiting ${platform}.`);
           continue;
         }
+
+        const items = excludeItemsOutsideSearchArea(config, allItems);
+        if (!items.length) {
+          log(`No items found within the search area.`);
+          continue;
+        }
+        verboseLog({ items });
+
         await withUnseenItems(items, async (unseenItems) => {
           for (const item of unseenItems) {
             await perItem?.(config, driver, item)?.then(() =>
