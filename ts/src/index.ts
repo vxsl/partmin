@@ -56,26 +56,29 @@ const runLoop = async (
     await fs.promises.mkdir(tmpDir);
   }
   const configExists = await fs.promises
-    .access(`${tmpDir}/config.json`)
+    .access(`${tmpDir}/configSearchParams.json`)
     .then(() => true)
     .catch(() => false);
   if (!configExists) {
-    await fs.promises.writeFile(`${tmpDir}/config.json`, JSON.stringify({}));
+    await fs.promises.writeFile(
+      `${tmpDir}/configSearchParams.json`,
+      JSON.stringify({})
+    );
   }
 
   const cachedConfig = await fs.promises.readFile(
-    `${tmpDir}/config.json`,
+    `${tmpDir}/configSearchParams.json`,
     "utf-8"
   );
   let configChanged =
-    JSON.stringify(JSON.parse(cachedConfig)?.search, null, 2) !==
-    JSON.stringify(config.search, null, 2);
+    JSON.stringify(JSON.parse(cachedConfig)?.search.params, null, 2) !==
+    JSON.stringify(config.search.params, null, 2);
 
   if (configChanged) {
     log("Config change detected.");
     await fs.promises.writeFile(
-      `${tmpDir}/config.json`,
-      JSON.stringify(config, null, 2)
+      `${tmpDir}/configSearchParams.json`,
+      JSON.stringify(config.search.params, null, 2)
     );
   }
   for (const { pre } of Object.values(runners)) {
