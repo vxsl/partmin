@@ -1,21 +1,15 @@
 import dotenv from "dotenv";
 import fs from "fs";
-import { Builder, WebDriver } from "selenium-webdriver";
-import chrome from "selenium-webdriver/chrome.js";
-import { Config } from "types/config.js";
-import _config from "../../config.json" assert { type: "json" };
-import { tmpDir } from "./constants.js";
-import { fbMain, fbPerItem } from "./fb/index.js";
-import { kijijiMain, kijijiPerItem, kijijiPre } from "./kijiji/index.js";
-import { startDiscordBot } from "./notifications/discord/index.js";
-import { notify } from "./notify.js";
+import fb from "./fb/index.js";
+import kijiji from "./kijiji/index.js";
 import {
   Item,
   Platform,
   excludeItemsOutsideSearchArea,
   processItems,
   withUnseenItems,
-} from "./process.js";
+import { Item } from "types/item.js";
+import { Platform } from "types/platform.js";
 import {
   discordLog,
   errorLog,
@@ -43,16 +37,7 @@ let notifyOnExit = true;
 //   process.exit();
 // });
 
-const runLoop = async (
-  driver: WebDriver,
-  runners: Partial<{
-    [k in Platform]: {
-      main: (c: Config, d: WebDriver) => Promise<Item[] | undefined>;
-      pre?: (c: Config, d: WebDriver, configChanged?: boolean) => Promise<void>;
-      perItem?: (c: Config, d: WebDriver, i: Item) => Promise<void>;
-    };
-  }>
-) => {
+const runLoop = async (driver: WebDriver, runners: Platform[]) => {
   // TODO don't do all this crap
   const tmpDirExists = await fs.promises
     .access(tmpDir)
@@ -153,17 +138,7 @@ const main = async () => {
     discordClient = await startDiscordBot();
 
     // await loadCookies(driver);
-    await runLoop(driver, {
-      fb: {
-        main: fbMain,
-        perItem: fbPerItem,
-      },
-      kijiji: {
-        main: kijijiMain,
-        pre: kijijiPre,
-        perItem: kijijiPerItem,
-      },
-    });
+    await runLoop(driver, [fb, kijiji]);
   } catch (e) {
     if (notifyOnExit) {
       if (discordClient?.isReady()) {

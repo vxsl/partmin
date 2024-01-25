@@ -1,5 +1,6 @@
 import he from "he";
-import { Item, Platform } from "process.js";
+import { Item } from "types/item.js";
+import { PlatformKey } from "types/platform.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { Config } from "types/config.js";
@@ -128,7 +129,7 @@ export const scrapeItems = (config: Config, rssUrl: string): Promise<Item[]> =>
         return acc;
       }
       const result: Item = {
-        platform: "kijiji" as Platform,
+        platform: "kijiji" as PlatformKey,
         id,
         details: {
           title: item.title ? he.decode(item.title) : id,

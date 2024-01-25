@@ -1,37 +1,7 @@
 import dotenv from "dotenv";
-import { Config } from "types/config.js";
-import { tmpDir } from "./constants.js";
-import { approxLocationLink, isWithinRadii } from "./util/geo.js";
-import { readJSON, writeJSON } from "./util/io.js";
-import { log, verboseLog } from "./util/misc.js";
-import config from "../../config.json" assert { type: "json" };
+import { Item, SeenItemDict } from "types/item.js";
 
 dotenv.config();
-
-export type Platform = "kijiji" | "fb";
-export type Item = {
-  id: string;
-  platform: Platform;
-  url: string;
-  details: {
-    title: string;
-    price?: number;
-    longDescription?: string;
-    location?: string;
-    lat?: number;
-    lon?: number;
-  };
-  computed?: {
-    locationLinkMD?: string;
-    bulletPoints?: string[];
-  };
-  imgURLs: string[];
-  videoURLs: string[];
-};
-
-export interface SeenItemDict {
-  [k: string]: 1 | undefined;
-}
 
 let blacklist: string[] | undefined;
 
