@@ -6,17 +6,12 @@ import {
   getKijijiRSS,
   visitKijijiListing,
   scrapeItems,
-} from "platforms/kijiji/util/index.js";
+} from "platforms/kijiji/ingest.js";
 
 let rssURL: string | undefined;
 
 const kijiji: Platform = {
   key: "kijiji",
-  main: async (driver) => {
-    if (!rssURL) throw new Error("No RSS feed found");
-    log(`Kijiji RSS feed URL: ${rssURL}`);
-    return await scrapeItems(rssURL);
-  },
   pre: async (driver, configChanged) => {
     try {
       if (!configChanged) {
@@ -33,9 +28,12 @@ const kijiji: Platform = {
       await fs.promises.writeFile(`${tmpDir}/kijiji-rss-url`, rssURL);
     }
   },
-  perItem: async (driver, item) => {
-    await visitKijijiListing(driver, item);
+  main: async () => {
+    if (!rssURL) throw new Error("No RSS feed found");
+    log(`Kijiji RSS feed URL: ${rssURL}`);
+    return await scrapeItems(rssURL);
   },
+  perItem: visitKijijiListing,
 };
 
 export default kijiji;

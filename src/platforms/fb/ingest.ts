@@ -11,7 +11,7 @@ import {
   withElement,
   withElementsByXpath,
 } from "util/selenium.js";
-import { MP_ITEM_XPATH } from "platforms/fb/util/index.js";
+import { fbItemXpath } from "platforms/fb/constants.js";
 
 const platform: PlatformKey = "fb";
 
@@ -182,7 +182,7 @@ export const visitMarketplace = async (
     return state === "complete";
   });
 
-  await elementShouldExist("xpath", MP_ITEM_XPATH, driver);
+  await elementShouldExist("xpath", fbItemXpath, driver);
 
   // ensure facebook didn't ignore our requested radius:
   // TODO ensure lat and lon as well?
@@ -213,7 +213,7 @@ export const scrapeItems = async (
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
   return await withElementsByXpath(
     driver,
-    MP_ITEM_XPATH,
+    fbItemXpath,
     async (e: WebElement): Promise<Item | undefined> => {
       const href = await e.getAttribute("href");
       const id = href.match(/\d+/)?.[0];

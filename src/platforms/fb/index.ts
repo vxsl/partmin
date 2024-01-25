@@ -2,7 +2,7 @@ import {
   scrapeItems,
   visitMarketplace,
   visitMarketplaceListing,
-} from "platforms/fb/util/marketplace.js";
+} from "platforms/fb/ingest.js";
 import { decodeMapDevelopersURL } from "util/geo.js";
 import { debugLog, randomWait } from "util/misc.js";
 import { Item } from "types/item.js";
@@ -27,9 +27,7 @@ const fb: Platform = {
     }
     return items;
   },
-  perItem: async (driver, item) => {
-    await visitMarketplaceListing(driver, item);
-  },
+  perItem: visitMarketplaceListing,
 };
 
 export default fb;

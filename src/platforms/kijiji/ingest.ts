@@ -1,14 +1,15 @@
 import config from "config.js";
 import he from "he";
-import { baseURL } from "platforms/kijiji/util/constants.js";
-import { setKijijiFilters } from "platforms/kijiji/util/filter-interactions.js";
+import { baseURL } from "platforms/kijiji/constants.js";
+import { setFilters } from "platforms/kijiji/util.js";
+import { kijijiGet } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { Item } from "types/item.js";
 import { PlatformKey } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
-import { debugLog, log, notUndefined, waitSeconds } from "util/misc.js";
+import { log, notUndefined, waitSeconds } from "util/misc.js";
 import { clearAlternate, clickByXPath, type } from "util/selenium.js";
 
 const parser = new Parser({
@@ -20,17 +21,6 @@ const parser = new Parser({
     ],
   },
 });
-
-export const kijijiGet = async (url: string, driver: WebDriver) => {
-  await driver.get(url);
-  const xpath = "//button[contains(@class, 'cookieBannerCloseButton')]";
-  await driver
-    .wait(until.elementLocated(By.xpath(xpath)), 1000)
-    .then((el) => el && clickByXPath(driver, xpath))
-    .catch((e) => {
-      debugLog(e);
-    });
-};
 
 export const visitKijijiListing = async (driver: WebDriver, item: Item) => {
   await kijijiGet(item.url, driver);
@@ -108,7 +98,7 @@ export const getKijijiRSS = async (driver: WebDriver) => {
 
   await driver.wait(until.urlMatches(/^(?!.*canada).*$/));
 
-  await setKijijiFilters(driver);
+  await setFilters(driver);
 
   return await driver
     .findElement(By.xpath(`//div[@data-testid="srp-rss-feed-button"]//a`))
