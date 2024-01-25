@@ -3,7 +3,7 @@ import { Item, Platform } from "process.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { Config } from "types/config.js";
-import { debugLog, notUndefined, waitSeconds } from "../../util/misc.js";
+import { debugLog, log, notUndefined, waitSeconds } from "../../util/misc.js";
 import { clearAlternate, clickByXPath, type } from "../../util/selenium.js";
 import { baseURL } from "./constants.js";
 import { setKijijiFilters } from "./filter-interactions.js";
@@ -123,7 +123,13 @@ export const scrapeItems = (config: Config, rssUrl: string): Promise<Item[]> =>
     output.items.reduce((acc, item) => {
       const url = item.link;
       const id = url?.split("/").pop();
-      if (!url || !id || !isWithinRadii(item.lat, item.lon, config)) {
+      if (!url || !id) {
+        log(`No URL or ID found for item: ${JSON.stringify(item)}`);
+        return acc;
+      }
+      if (!isWithinRadii(item.lat, item.lon, config)) {
+        log(`Item ${id} is outside of the search radius:`);
+        log(item);
         return acc;
       }
       const result: Item = {
