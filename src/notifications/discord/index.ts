@@ -6,7 +6,7 @@ import config from "config.js";
 import { mdQuote } from "util/data.js";
 import { errorLog, log } from "util/misc.js";
 import { greetings } from "notifications/discord/chat.js";
-import { convertItemToDiscordEmbed } from "notifications/discord/util.js";
+import { convertItemToDiscordEmbed } from "notifications/discord/embed.js";
 
 dotenv.config();
 
