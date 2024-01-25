@@ -170,4 +170,5 @@ const main = async () => {
   }
 };
 
+process.title = "partmin";
 main();
