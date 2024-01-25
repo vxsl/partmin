@@ -1,37 +1,47 @@
-import config from "../config.json" assert { type: "json" };
+import {
+  Array,
+  Boolean,
+  Literal,
+  Number,
+  Optional,
+  Record,
+  Static,
+  String,
+} from "runtypes";
+import _config from "../config.json";
 
-export type Config = {
-  headless?: boolean;
-  testing?: boolean;
-  verbose?: boolean;
-  debug?: boolean;
-  skipGreeting?: boolean;
+const SearchParams = Record({
+  outdoorSpace: Optional(Boolean),
+  basementNotAccepted: Optional(Literal(true)),
+  roommateNotAccepted: Optional(Literal(true)),
+  petFriendly: Optional(Boolean),
+  price: Record({
+    min: Number,
+    max: Number,
+  }),
+});
 
-  search: {
-    params: {
-      // minArea?: number;
-      // parkingIncluded?: boolean;
-      // bedrooms: {
-      //   min: number;
-      // };
-      outdoorSpace?: boolean;
-      // propertyType: ["apartment-condo", "house", "townhouse"];
-      basementNotAccepted?: true;
-      roommateNotAccepted?: true;
-      petFriendly?: boolean;
-      price: {
-        min: number;
-        max: number;
-      };
-    };
+const Location = Record({
+  city: String,
+  region: String,
+  mapDevelopersURL: String,
+});
 
-    location: {
-      city: string;
-      region: string;
-      mapDevelopersURL: string;
-    };
-    blacklist: string[];
-  };
-};
+const Config = Record({
+  headless: Optional(Boolean),
+  testing: Optional(Boolean),
+  verbose: Optional(Boolean),
+  debug: Optional(Boolean),
+  skipGreeting: Optional(Boolean),
+  search: Record({
+    params: SearchParams,
+    location: Location,
+    blacklist: Optional(Array(String)),
+  }),
+});
 
-export default config as Config;
+export type Config = Static<typeof Config>;
+
+const config = Config.check(_config);
+
+export default config;
