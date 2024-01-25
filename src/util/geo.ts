@@ -1,6 +1,6 @@
 import haversine from "haversine";
 import { Config } from "config.js";
-import { verboseLog } from "util/misc.js";
+import { debugLog, verboseLog } from "util/misc.js";
 import { tmpDir } from "constants.js";
 import { readJSON, writeJSON } from "util/io.js";
 import axios from "axios";
@@ -62,14 +62,12 @@ export const getGoogleMapsLink = (query: string) =>
 
 export const approxLocationLink = async (lat: number, lon: number) => {
   const key = `${lat},${lon}`;
-
-  const cached = await readJSON<{ [k: string]: [string, string] }>(
-    `${tmpDir}/addresses.json`
-  );
-  const cachedAddress = cached?.[key];
-  if (cachedAddress) {
-    const display = cachedAddress[0];
-    const query = encodeURIComponent(cachedAddress[1]);
+  const cacheFile = `${tmpDir}/approximate-addresses.json`;
+  const cache = await readJSON<{ [k: string]: [string, string] }>(cacheFile);
+  const cached = cache?.[key];
+  if (cached) {
+    const display = cached[0];
+    const query = encodeURIComponent(cached[1]);
     const link = `https://www.google.com/maps/search/?api=1&query=${query}`;
     return `[*${display} **(approx.)***](${link})`;
   }
@@ -88,11 +86,39 @@ export const approxLocationLink = async (lat: number, lon: number) => {
     (comps.find((c: any) => c.types.includes("neighborhood"))?.short_name ??
       comps.find((c: any) => c.types.includes("sublocality"))?.short_name);
 
-  await writeJSON(`${tmpDir}/addresses.json`, {
-    ...cached,
+  await writeJSON(cacheFile, {
+    ...cache,
     [key]: [displayAddr, data.results[0].formatted_address],
   });
 
   const query = data.results[0].formatted_address;
   return `[*${displayAddr} **(approx.)***](${getGoogleMapsLink(query)})`;
+};
+
+export const isValidAddress = async (address: string) => {
+  let result;
+  const cacheFile = `${tmpDir}/address-validity.json`;
+  const cache =
+    (await readJSON<{ [k: string]: [string, string] }>(cacheFile)) ?? {};
+  if (address in cache) {
+    debugLog(`Address found in cache: ${address}`);
+    result = cache[address];
+  } else {
+    try {
+      const { data } = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          address
+        )}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+      );
+      result = !!data.results[0].geometry.location;
+    } catch {
+      debugLog(`Error validating address: ${address}`);
+      result = false;
+    }
+    await writeJSON(cacheFile, { ...cache, [address]: result });
+  }
+  debugLog(
+    result ? `Address is valid: ${address}` : `Address is invalid: ${address}`
+  );
+  return result;
 };

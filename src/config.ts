@@ -10,6 +10,10 @@ import {
 } from "runtypes";
 import _config from "../config.json";
 
+const Options = Record({
+  computeDistanceTo: Optional(Array(String)),
+});
+
 const SearchParams = Record({
   outdoorSpace: Optional(Boolean),
   basementNotAccepted: Optional(Literal(true)),
@@ -41,6 +45,7 @@ const Development = Record({
 const Config = Record({
   development: Optional(Development),
   logging: Optional(Logging),
+  options: Optional(Options),
   search: Record({
     params: SearchParams,
     location: Location,

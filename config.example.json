@@ -8,6 +8,11 @@
     "testing": false,
     "skipGreeting": false
   },
+  "options": {
+    "computeDistanceTo": [
+      "99 Rue Chabanel O, Montréal, QC H2N 1C3"
+    ]
+  },
   "search": {
     "params": {
       "basementNotAccepted": true,

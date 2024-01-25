@@ -15,6 +15,7 @@ import { Builder, WebDriver } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { Item } from "types/item.js";
 import { Platform } from "types/platform.js";
+import { isValidAddress } from "util/geo.js";
 import {
   discordLog,
   errorLog,
@@ -129,6 +130,14 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
 };
 
 const main = async () => {
+  for (const address of config.options?.computeDistanceTo ?? []) {
+    if (!(await isValidAddress(address))) {
+      throw new Error(
+        `Invalid address provided to config.options.computeDistanceTo: ${address}`
+      );
+    }
+  }
+
   let driver, discordClient;
   try {
     driver = await new Builder()
