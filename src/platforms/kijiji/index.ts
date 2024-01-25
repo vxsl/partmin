@@ -1,8 +1,12 @@
 import fs from "fs";
-import { tmpDir } from "../constants.js";
+import { tmpDir } from "constants.js";
 import { Platform } from "types/platform.js";
-import { log } from "../util/misc.js";
-import { getKijijiRSS, visitKijijiListing, scrapeItems } from "./util/index.js";
+import { log } from "util/misc.js";
+import {
+  getKijijiRSS,
+  visitKijijiListing,
+  scrapeItems,
+} from "platforms/kijiji/util/index.js";
 
 let rssURL: string | undefined;
 

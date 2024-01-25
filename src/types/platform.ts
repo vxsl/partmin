@@ -1,5 +1,5 @@
 import { WebDriver } from "selenium-webdriver";
-import { Config } from "types/config.js";
+import { Config } from "config.js";
 import { Item } from "types/item.js";
 
 // main: (c: Config, d: WebDriver) => Promise<Item[] | undefined>;

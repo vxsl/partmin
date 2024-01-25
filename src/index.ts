@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 import fs from "fs";
 import { startDiscordBot } from "notifications/discord/index.js";
 import { notify } from "notify.js";
-import fb from "./fb/index.js";
-import kijiji from "./kijiji/index.js";
+import fb from "platforms/fb/index.js";
+import kijiji from "platforms/kijiji/index.js";
 import {
   excludeItemsOutsideSearchArea,
   processItems,

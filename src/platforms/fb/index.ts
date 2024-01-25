@@ -1,15 +1,13 @@
-import { WebDriver } from "selenium-webdriver";
-import { decodeMapDevelopersURL } from "../util/geo.js";
-import { debugLog, randomWait } from "../util/misc.js";
 import {
   scrapeItems,
   visitMarketplace,
   visitMarketplaceListing,
-} from "./util/marketplace.js";
-
-import { Config } from "types/config.js";
-import { Item } from "../process.js";
-import { withDOMChangesBlocked } from "../util/selenium.js";
+} from "platforms/fb/util/marketplace.js";
+import { decodeMapDevelopersURL } from "util/geo.js";
+import { debugLog, randomWait } from "util/misc.js";
+import { Item } from "types/item.js";
+import { Platform } from "types/platform.js";
+import { withDOMChangesBlocked } from "util/selenium.js";
 
 const fb: Platform = {
   key: "fb",
