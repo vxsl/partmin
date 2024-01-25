@@ -1,8 +1,8 @@
 import haversine from "haversine";
-import { Config } from "../types/config.js";
-import { verboseLog } from "./misc.js";
-import { tmpDir } from "../constants.js";
-import { readJSON, writeJSON } from "./io.js";
+import { Config } from "config.js";
+import { verboseLog } from "util/misc.js";
+import { tmpDir } from "constants.js";
+import { readJSON, writeJSON } from "util/io.js";
 import axios from "axios";
 
 // TODO move to types?

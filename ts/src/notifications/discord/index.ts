@@ -1,12 +1,12 @@
 import Discord from "discord.js";
 import dotenv from "dotenv";
 import { WebDriver } from "selenium-webdriver";
-import config from "../../../../config.json" assert { type: "Config" };
-import { Item } from "../../process.js";
-import { convertItemToDiscordEmbed } from "./util.js";
-import { errorLog, log } from "../../util/misc.js";
-import { mdQuote } from "../../util/data.js";
-import { greetings } from "./chat.js";
+import { Item } from "types/item.js";
+import config from "config.js";
+import { mdQuote } from "util/data.js";
+import { errorLog, log } from "util/misc.js";
+import { greetings } from "notifications/discord/chat.js";
+import { convertItemToDiscordEmbed } from "notifications/discord/util.js";
 
 dotenv.config();
 
@@ -48,7 +48,7 @@ if (!channelIDs.logs) {
   process.exit(1);
 }
 
-client.on("ready", async () => {
+client.on("ready", () => {
   // // delete all messages in channel:
   // const channel = await getChannel("main");
   // const messages = await channel.messages.fetch();

@@ -1,13 +1,18 @@
+import config from "config.js";
+import { tmpDir } from "constants.js";
 import dotenv from "dotenv";
 import fs from "fs";
+import { startDiscordBot } from "notifications/discord/index.js";
+import { notify } from "notify.js";
 import fb from "./fb/index.js";
 import kijiji from "./kijiji/index.js";
 import {
-  Item,
-  Platform,
   excludeItemsOutsideSearchArea,
   processItems,
   withUnseenItems,
+} from "process.js";
+import { Builder, WebDriver } from "selenium-webdriver";
+import chrome from "selenium-webdriver/chrome.js";
 import { Item } from "types/item.js";
 import { Platform } from "types/platform.js";
 import {
@@ -16,13 +21,11 @@ import {
   log,
   randomWait,
   verboseLog,
-} from "./util/misc.js";
+} from "util/misc.js";
 
 process.title = "partmin";
 
 dotenv.config();
-
-const config = _config as Config; // TODO don't naively assert here
 
 const ops = new chrome.Options();
 if (config.headless) {

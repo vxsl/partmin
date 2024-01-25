@@ -11,26 +11,28 @@ import { Config } from "types/config.js";
 import { Item } from "../process.js";
 import { withDOMChangesBlocked } from "../util/selenium.js";
 
-export const fbMain = async (config: Config, driver: WebDriver) => {
-  const items: Item[] = [];
-  const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
-  for (const r of radii) {
-    debugLog(`visiting fb marketplace for radius ${JSON.stringify(r)}`);
-    await visitMarketplace(config, driver, r);
-    await withDOMChangesBlocked(driver, async () => {
-      await scrapeItems(config, driver).then((arr) =>
-        items.push(...(arr ?? []))
-      );
-    });
-    await randomWait({ short: true, suppressLog: true });
-  }
-  return items;
+const fb: Platform = {
+  key: "fb",
+  main: async (config, driver) => {
+    const items: Item[] = [];
+    const radii = decodeMapDevelopersURL(
+      config.search.location.mapDevelopersURL
+    );
+    for (const r of radii) {
+      debugLog(`visiting fb marketplace for radius ${JSON.stringify(r)}`);
+      await visitMarketplace(config, driver, r);
+      await withDOMChangesBlocked(driver, async () => {
+        await scrapeItems(config, driver).then((arr) =>
+          items.push(...(arr ?? []))
+        );
+      });
+      await randomWait({ short: true, suppressLog: true });
+    }
+    return items;
+  },
+  perItem: async (_, driver, item) => {
+    await visitMarketplaceListing(driver, item);
+  },
 };
 
-export const fbPerItem = async (
-  config: Config,
-  driver: WebDriver,
-  item: Item
-) => {
-  await visitMarketplaceListing(driver, item);
-};
+export default fb;

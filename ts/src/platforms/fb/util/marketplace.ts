@@ -1,18 +1,19 @@
-import { Item, Platform } from "process.js";
+import { Item } from "types/item.js";
+import { PlatformKey } from "types/platform.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
-import { Config } from "types/config.js";
-import { findNestedProperty } from "../../util/data.js";
-import { Radius, getGoogleMapsLink } from "../../util/geo.js";
-import { debugLog, discordLog, log, notUndefined } from "../../util/misc.js";
+import { Config } from "config.js";
+import { findNestedProperty } from "util/data.js";
+import { Radius, getGoogleMapsLink } from "util/geo.js";
+import { debugLog, discordLog, log, notUndefined } from "util/misc.js";
 import {
   clearBrowsingData,
   elementShouldExist,
   withElement,
   withElementsByXpath,
-} from "../../util/selenium.js";
-import { MP_ITEM_XPATH } from "./index.js";
+} from "util/selenium.js";
+import { MP_ITEM_XPATH } from "platforms/fb/util/index.js";
 
-const platform: Platform = "fb";
+const platform: PlatformKey = "fb";
 
 export const visitMarketplaceListing = async (
   driver: WebDriver,

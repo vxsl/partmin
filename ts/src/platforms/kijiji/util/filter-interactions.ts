@@ -1,6 +1,6 @@
 import { By, WebDriver } from "selenium-webdriver";
-import { Config } from "types/config.js";
-import { RecursiveKeyMap } from "../../types/type-utils.js";
+import { Config } from "config.js";
+import { RecursiveKeyMap } from "types/type-utils.js";
 import {
   click,
   clickAllByXPath,
@@ -9,8 +9,8 @@ import {
   fillInputByLabel,
   waitUntilUrlChanges,
   withElement,
-} from "../../util/selenium.js";
-import { debugLog } from "../../util/misc.js";
+} from "util/selenium.js";
+import { debugLog } from "util/misc.js";
 
 type ConfigInteractions = RecursiveKeyMap<
   Config["search"]["params"],

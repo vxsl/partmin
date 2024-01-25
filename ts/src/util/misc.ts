@@ -1,6 +1,6 @@
 import { stdout as singleLineStdOut } from "single-line-log";
-import { discordMsg } from "../notifications/discord/index.js";
-import config from "../../../config.json" assert { type: "Config" };
+import { discordMsg } from "notifications/discord/index.js";
+import config from "config.js";
 
 export const waitSeconds = async (s: number) =>
   await new Promise((resolve) => setTimeout(resolve, s * 1000));

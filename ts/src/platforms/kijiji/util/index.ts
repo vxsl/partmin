@@ -3,13 +3,13 @@ import { Item } from "types/item.js";
 import { PlatformKey } from "types/platform.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
-import { Config } from "types/config.js";
-import { trimAddress } from "../../util/data.js";
-import { getGoogleMapsLink } from "../../util/geo.js";
-import { debugLog, log, notUndefined, waitSeconds } from "../../util/misc.js";
-import { clearAlternate, clickByXPath, type } from "../../util/selenium.js";
-import { baseURL } from "./constants.js";
-import { setKijijiFilters } from "./filter-interactions.js";
+import { Config } from "config.js";
+import { trimAddress } from "util/data.js";
+import { getGoogleMapsLink } from "util/geo.js";
+import { debugLog, log, notUndefined, waitSeconds } from "util/misc.js";
+import { clearAlternate, clickByXPath, type } from "util/selenium.js";
+import { baseURL } from "platforms/kijiji/util/constants.js";
+import { setKijijiFilters } from "platforms/kijiji/util/filter-interactions.js";
 
 const parser = new Parser({
   customFields: {

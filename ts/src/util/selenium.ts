@@ -1,3 +1,4 @@
+import { tmpDir } from "constants.js";
 import {
   By,
   Condition,
@@ -7,9 +8,8 @@ import {
   WebElementPromise,
   until,
 } from "selenium-webdriver";
-import { tmpDir } from "../constants.js";
-import { readJSON, writeJSON } from "./io.js";
-import { debugLog, verboseLog, waitSeconds } from "./misc.js";
+import { readJSON, writeJSON } from "util/io.js";
+import { debugLog, waitSeconds } from "util/misc.js";
 
 export const clearBrowsingData = async (driver: WebDriver) => {
   if (!(await driver.getCurrentUrl()).startsWith("data")) {

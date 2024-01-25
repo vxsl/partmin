@@ -1,8 +1,9 @@
-import { notUndefined } from "../../util/misc.js";
-import { Item, Platform } from "../../process.js";
+import { notUndefined } from "util/misc.js";
+import { Item } from "types/item.js";
+import { PlatformKey } from "types/platform.js";
 import Discord from "discord.js";
 
-const platformIcons: Record<Platform, string> = {
+const platformIcons: Record<PlatformKey, string> = {
   kijiji: "https://www.kijiji.ca/favicon.ico",
   fb: "https://www.facebook.com/favicon.ico",
 };
