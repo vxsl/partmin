@@ -4,7 +4,7 @@ import { WebDriver } from "selenium-webdriver";
 import config from "../../../../config.json" assert { type: "Config" };
 import { Item } from "../../process.js";
 import { convertItemToDiscordEmbed } from "./util.js";
-import { log } from "../../util/misc.js";
+import { errorLog, log } from "../../util/misc.js";
 import { mdQuote } from "../../util/data.js";
 import { greetings } from "./chat.js";
 
@@ -66,15 +66,20 @@ export const discordMsg = async (
   c: Channel,
   ...args: Parameters<Discord.PartialTextBasedChannelFields["send"]>
 ) => {
-  const channel = await getChannel(c);
-  if (!channel.client.isReady()) {
-    console.error(`Client for channel with ID ${channelIDs[c]} not ready`);
-    return;
+  try {
+    const channel = await getChannel(c);
+    if (!channel.client.isReady()) {
+      console.error(`Client for channel with ID ${channelIDs[c]} not ready`);
+      return;
+    }
+    if (channel) {
+      return channel.send(...args);
+    }
+    console.error(`Channel with ID ${channelIDs[c]} not found`);
+  } catch (e) {
+    errorLog(`Error while sending message to Discord:`);
+    errorLog(e);
   }
-  if (channel) {
-    return channel.send(...args);
-  }
-  console.error(`Channel with ID ${channelIDs[c]} not found`);
 };
 
 export const discordEmbed = async (driver: WebDriver, item: Item) => {
