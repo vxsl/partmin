@@ -82,14 +82,14 @@ const runLoop = async (
 
   if (configChanged) {
     log("Config change detected.");
-    await fs.promises.writeFile(
-      `${tmpDir}/configSearchParams.json`,
-      JSON.stringify(config.search.params, null, 2)
-    );
   }
   for (const { pre } of Object.values(runners)) {
     await (pre?.(config, driver, configChanged) ?? Promise.resolve());
   }
+  await fs.promises.writeFile(
+    `${tmpDir}/configSearchParams.json`,
+    JSON.stringify(config.search.params, null, 2)
+  );
 
   while (true) {
     try {
