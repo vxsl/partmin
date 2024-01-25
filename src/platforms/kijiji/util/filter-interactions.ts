@@ -1,5 +1,5 @@
 import { By, WebDriver } from "selenium-webdriver";
-import { Config } from "config.js";
+import config, { Config } from "config.js";
 import { RecursiveKeyMap } from "types/type-utils.js";
 import {
   click,
@@ -40,8 +40,7 @@ export const ensureFilterIsOpen = async (id: string, driver: WebDriver) => {
 };
 
 export const getFilterInteractions = (
-  driver: WebDriver,
-  config: Config
+  driver: WebDriver
 ): ConfigInteractions => {
   return {
     // minArea: async () => {
@@ -208,7 +207,7 @@ export const getFilterInteractions = (
   };
 };
 
-export const setKijijiFilters = async (driver: WebDriver, config: Config) => {
+export const setKijijiFilters = async (driver: WebDriver) => {
   const interactWithFilters = async (obj: {
     [k: string]: Function | Object;
   }) => {
@@ -224,5 +223,5 @@ export const setKijijiFilters = async (driver: WebDriver, config: Config) => {
     }
   };
 
-  await interactWithFilters(getFilterInteractions(driver, config));
+  await interactWithFilters(getFilterInteractions(driver));
 };

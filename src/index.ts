@@ -72,7 +72,7 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
     log("Config change detected.");
   }
   for (const { pre } of Object.values(runners)) {
-    await (pre?.(config, driver, configChanged) ?? Promise.resolve());
+    await (pre?.(driver, configChanged) ?? Promise.resolve());
   }
   await fs.promises.writeFile(
     `${tmpDir}/configSearchParams.json`,
@@ -87,7 +87,7 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
         );
         let allItems: Item[] | undefined;
         try {
-          allItems = await main(config, driver);
+          allItems = await main(driver);
           if (!allItems?.length) {
             log(`Somehow there are no items upon visiting ${platform}.`);
             continue;
@@ -99,7 +99,7 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
         }
 
         try {
-          const items = excludeItemsOutsideSearchArea(config, allItems);
+          const items = excludeItemsOutsideSearchArea(allItems);
           if (!items.length) {
             log(`No items found within the search area.`);
             continue;
@@ -108,11 +108,11 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
 
           await withUnseenItems(items, async (unseenItems) => {
             for (const item of unseenItems) {
-              await perItem?.(config, driver, item)?.then(() =>
+              await perItem?.(driver, item)?.then(() =>
                 randomWait({ short: true, suppressLog: true })
               );
             }
-            await processItems(config, unseenItems).then(async (arr) => {
+            await processItems(unseenItems).then(async (arr) => {
               for (const item of arr) {
                 await sendEmbedWithButtons(item);
                 await waitSeconds(0.5);

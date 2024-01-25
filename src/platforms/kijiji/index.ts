@@ -12,12 +12,12 @@ let rssURL: string | undefined;
 
 const kijiji: Platform = {
   key: "kijiji",
-  main: async (config, driver) => {
+  main: async (driver) => {
     if (!rssURL) throw new Error("No RSS feed found");
     log(`Kijiji RSS feed URL: ${rssURL}`);
-    return await scrapeItems(config, rssURL);
+    return await scrapeItems(rssURL);
   },
-  pre: async (config, driver, configChanged) => {
+  pre: async (driver, configChanged) => {
     try {
       if (!configChanged) {
         rssURL = await fs.promises.readFile(
@@ -28,13 +28,13 @@ const kijiji: Platform = {
     } catch {}
     if (!rssURL) {
       log("No cached RSS feed found, fetching new one");
-      rssURL = await getKijijiRSS(config, driver);
+      rssURL = await getKijijiRSS(driver);
       log(`New RSS feed URL: ${rssURL}`);
       await fs.promises.writeFile(`${tmpDir}/kijiji-rss-url`, rssURL);
     }
   },
-  perItem: async (config, driver, item) => {
-    await visitKijijiListing(config, driver, item);
+  perItem: async (driver, item) => {
+    await visitKijijiListing(driver, item);
   },
 };
 

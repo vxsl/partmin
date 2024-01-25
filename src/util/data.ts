@@ -1,4 +1,4 @@
-import { Config } from "config.js";
+import config from "config.js";
 export const findNestedProperty = (jsonString: string, key: string): any => {
   const keyIndex = jsonString.indexOf(`"${key}"`);
 
@@ -32,7 +32,7 @@ const sanitizeString = (s: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-export const trimAddress = (config: Config, address: string): string => {
+export const trimAddress = (address: string): string => {
   const city = sanitizeString(config.search.location.city);
   const prov = sanitizeString(config.search.location.region);
   const cityIndex = sanitizeString(address).lastIndexOf(city);

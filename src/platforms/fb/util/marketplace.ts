@@ -1,7 +1,7 @@
 import { Item } from "types/item.js";
 import { PlatformKey } from "types/platform.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
-import { Config } from "config.js";
+import config from "config.js";
 import { findNestedProperty } from "util/data.js";
 import { Radius, getGoogleMapsLink } from "util/geo.js";
 import { debugLog, discordLog, log, notUndefined } from "util/misc.js";
@@ -133,7 +133,6 @@ export const visitMarketplaceListing = async (
 };
 
 export const visitMarketplace = async (
-  config: Config,
   driver: WebDriver,
   radius: Radius,
   tries: number = 0
@@ -199,7 +198,7 @@ export const visitMarketplace = async (
   if (urlRadius < minRadius || urlRadius > maxRadius) {
     const maxTries = 3;
     if (++tries < maxTries) {
-      visitMarketplace(config, driver, radius, tries);
+      visitMarketplace(driver, radius, tries);
     } else {
       discordLog(
         `Facebook Marketplace is misbehaving by refusing to correctly load ${url}.`
@@ -209,7 +208,6 @@ export const visitMarketplace = async (
 };
 
 export const scrapeItems = async (
-  config: Config,
   driver: WebDriver
 ): Promise<Item[] | undefined> => {
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);

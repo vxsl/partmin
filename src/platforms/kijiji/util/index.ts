@@ -1,15 +1,15 @@
+import config from "config.js";
 import he from "he";
-import { Item } from "types/item.js";
-import { PlatformKey } from "types/platform.js";
+import { baseURL } from "platforms/kijiji/util/constants.js";
+import { setKijijiFilters } from "platforms/kijiji/util/filter-interactions.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
-import { Config } from "config.js";
+import { Item } from "types/item.js";
+import { PlatformKey } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
 import { debugLog, log, notUndefined, waitSeconds } from "util/misc.js";
 import { clearAlternate, clickByXPath, type } from "util/selenium.js";
-import { baseURL } from "platforms/kijiji/util/constants.js";
-import { setKijijiFilters } from "platforms/kijiji/util/filter-interactions.js";
 
 const parser = new Parser({
   customFields: {
@@ -32,11 +32,7 @@ export const kijijiGet = async (url: string, driver: WebDriver) => {
     });
 };
 
-export const visitKijijiListing = async (
-  config: Config,
-  driver: WebDriver,
-  item: Item
-) => {
+export const visitKijijiListing = async (driver: WebDriver, item: Item) => {
   await kijijiGet(item.url, driver);
   const data: any = await driver.executeScript("return window.__data;");
   if (!data || typeof data !== "object") {
@@ -70,7 +66,7 @@ export const visitKijijiListing = async (
   try {
     const loc = data.viewItemPage.viewItemData.adLocation.mapAddress;
     if (loc) {
-      item.details.location = trimAddress(config, loc);
+      item.details.location = trimAddress(loc);
       item.computed = {
         ...(item.computed ?? {}),
         locationLinkMD: `[**${item.details.location}**](${getGoogleMapsLink(
@@ -88,7 +84,7 @@ export const visitKijijiListing = async (
     .getAttribute("innerText");
 };
 
-export const getKijijiRSS = async (config: Config, driver: WebDriver) => {
+export const getKijijiRSS = async (driver: WebDriver) => {
   await kijijiGet(baseURL, driver);
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
 
@@ -112,14 +108,14 @@ export const getKijijiRSS = async (config: Config, driver: WebDriver) => {
 
   await driver.wait(until.urlMatches(/^(?!.*canada).*$/));
 
-  await setKijijiFilters(driver, config);
+  await setKijijiFilters(driver);
 
   return await driver
     .findElement(By.xpath(`//div[@data-testid="srp-rss-feed-button"]//a`))
     .then((el) => el.getAttribute("href"));
 };
 
-export const scrapeItems = (config: Config, rssUrl: string): Promise<Item[]> =>
+export const scrapeItems = (rssUrl: string): Promise<Item[]> =>
   parser.parseURL(rssUrl).then((output) =>
     output.items.reduce((acc, item) => {
       const url = item.link;

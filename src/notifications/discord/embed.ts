@@ -2,6 +2,7 @@ import Discord from "discord.js";
 import { ChannelKey, getChannel } from "notifications/discord/index.js";
 import { Item } from "types/item.js";
 import { PlatformKey } from "types/platform.js";
+import { mdQuote } from "util/data.js";
 import { notUndefined } from "util/misc.js";
 
 const platformIcons: Record<PlatformKey, string> = {

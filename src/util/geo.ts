@@ -1,5 +1,5 @@
 import haversine from "haversine";
-import { Config } from "config.js";
+import config from "config.js";
 import { debugLog, verboseLog } from "util/misc.js";
 import { tmpDir } from "constants.js";
 import { readJSON, writeJSON } from "util/io.js";
@@ -30,7 +30,7 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
   });
 };
 
-export const isWithinRadii = (lat: number, lon: number, config: Config) => {
+export const isWithinRadii = (lat: number, lon: number) => {
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
   verboseLog(`checking if ${lat}, ${lon} is within ${radii.length} radii:`);
   verboseLog(radii);

@@ -1,6 +1,6 @@
-import { By, Key, WebDriver, WebElementPromise } from "selenium-webdriver";
+import { By, WebDriver, WebElementPromise } from "selenium-webdriver";
 import { waitSeconds as seconds } from "util/misc.js";
-import { click, elementShouldExist, type } from "util/selenium.js";
+import { click, type } from "util/selenium.js";
 
 export const MP_ITEM_XPATH = `.//a[contains(@href,'/marketplace/item/')]`;
 

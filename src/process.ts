@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-import { Config } from "config.js";
 import { tmpDir } from "constants.js";
 import { approxLocationLink, isWithinRadii } from "util/geo.js";
 import { readJSON, writeJSON } from "util/io.js";
@@ -9,7 +8,7 @@ import { Item, SeenItemDict } from "types/item.js";
 
 dotenv.config();
 
-let blacklist: string[] | undefined;
+const blacklist = config.search.blacklist?.map((b) => b.toLowerCase());
 
 const findBlacklistedWords = (i: Item): string[] | null => {
   const result: string[] = [];
@@ -85,11 +84,7 @@ export const withUnseenItems = async <T>(
   return result;
 };
 
-export const processItems = async (config: Config, unseenItems: Item[]) => {
-  if (!blacklist) {
-    blacklist = config.search.blacklist?.map((b) => b.toLowerCase());
-  }
-
+export const processItems = async (unseenItems: Item[]) => {
   // process items:
   const [targets, blacklistLogs] = await unseenItems.reduce<
     Promise<[Item[], string[]]>
@@ -139,11 +134,11 @@ export const processItems = async (config: Config, unseenItems: Item[]) => {
   return targets;
 };
 
-export const excludeItemsOutsideSearchArea = (config: Config, items: Item[]) =>
+export const excludeItemsOutsideSearchArea = (items: Item[]) =>
   items.filter((item) => {
     if (item.details.lat === undefined || item.details.lon === undefined)
       return true;
-    const v = isWithinRadii(item.details.lat, item.details.lon, config);
+    const v = isWithinRadii(item.details.lat, item.details.lon);
     if (!v) {
       log(`Item ${getSeenItemKey(item)} is outside of the search area:`);
       log(item);
