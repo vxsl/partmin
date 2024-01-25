@@ -47,7 +47,7 @@ const findBlacklistedWords = (i: Item): string[] | null => {
   return null;
 };
 
-const seenPath = config.testing
+const seenPath = config.development?.testing
   ? `${tmpDir}/test-seen.json`
   : `${tmpDir}/seen.json`;
 export const loadSeenItems = async () =>
@@ -78,7 +78,7 @@ export const withUnseenItems = async <T>(
   log(
     `${unseenItems.length} unseen item${
       unseenItems.length !== 1 ? "s" : ""
-    } out of ${items.length}${config.verbose ? ":" : "."}`
+    } out of ${items.length}${config.logging?.verbose ? ":" : "."}`
   );
   verboseLog(unseenItems);
 
@@ -134,7 +134,7 @@ export const processItems = async (config: Config, unseenItems: Item[]) => {
 
   log(
     `${targets.length} new result${targets.length !== 1 ? "s" : ""}${
-      config.verbose ? ":" : "."
+      config.logging?.verbose ? ":" : "."
     }`
   );
   verboseLog(targets);

@@ -1,9 +1,13 @@
 {
-  "headless": true,
-  "testing": true,
-  "verbose": true,
-  "debug": true,
-  "skipGreeting": false,
+  "logging": {
+    "verbose": true,
+    "debug": true
+  },
+  "development": {
+    "headed": false,
+    "testing": false,
+    "skipGreeting": false
+  },
   "search": {
     "params": {
       "basementNotAccepted": true,
@@ -36,9 +40,11 @@
       "sous-location",
       "sublet",
       "coloc",
+      "coloque",
       "colocation",
       "colocataire",
-      "Pas d animaux"
+      "pas d animaux",
+      "animaux non autorisés"
     ]
   }
 }

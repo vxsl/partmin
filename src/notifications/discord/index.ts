@@ -14,26 +14,19 @@ const client = new Discord.Client({ intents: 512 });
 
 type Channel = "main" | "logs";
 
-const getChannel = async (c: Channel) => {
-  const id = channelIDs[c];
-  const result = (await (client.channels.cache.get(id) ??
-    client.channels.fetch(id))) as Discord.TextChannel;
-  if (!result) {
-    throw new Error(`Channel with ID ${id} not found`);
-  }
-  return result;
-};
-
 const token = process.env.DISCORD_BOT_TOKEN;
 
-const channelIDs = {
-  main: config.testing
-    ? process.env.DISCORD_CHANNEL_ID_MAIN_TEST
-    : process.env.DISCORD_CHANNEL_ID_MAIN,
-  logs: config.testing
-    ? process.env.DISCORD_CHANNEL_ID_LOGS_TEST
-    : process.env.DISCORD_CHANNEL_ID_LOGS,
-} as Record<Channel, string>; // TODO remove assertion
+const channelIDs = (
+  config.development?.testing
+    ? {
+        main: process.env.DISCORD_CHANNEL_ID_MAIN_TEST,
+        logs: process.env.DISCORD_CHANNEL_ID_LOGS_TEST,
+      }
+    : {
+        main: process.env.DISCORD_CHANNEL_ID_MAIN,
+        logs: process.env.DISCORD_CHANNEL_ID_LOGS,
+      }
+) as Record<Channel, string>;
 
 if (!token) {
   console.error("No DISCORD_BOT_TOKEN provided in .env");
@@ -48,6 +41,16 @@ if (!channelIDs.logs) {
   process.exit(1);
 }
 
+const getChannel = async (c: Channel) => {
+  const id = channelIDs[c];
+  const result = (await (client.channels.cache.get(id) ??
+    client.channels.fetch(id))) as Discord.TextChannel;
+  if (!result) {
+    throw new Error(`Channel with ID ${id} not found`);
+  }
+  return result;
+};
+
 client.on("ready", () => {
   // // delete all messages in channel:
   // const channel = await getChannel("main");
@@ -55,7 +58,7 @@ client.on("ready", () => {
   // await channel.bulkDelete(messages);
   // process.exit();
 
-  if (!config.skipGreeting) {
+  if (!config.development?.skipGreeting) {
     const g = greetings[Math.floor(Math.random() * greetings.length)];
     discordMsg("main", g);
     log(g);

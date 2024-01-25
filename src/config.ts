@@ -27,12 +27,20 @@ const Location = Record({
   mapDevelopersURL: String,
 });
 
-const Config = Record({
-  headless: Optional(Boolean),
-  testing: Optional(Boolean),
-  verbose: Optional(Boolean),
+const Logging = Record({
   debug: Optional(Boolean),
+  verbose: Optional(Boolean),
+});
+
+const Development = Record({
+  headed: Optional(Boolean),
+  testing: Optional(Boolean),
   skipGreeting: Optional(Boolean),
+});
+
+const Config = Record({
+  development: Optional(Development),
+  logging: Optional(Logging),
   search: Record({
     params: SearchParams,
     location: Location,

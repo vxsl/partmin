@@ -17,7 +17,7 @@ export const fatalError = (
 };
 
 export const debugLog = (msg?: any) => {
-  if (config.debug) {
+  if (config.logging?.debug) {
     console.log(`${new Date().toLocaleTimeString("it-IT")}: ${msg}`);
   }
 };
@@ -37,7 +37,7 @@ export const discordLog = (message: any, options?: { monospace?: true }) => {
 };
 
 export const verboseLog = (...args: Parameters<typeof console.log>) => {
-  if (config.verbose) {
+  if (config.logging?.verbose) {
     console.log(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
   }
 };

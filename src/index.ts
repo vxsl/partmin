@@ -28,7 +28,7 @@ process.title = "partmin";
 dotenv.config();
 
 const ops = new chrome.Options();
-if (config.headless) {
+if (!config.development?.headed) {
   ops.addArguments("--headless");
   ops.addArguments("--disable-gpu");
 }
