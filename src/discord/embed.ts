@@ -61,6 +61,36 @@ export const convertItemToDiscordEmbed = (item: Item) => {
     );
 };
 
+const getButtons = (item: Item) => {
+  let descButton: Discord.ButtonBuilder | undefined,
+    prevImgButton: Discord.ButtonBuilder | undefined,
+    imgButton: Discord.ButtonBuilder | undefined,
+    nextImgButton: Discord.ButtonBuilder | undefined;
+
+  if (item.details.longDescription !== undefined) {
+    descButton = new Discord.ButtonBuilder()
+      .setCustomId("desc")
+      .setLabel(`📄`)
+      .setStyle(Discord.ButtonStyle.Secondary)
+      .setDisabled(item.details.longDescription === undefined);
+  }
+  if (item.imgURLs.length > 1) {
+    prevImgButton = new Discord.ButtonBuilder()
+      .setCustomId("prevImg")
+      .setLabel("⬅")
+      .setStyle(Discord.ButtonStyle.Secondary);
+    imgButton = new Discord.ButtonBuilder()
+      .setCustomId("img")
+      .setLabel(`️${1} / ${item.imgURLs.length}`)
+      .setStyle(Discord.ButtonStyle.Secondary);
+    nextImgButton = new Discord.ButtonBuilder()
+      .setCustomId("nextImg")
+      .setLabel(`➡`)
+      .setStyle(Discord.ButtonStyle.Secondary);
+  }
+  return { prevImgButton, imgButton, nextImgButton, descButton };
+};
+
 export const sendEmbedWithButtons = async (
   item: Item,
   c: ChannelKey = "main"
@@ -69,54 +99,24 @@ export const sendEmbedWithButtons = async (
 
   const embed = convertItemToDiscordEmbed(item);
 
-  const descButton = new Discord.ButtonBuilder()
-    .setCustomId("desc")
-    .setLabel(`📄`)
-    .setStyle(Discord.ButtonStyle.Secondary)
-    .setDisabled(item.details.longDescription === undefined);
+  const buttons = getButtons(item);
+  const buttonsArr = Object.values(buttons).filter(notUndefined);
 
-  const buttonRow = new Discord.ActionRowBuilder<Discord.ButtonBuilder>({
-    components: [descButton],
-  });
+  const components = !buttonsArr.length
+    ? undefined
+    : [
+        new Discord.ActionRowBuilder<Discord.ButtonBuilder>({
+          components: buttonsArr,
+        }),
+      ];
 
-  if (item.imgURLs.length <= 1) {
-    await channel.send({ embeds: [embed], components: [buttonRow] });
+  const msg = await channel.send({ embeds: [embed], components });
+
+  if (!components) {
     return;
   }
 
-  const imgButton = new Discord.ButtonBuilder()
-    .setCustomId("img")
-    .setLabel(`️${1} / ${item.imgURLs.length}`)
-    .setStyle(Discord.ButtonStyle.Secondary);
-  buttonRow.setComponents([
-    new Discord.ButtonBuilder()
-      .setCustomId("prevImg")
-      .setLabel("⬅")
-      .setStyle(Discord.ButtonStyle.Secondary),
-    imgButton,
-    new Discord.ButtonBuilder()
-      .setCustomId("nextImg")
-      .setLabel(`➡`)
-      .setStyle(Discord.ButtonStyle.Secondary),
-    descButton,
-  ]);
-
-  const msg = await channel.send({
-    embeds: [embed],
-    components: [buttonRow],
-  });
-
-  const collector = msg.createMessageComponentCollector({
-    filter: (interaction) => {
-      interaction.deferUpdate();
-      return (
-        interaction.customId === "nextImg" ||
-        interaction.customId === "prevImg" ||
-        interaction.customId === "desc"
-      );
-    },
-    time: 24 * 3600000,
-  });
+  const { imgButton, descButton } = buttons;
 
   let i = 0;
   let descOpened = false;
@@ -125,45 +125,56 @@ export const sendEmbedWithButtons = async (
   const navigateImg = async (backwards = false) => {
     const len = item.imgURLs.length;
     i = (backwards ? i - 1 + len : i + 1) % len;
-    imgButton.setLabel(`${i + 1} / ${len}`);
+    imgButton?.setLabel(`${i + 1} / ${len}`);
     embed.setImage(item.imgURLs[i]).setThumbnail(null);
-    await msg.edit({ embeds: [embed], components: [buttonRow] });
+    await msg.edit({ embeds: [embed], components });
   };
 
-  collector.on("collect", async (interaction) => {
-    switch (interaction.customId) {
-      case "nextImg":
-        await navigateImg();
-        break;
-      case "prevImg":
-        await navigateImg(true);
-        break;
-      case "desc":
-        if (item.details.longDescription === undefined) {
+  msg
+    .createMessageComponentCollector({
+      filter: (interaction) => {
+        interaction.deferUpdate();
+        return (
+          interaction.customId === "nextImg" ||
+          interaction.customId === "prevImg" ||
+          interaction.customId === "desc"
+        );
+      },
+      time: 24 * 3600000,
+    })
+    .on("collect", async (interaction) => {
+      switch (interaction.customId) {
+        case "nextImg":
+          await navigateImg();
           break;
-        }
-        descButton.setDisabled(true);
-        msg.edit({ components: [buttonRow] });
+        case "prevImg":
+          await navigateImg(true);
+          break;
+        case "desc":
+          if (item.details.longDescription === undefined) {
+            break;
+          }
+          descButton?.setDisabled(true);
+          msg.edit({ components });
 
-        if (!descOpened) {
-          embed
-            .setDescription(
-              [origDesc, mdQuote(item.details.longDescription)]
-                .filter(Boolean)
-                .join("\n")
-            )
-            .setThumbnail(null);
-          descButton.setStyle(Discord.ButtonStyle.Primary);
-          // TODO consider automatically closing the description after a minute or so
-        } else {
-          embed.setDescription(origDesc);
-          descButton.setStyle(Discord.ButtonStyle.Secondary);
-        }
-        descOpened = !descOpened;
-        descButton.setDisabled(false);
-        await msg.edit({ embeds: [embed], components: [buttonRow] });
-        // await kijijiVisit(item.url, driver);
-        break;
-    }
-  });
+          if (!descOpened) {
+            embed
+              .setDescription(
+                [origDesc, mdQuote(item.details.longDescription)]
+                  .filter(Boolean)
+                  .join("\n")
+              )
+              .setThumbnail(null);
+            descButton?.setStyle(Discord.ButtonStyle.Primary);
+            // TODO consider automatically closing the description after a minute or so
+          } else {
+            embed.setDescription(origDesc);
+            descButton?.setStyle(Discord.ButtonStyle.Secondary);
+          }
+          descOpened = !descOpened;
+          descButton?.setDisabled(false);
+          await msg.edit({ embeds: [embed], components });
+          break;
+      }
+    });
 };
