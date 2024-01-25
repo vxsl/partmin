@@ -77,7 +77,7 @@ const runLoop = async (
     "utf-8"
   );
   let configChanged =
-    JSON.stringify(JSON.parse(cachedConfig)?.search.params, null, 2) !==
+    JSON.stringify(JSON.parse(cachedConfig)?.search?.params ?? {}, null, 2) !==
     JSON.stringify(config.search.params, null, 2);
 
   if (configChanged) {
