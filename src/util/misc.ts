@@ -1,5 +1,5 @@
 import { stdout as singleLineStdOut } from "single-line-log";
-import { discordMsg } from "notifications/discord/index.js";
+import { discordMsg } from "discord/index.js";
 import config from "config.js";
 
 export const waitSeconds = async (s: number) =>

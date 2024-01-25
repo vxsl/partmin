@@ -1,7 +1,7 @@
 import config from "config.js";
 import Discord from "discord.js";
 import dotenv from "dotenv";
-import { greetings } from "notifications/discord/chat.js";
+import { greetings } from "discord/chat.js";
 import { errorLog, log } from "util/misc.js";
 
 dotenv.config();

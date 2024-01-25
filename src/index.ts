@@ -2,8 +2,8 @@ import config from "config.js";
 import { tmpDir } from "constants.js";
 import dotenv from "dotenv";
 import fs from "fs";
-import { sendEmbedWithButtons } from "notifications/discord/embed.js";
-import { startDiscordBot } from "notifications/discord/index.js";
+import { sendEmbedWithButtons } from "discord/embed.js";
+import { startDiscordBot } from "discord/index.js";
 import fb from "platforms/fb/index.js";
 import kijiji from "platforms/kijiji/index.js";
 import {
