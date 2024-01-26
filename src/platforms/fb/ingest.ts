@@ -247,7 +247,7 @@ export const scrapeItems = async (
         config.search.params.roommateNotAccepted &&
         ["Private room for rent", "Chambre privée à louer"].includes(title)
       ) {
-        log(`Skipping room-only listing: ${title}`);
+        log(`Skipping room-only listing: ${title} (${id})`);
         return undefined;
       }
 

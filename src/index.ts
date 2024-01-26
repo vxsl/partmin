@@ -159,7 +159,7 @@ const main = async () => {
     if (notifyOnExit) {
       if (discordClient?.isReady()) {
         discordLog("Crashed.");
-        discordLog(e);
+        discordLog(e, { monospace: true });
       } else {
         log("Crashed.");
         log(e);
