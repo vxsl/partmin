@@ -1,5 +1,5 @@
 import { WebDriver } from "selenium-webdriver";
-import { Item } from "types/item.js";
+import { Item } from "item.js";
 
 export type PlatformKey = "kijiji" | "fb";
 export type Platform = {

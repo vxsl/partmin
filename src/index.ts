@@ -1,19 +1,19 @@
 import config from "config.js";
 import { tmpDir } from "constants.js";
-import dotenv from "dotenv";
-import fs from "fs";
 import { sendEmbedWithButtons } from "discord/embed.js";
 import { startDiscordBot } from "discord/index.js";
+import dotenv from "dotenv";
+import fs from "fs";
+import { Item } from "item.js";
 import fb from "platforms/fb/index.js";
 import kijiji from "platforms/kijiji/index.js";
 import {
   excludeItemsOutsideSearchArea,
   processItems,
   withUnseenItems,
-} from "process.js";
+} from "process/index.js";
 import { Builder, WebDriver } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
-import { Item } from "types/item.js";
 import { Platform } from "types/platform.js";
 import { isValidAddress } from "util/geo.js";
 import {

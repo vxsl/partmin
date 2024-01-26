@@ -1,8 +1,9 @@
 import Discord from "discord.js";
 import { ChannelKey, getChannel } from "discord/index.js";
-import { Item } from "types/item.js";
+import { Item, getCommuteOrigin } from "item.js";
 import { PlatformKey } from "types/platform.js";
-import { mdQuote } from "util/data.js";
+import { mdQuote, trimAddress } from "util/data.js";
+import { formatCommuteSummaryMD } from "util/geo.js";
 import { notUndefined } from "util/misc.js";
 
 const platformIcons: Record<PlatformKey, string> = {
@@ -11,20 +12,41 @@ const platformIcons: Record<PlatformKey, string> = {
 };
 
 export const convertItemToDiscordEmbed = (item: Item) => {
-  const descriptionHeader = [
+  let descriptionHeader = [
     `${
       item.details.price
         ? `**$${parseFloat(`${item.details.price}`).toFixed(2)}**`
         : undefined
     }`,
     item.computed?.locationLinkMD ??
-      item.details.location ??
+      item.details.shortAddress ??
       (item.details.lat && item.details.lon
         ? `(${item.details.lat}, ${item.details.lon})`
         : undefined),
   ]
     .filter(notUndefined)
     .join(" / ");
+
+  const dests = Object.keys(item.computed?.distanceTo ?? {});
+  if (dests.length) {
+    descriptionHeader = [
+      descriptionHeader,
+      dests
+        .map((d) => {
+          const o = getCommuteOrigin(item);
+          const summ = item.computed?.distanceTo?.[d];
+          return !summ || !o
+            ? ""
+            : [
+                dests.length > 1 ? trimAddress(d) : undefined,
+                formatCommuteSummaryMD(summ, o, d),
+              ]
+                .filter(notUndefined)
+                .join("\n");
+        })
+        .join("\n"),
+    ].join("\n");
+  }
 
   return new Discord.EmbedBuilder()
     .setTitle(item.details.title ?? null)
@@ -38,7 +60,6 @@ export const convertItemToDiscordEmbed = (item: Item) => {
     )
     .setURL(item.url)
     .setImage(item.imgURLs[0] ?? null)
-    .setThumbnail(item.imgURLs[1] ?? null)
     .setFooter({
       text: item.platform,
       iconURL: platformIcons[item.platform],
@@ -62,17 +83,25 @@ export const convertItemToDiscordEmbed = (item: Item) => {
 };
 
 const getButtons = (item: Item) => {
-  let descButton: Discord.ButtonBuilder | undefined,
-    prevImgButton: Discord.ButtonBuilder | undefined,
-    imgButton: Discord.ButtonBuilder | undefined,
-    nextImgButton: Discord.ButtonBuilder | undefined;
+  let descButton, prevImgButton, imgButton, nextImgButton, distanceToButton;
 
+  const loc =
+    item.details.longAddress ||
+    item.details.shortAddress ||
+    (item.details.lat && item.details.lon
+      ? `(${item.details.lat}, ${item.details.lon})`
+      : undefined);
+  if (loc) {
+    distanceToButton = new Discord.ButtonBuilder()
+      .setCustomId("distanceTo")
+      .setLabel(`📏`)
+      .setStyle(Discord.ButtonStyle.Secondary);
+  }
   if (item.details.longDescription !== undefined) {
     descButton = new Discord.ButtonBuilder()
       .setCustomId("desc")
       .setLabel(`📄`)
-      .setStyle(Discord.ButtonStyle.Secondary)
-      .setDisabled(item.details.longDescription === undefined);
+      .setStyle(Discord.ButtonStyle.Secondary);
   }
   if (item.imgURLs.length > 1) {
     prevImgButton = new Discord.ButtonBuilder()
@@ -126,7 +155,7 @@ export const sendEmbedWithButtons = async (
     const len = item.imgURLs.length;
     i = (backwards ? i - 1 + len : i + 1) % len;
     imgButton?.setLabel(`${i + 1} / ${len}`);
-    embed.setImage(item.imgURLs[i]).setThumbnail(null);
+    embed.setImage(item.imgURLs[i]);
     await msg.edit({ embeds: [embed], components });
   };
 
@@ -137,7 +166,8 @@ export const sendEmbedWithButtons = async (
         return (
           interaction.customId === "nextImg" ||
           interaction.customId === "prevImg" ||
-          interaction.customId === "desc"
+          interaction.customId === "desc" ||
+          interaction.customId === "distanceTo"
         );
       },
       time: 24 * 3600000,
@@ -158,13 +188,11 @@ export const sendEmbedWithButtons = async (
           msg.edit({ components });
 
           if (!descOpened) {
-            embed
-              .setDescription(
-                [origDesc, mdQuote(item.details.longDescription)]
-                  .filter(Boolean)
-                  .join("\n")
-              )
-              .setThumbnail(null);
+            embed.setDescription(
+              [origDesc, mdQuote(item.details.longDescription)]
+                .filter(Boolean)
+                .join("\n")
+            );
             descButton?.setStyle(Discord.ButtonStyle.Primary);
             // TODO consider automatically closing the description after a minute or so
           } else {

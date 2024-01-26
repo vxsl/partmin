@@ -6,7 +6,6 @@ import { By, WebDriver, until } from "selenium-webdriver";
 import { debugLog } from "util/misc.js";
 import {
   click,
-  clickByXPath,
   elementShouldBeInteractable,
   withElement,
 } from "util/selenium.js";
@@ -16,7 +15,7 @@ export const kijijiGet = async (url: string, driver: WebDriver) => {
   const xpath = "//button[contains(@class, 'cookieBannerCloseButton')]";
   await driver
     .wait(until.elementLocated(By.xpath(xpath)), 1000)
-    .then((el) => el && clickByXPath(driver, xpath))
+    .then((el) => click(el))
     .catch((e) => {
       debugLog(e);
     });

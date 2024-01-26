@@ -4,6 +4,10 @@ import { debugLog, verboseLog } from "util/misc.js";
 import { tmpDir } from "constants.js";
 import { readJSON, writeJSON } from "util/io.js";
 import axios from "axios";
+import { abbreviateDuration } from "util/data.js";
+
+const gMaps = "https://www.google.com/maps";
+const gMapsAPIs = "https://maps.googleapis.com/maps/api";
 
 // TODO move to types?
 // TODO ensure everything is using this instead of { lat, lon, radius }
@@ -56,9 +60,7 @@ export const isWithinRadii = (lat: number, lon: number) => {
 };
 
 export const getGoogleMapsLink = (query: string) =>
-  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    query
-  )}`;
+  `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
 export const approxLocationLink = async (lat: number, lon: number) => {
   const key = `${lat},${lon}`;
@@ -68,12 +70,12 @@ export const approxLocationLink = async (lat: number, lon: number) => {
   if (cached) {
     const display = cached[0];
     const query = encodeURIComponent(cached[1]);
-    const link = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    const link = `${gMaps}/search/?api=1&query=${query}`;
     return `[*${display} **(approx.)***](${link})`;
   }
 
   const { data } = await axios.get(
-    `https://maps.googleapis.com/maps/api/geocode/json?latlng=\
+    `${gMapsAPIs}/geocode/json?latlng=\
       ${lat},${lon}\
       &key=${process.env.GOOGLE_MAPS_API_KEY}`
   );
@@ -106,19 +108,99 @@ export const isValidAddress = async (address: string) => {
   } else {
     try {
       const { data } = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-          address
-        )}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+        `${gMapsAPIs}/geocode/json?address=${encodeURIComponent(address)}&key=${
+          process.env.GOOGLE_MAPS_API_KEY
+        }`
       );
       result = !!data.results[0].geometry.location;
+      await writeJSON(cacheFile, { ...cache, [address]: result });
     } catch {
       debugLog(`Error validating address: ${address}`);
       result = false;
     }
-    await writeJSON(cacheFile, { ...cache, [address]: result });
   }
   debugLog(
     result ? `Address is valid: ${address}` : `Address is invalid: ${address}`
   );
   return result;
+};
+
+const commuteModes = ["transit", "bicycling", "driving", "walking"] as const;
+type CommuteMode = (typeof commuteModes)[number];
+export type CommuteSummary = Record<CommuteMode, string>;
+
+export const getCommuteSummary = async (origin: string, dest: string) => {
+  const cacheFile = `${tmpDir}/commute-summaries.json`;
+  let rawData: Partial<Record<CommuteMode, any>> = {};
+  const cache =
+    (await readJSON<Record<string, Record<string, CommuteSummary>>>(
+      cacheFile
+    )) ?? {};
+  const cached = cache[origin]?.[dest];
+  if (cached !== undefined) {
+    debugLog(`Commute summary found in cache: ${origin} -> ${dest}`);
+    rawData = cached;
+  } else {
+    try {
+      await Promise.all(
+        commuteModes.map((mode) =>
+          axios
+            .get(
+              `${gMapsAPIs}/distancematrix/json?units=metric&origins=${origin}&destinations=${dest}&key=${process.env.GOOGLE_MAPS_API_KEY}&mode=${mode}`
+            )
+            .then(({ data }) => {
+              rawData[mode] = data.rows;
+            })
+        )
+      );
+
+      await writeJSON(cacheFile, {
+        ...cache,
+        [origin]: { ...cache[origin], [dest]: rawData },
+      });
+    } catch (e) {
+      debugLog(`Error computing commute summary: ${origin} -> ${dest}`);
+      debugLog(e);
+    }
+  }
+
+  if (Object.keys(rawData).length === 0) {
+    debugLog(`Erroneous commute data (${origin} -> ${dest}):`);
+    debugLog(rawData);
+    return undefined;
+  }
+
+  console.log(JSON.stringify(rawData, null, 2));
+  const result = Object.fromEntries(
+    commuteModes.map((mode) => {
+      console.log(rawData[mode]);
+      return [
+        mode,
+        rawData[mode]?.[0]?.elements?.[0]?.duration?.text ?? "<missing>",
+      ];
+    })
+  ) as CommuteSummary;
+
+  debugLog(`Commute summary computed: ${origin} -> ${dest}`);
+  debugLog(result);
+  return result;
+};
+
+const commuteEmojis: Record<CommuteMode, string> = {
+  transit: "🚌",
+  walking: "🚶",
+  bicycling: "🚴",
+  driving: "🚗",
+};
+
+export const formatCommuteSummaryMD = (
+  summary: CommuteSummary,
+  orig: string,
+  dest: string
+) => {
+  const url =
+    `${gMaps}/dir/` + `${encodeURIComponent(orig)}/${encodeURIComponent(dest)}`;
+  return `[*${commuteModes
+    .map((mode) => `${commuteEmojis[mode]}${abbreviateDuration(summary[mode])}`)
+    .join("  ")}*](${url})`;
 };

@@ -1,4 +1,4 @@
-import { Item } from "types/item.js";
+import { Item } from "item.js";
 import { PlatformKey } from "types/platform.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import config from "config.js";
@@ -68,7 +68,7 @@ export const visitMarketplaceListing = async (
   try {
     const loc = productDetails.target.home_address.street;
     if (loc) {
-      item.details.location = loc;
+      item.details.shortAddress = loc;
       const full =
         productDetails.target.pdp_display_sections
           .find((s: any) => s.section_type === "UNIT_SUBTITLE")

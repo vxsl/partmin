@@ -5,7 +5,7 @@ import {
 } from "platforms/fb/ingest.js";
 import { decodeMapDevelopersURL } from "util/geo.js";
 import { debugLog, randomWait } from "util/misc.js";
-import { Item } from "types/item.js";
+import { Item } from "item.js";
 import { Platform } from "types/platform.js";
 import { withDOMChangesBlocked } from "util/selenium.js";
 import config from "config.js";

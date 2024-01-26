@@ -5,7 +5,7 @@ import { setFilters } from "platforms/kijiji/util.js";
 import { kijijiGet } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
-import { Item } from "types/item.js";
+import { Item } from "item.js";
 import { PlatformKey } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
@@ -56,10 +56,11 @@ export const visitKijijiListing = async (driver: WebDriver, item: Item) => {
   try {
     const loc = data.viewItemPage.viewItemData.adLocation.mapAddress;
     if (loc) {
-      item.details.location = trimAddress(loc);
+      item.details.shortAddress = trimAddress(loc);
+      item.details.longAddress = loc;
       item.computed = {
         ...(item.computed ?? {}),
-        locationLinkMD: `[**${item.details.location}**](${getGoogleMapsLink(
+        locationLinkMD: `[**${item.details.shortAddress}**](${getGoogleMapsLink(
           loc
         )})`,
       };

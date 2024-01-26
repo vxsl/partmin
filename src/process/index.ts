@@ -1,10 +1,11 @@
-import dotenv from "dotenv";
+import config from "config.js";
 import { tmpDir } from "constants.js";
-import { approxLocationLink, isWithinRadii } from "util/geo.js";
+import dotenv from "dotenv";
+import { Item, SeenItemDict } from "item.js";
+import { isWithinRadii } from "util/geo.js";
 import { readJSON, writeJSON } from "util/io.js";
 import { log, verboseLog } from "util/misc.js";
-import config from "config.js";
-import { Item, SeenItemDict } from "types/item.js";
+import { addLocationLink, addCommuteSummary } from "item.js";
 
 dotenv.config();
 
@@ -31,7 +32,7 @@ const findBlacklistedWords = (i: Item): string[] | null => {
         return true;
       }
 
-      const locationMatch = i.details.location?.toLowerCase().includes(b);
+      const locationMatch = i.details.shortAddress?.toLowerCase().includes(b);
       if (locationMatch) {
         result.push(`'${_b}' in item ${i.id}'s location`);
         return true;
@@ -85,53 +86,36 @@ export const withUnseenItems = async <T>(
 };
 
 export const processItems = async (unseenItems: Item[]) => {
-  // process items:
-  const [targets, blacklistLogs] = await unseenItems.reduce<
+  const [results, blacklistLogs] = await unseenItems.reduce<
     Promise<[Item[], string[]]>
   >(async (promises, item) => {
-    const [_targets, _blacklistLog] = await promises;
-
-    // 1. check for blacklisted words:
-    const logs = findBlacklistedWords(item);
-    if (logs) {
-      _blacklistLog.push(...logs);
-      return [_targets, _blacklistLog];
+    const [_results, _blacklistLogs] = await promises;
+    const bl = findBlacklistedWords(item);
+    if (bl) {
+      _blacklistLogs.push(...bl);
+    } else {
+      await addLocationLink(item);
+      await addCommuteSummary(item);
+      _results.push(item);
     }
-
-    // 2. if necessary and possible, compute the location link:
-    if (
-      !item.computed?.locationLinkMD &&
-      item.details.lat &&
-      item.details.lon
-    ) {
-      item.computed = {
-        ...(item.computed ?? {}),
-        locationLinkMD: await approxLocationLink(
-          item.details.lat,
-          item.details.lon
-        ),
-      };
-    }
-
-    _targets.push(item);
-    return [_targets, _blacklistLog];
+    return [_results, _blacklistLogs];
   }, Promise.resolve([[], []]));
 
   // TODO sort based on time?
   // TODO compute duplicates?
 
   log(
-    `${targets.length} new result${targets.length !== 1 ? "s" : ""}${
+    `${results.length} new result${results.length !== 1 ? "s" : ""}${
       config.logging?.verbose ? ":" : "."
     }`
   );
-  verboseLog(targets);
+  verboseLog(results);
   if (blacklistLogs.length) {
     log(`${blacklistLogs.length} blacklisted:`);
     log(blacklistLogs.map((b) => `  - found ${b}`).join("\n"));
   }
 
-  return targets;
+  return results;
 };
 
 export const excludeItemsOutsideSearchArea = (items: Item[]) =>

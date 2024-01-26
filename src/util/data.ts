@@ -1,4 +1,5 @@
 import config from "config.js";
+import { debugLog } from "util/misc.js";
 export const findNestedProperty = (jsonString: string, key: string): any => {
   const keyIndex = jsonString.indexOf(`"${key}"`);
 
@@ -48,3 +49,13 @@ export const trimAddress = (address: string): string => {
 };
 
 export const mdQuote = (s: string) => `> ${s.replace(/\n/g, "\n> ")}`;
+
+export const abbreviateDuration = (input: string) =>
+  input
+    .trim()
+    .replace(/\s+/g, "")
+    .replace(/hour(s)?/gi, "h")
+    .replace(/minute(s)?/gi, "m")
+    .replace(/min(s)?/gi, "m")
+    .replace(/second(s)?/gi, "s")
+    .replace(/sec(s)?/gi, "s");
