@@ -60,7 +60,7 @@ export const randomWait = async (options?: {
 
   const toWait = options?.short
     ? Math.round(Math.random() * (maxShort - minShort) + minShort)
-    : new Date().getHours() >= 5 && new Date().getHours() < 20
+    : new Date().getHours() >= 5 && new Date().getHours() < 22
     ? Math.round(Math.random() * (maxLong - minLong) + minLong)
     : Math.round(Math.random() * (maxLongNight - minLongNight) + minLongNight);
 
