@@ -71,7 +71,7 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
   if (configChanged) {
     log("Config change detected.");
   }
-  for (const { pre } of Object.values(runners)) {
+  for (const { pre } of runners) {
     await (pre?.(driver, configChanged) ?? Promise.resolve());
   }
   await fs.promises.writeFile(
@@ -81,7 +81,7 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
 
   while (true) {
     try {
-      for (const [platform, { main, perItem }] of Object.entries(runners)) {
+      for (const { key: platform, main, perItem } of runners) {
         log(
           `\n=======================================================\n${platform}\n`
         );
