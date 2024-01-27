@@ -114,8 +114,9 @@ export const isValidAddress = async (address: string) => {
       );
       result = !!data.results[0].geometry.location;
       await writeJSON(cacheFile, { ...cache, [address]: result });
-    } catch {
+    } catch (e) {
       debugLog(`Error validating address: ${address}`);
+      debugLog(e);
       result = false;
     }
   }

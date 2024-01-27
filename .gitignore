@@ -6,5 +6,6 @@ tmp
 todo.md
 .tmp
 scratchpad
+scratchpad.md
 config.json
 *.log
