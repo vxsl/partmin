@@ -1,4 +1,5 @@
-import { log, singleLineLog } from "util/log.js";
+import { stdout as singleLineStdOut } from "single-line-log";
+import { log } from "util/log.js";
 
 export function notUndefined<T>(value: T | undefined): value is T {
   return value !== undefined;
@@ -33,7 +34,7 @@ export const randomWait = async (options?: {
     );
   for (let i = 0; i < toWait; i++) {
     !options?.suppressLog &&
-      singleLineLog(toWait - i === 1 ? "" : `Waiting ${toWait - i} seconds`);
+      singleLineStdOut(toWait - i === 1 ? "" : `Waiting ${toWait - i} seconds`);
     await waitSeconds(1);
   }
 };

@@ -1,5 +1,4 @@
 import config from "config.js";
-import { debugLog } from "util/log.js";
 export const findNestedProperty = (jsonString: string, key: string): any => {
   const keyIndex = jsonString.indexOf(`"${key}"`);
 

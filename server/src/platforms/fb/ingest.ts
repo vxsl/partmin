@@ -1,18 +1,19 @@
-import { Item } from "item.js";
-import { PlatformKey } from "types/platform.js";
-import { By, WebDriver, WebElement } from "selenium-webdriver";
 import config from "config.js";
+import { discordSend } from "discord/util.js";
+import { Item } from "item.js";
+import { fbItemXpath } from "platforms/fb/constants.js";
+import { By, WebDriver, WebElement } from "selenium-webdriver";
+import { PlatformKey } from "types/platform.js";
 import { findNestedProperty } from "util/data.js";
 import { Radius, getGoogleMapsLink } from "util/geo.js";
+import { debugLog, log } from "util/log.js";
 import { notUndefined } from "util/misc.js";
-import { debugLog, discordLog, log } from "util/log.js";
 import {
   clearBrowsingData,
   elementShouldExist,
   withElement,
   withElementsByXpath,
 } from "util/selenium.js";
-import { fbItemXpath } from "platforms/fb/constants.js";
 
 const platform: PlatformKey = "fb";
 
@@ -40,8 +41,9 @@ export const visitMarketplaceListing = async (
   );
 
   if (!productDetails) {
-    discordLog(
-      `Warning: couldn't find marketplace_product_details_page for ${url}.`
+    discordSend(
+      `Warning: couldn't retrieve info for the following Marketplace listing: ${url}.\nThe retrieval method may have changed.`,
+      { bold: true }
     );
     // TODO do something else.
 
@@ -197,14 +199,15 @@ export const visitMarketplace = async (
   const minRadius = radius.diam * 0.9;
   const maxRadius = radius.diam * 1.1;
   if (urlRadius < minRadius || urlRadius > maxRadius) {
-    const maxTries = 3;
-    if (++tries < maxTries) {
-      visitMarketplace(driver, radius, tries);
-    } else {
-      discordLog(
-        `Facebook Marketplace is misbehaving by refusing to correctly load ${url}.`
+    if (++tries >= 3) {
+      // TODO only send this if the error persists over time
+      discordSend(
+        `Warning: Marketplace is misbehaving by refusing to correctly load ${url}.`,
+        { bold: true }
       );
+      return;
     }
+    await visitMarketplace(driver, radius, tries);
   }
 };
 

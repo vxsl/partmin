@@ -1,5 +1,5 @@
 import Discord from "discord.js";
-import { ChannelKey, getChannel } from "discord/index.js";
+import { ChannelKey, getChannel } from "discord/util.js";
 import { Item, getCommuteOrigin } from "item.js";
 import { PlatformKey } from "types/platform.js";
 import { mdQuote, trimAddress } from "util/data.js";

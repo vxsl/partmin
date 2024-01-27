@@ -1,34 +1,27 @@
-import { stdout as singleLineStdOut } from "single-line-log";
-import { discordMsg } from "discord/index.js";
 import config from "config.js";
+import { discordSend } from "discord/util.js";
 
-export const debugLog = (msg?: any) => {
-  if (config.logging?.debug) {
-    console.log(`${new Date().toLocaleTimeString("it-IT")}: ${msg}`);
+const time = () => new Date().toLocaleTimeString("it-IT");
+
+export type LogLevel = "debug" | "verbose";
+interface LogOptions {
+  error?: boolean;
+  level?: LogLevel;
+}
+export const log = (message: any, options?: LogOptions) => {
+  if (options?.level && !config.logging?.[options.level]) {
+    return;
   }
+  const t = time();
+  (options?.error ? console.error : console.log)(`${t}:`, message);
+  return discordSend(`${t}: ${message}`, {
+    channel: "logs",
+    monospace: true,
+    skipLog: true,
+  });
 };
 
-export const errorLog = (...args: Parameters<typeof console.error>) =>
-  console.error(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
-
-export const log = (message: any) => {
-  const date = new Date().toLocaleTimeString("it-IT");
-  console.log(`${date}:`, message);
-  return discordMsg("logs", `\`${date}: ${message}\``);
-};
-
-export const discordLog = (message: any, options?: { monospace?: true }) => {
-  console.log(`${new Date().toLocaleTimeString("it-IT")}:`, message);
-  discordMsg("main", String(options?.monospace ? `\`${message}\`` : message));
-};
-
-export const verboseLog = (...args: Parameters<typeof console.log>) => {
-  if (config.logging?.verbose) {
-    console.log(`${new Date().toLocaleTimeString("it-IT")}:`, ...args);
-  }
-};
-
-export const singleLineLog = (...args: Parameters<typeof singleLineStdOut>) =>
-  singleLineStdOut(...args);
-
-export const clearSingleLineLog = () => singleLineStdOut.clear();
+export const debugLog = (msg: any, options?: Omit<LogOptions, "level">) =>
+  log(msg, { ...options, level: "debug" });
+export const verboseLog = (msg: any, options?: Omit<LogOptions, "level">) =>
+  log(msg, { ...options, level: "debug" });

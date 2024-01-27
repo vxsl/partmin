@@ -2,6 +2,7 @@ import config from "config.js";
 import { tmpDir } from "constants.js";
 import { sendEmbedWithButtons } from "discord/embed.js";
 import { startDiscordBot } from "discord/index.js";
+import { discordImportantError } from "discord/util.js";
 import dotenv from "dotenv";
 import fs from "fs";
 import { Item } from "item.js";
@@ -16,7 +17,7 @@ import { Builder, WebDriver } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { Platform } from "types/platform.js";
 import { isValidAddress } from "util/geo.js";
-import { discordLog, errorLog, log, verboseLog } from "util/log.js";
+import { log, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
 
 process.title = "partmin";
@@ -87,8 +88,7 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
             continue;
           }
         } catch (e) {
-          discordLog(`Error while visiting ${platform}:`);
-          discordLog(e, { monospace: true });
+          discordImportantError(`Error while visiting ${platform}:`, e);
           continue;
         }
 
@@ -114,14 +114,16 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
             });
           });
         } catch (e) {
-          discordLog(`Error while processing items from ${platform}:`);
-          discordLog(e, { monospace: true });
+          discordImportantError(
+            `Error while processing items from ${platform}:`,
+            e
+          );
         }
         log("\n----------------------------------------\n");
       }
       await randomWait();
     } catch (err) {
-      errorLog(err);
+      log(err, { error: true });
       break;
     }
   }
@@ -147,13 +149,11 @@ const main = async () => {
 
     discordClient = await startDiscordBot();
 
-    // await loadCookies(driver);
     await runLoop(driver, [fb, kijiji]);
   } catch (e) {
     if (notifyOnExit) {
       if (discordClient?.isReady()) {
-        discordLog("Crashed.");
-        discordLog(e, { monospace: true });
+        discordImportantError("Crashed.", e);
       } else {
         log("Crashed.");
         log(e);
