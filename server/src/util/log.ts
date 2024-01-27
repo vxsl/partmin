@@ -14,6 +14,9 @@ export const log = (message: any, options?: LogOptions) => {
   }
   const t = time();
   (options?.error ? console.error : console.log)(`${t}:`, message);
+  if (options?.level === "verbose") {
+    return;
+  }
   return discordSend(`${t}: ${message}`, {
     channel: "logs",
     monospace: true,
