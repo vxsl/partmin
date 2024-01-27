@@ -2,7 +2,7 @@ import config from "config.js";
 import { tmpDir } from "constants.js";
 import { sendEmbedWithButtons } from "discord/embed.js";
 import { startDiscordBot } from "discord/index.js";
-import { discordImportantError, discordSend } from "discord/util.js";
+import { discordImportantError } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import fs from "fs";
 import { Item } from "item.js";

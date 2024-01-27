@@ -1,2 +1,6 @@
+import fs from "fs";
 export const tmpDir = "./.tmp";
-export const imagesDir = `${tmpDir}/images`;
+
+if (!fs.existsSync(tmpDir)) {
+  fs.mkdirSync(tmpDir);
+}
