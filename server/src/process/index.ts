@@ -1,13 +1,13 @@
 import config from "config.js";
 import { tmpDir } from "constants.js";
-import dotenv from "dotenv";
+import dotenv from "dotenv-mono";
 import { Item, SeenItemDict } from "item.js";
 import { isWithinRadii } from "util/geo.js";
 import { readJSON, writeJSON } from "util/io.js";
 import { log, verboseLog } from "util/log.js";
 import { addLocationLink, addCommuteSummary } from "item.js";
 
-dotenv.config();
+dotenv.load();
 
 const blacklist = config.search.blacklist?.map((b) => b.toLowerCase());
 

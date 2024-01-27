@@ -2,9 +2,9 @@ import config from "config.js";
 import Discord from "discord.js";
 import { greetings } from "discord/chat.js";
 import { ChannelKey, discordSend as discordSend } from "discord/util.js";
-import dotenv from "dotenv";
+import dotenv from "dotenv-mono";
 
-dotenv.config();
+dotenv.load();
 
 export const discordClient = new Discord.Client({ intents: 512 });
 

@@ -2,8 +2,8 @@ import config from "config.js";
 import { tmpDir } from "constants.js";
 import { sendEmbedWithButtons } from "discord/embed.js";
 import { startDiscordBot } from "discord/index.js";
-import { discordImportantError } from "discord/util.js";
-import dotenv from "dotenv";
+import { discordImportantError, discordSend } from "discord/util.js";
+import dotenv from "dotenv-mono";
 import fs from "fs";
 import { Item } from "item.js";
 import fb from "platforms/fb/index.js";
@@ -22,7 +22,7 @@ import { randomWait, waitSeconds } from "util/misc.js";
 
 process.title = "partmin";
 
-dotenv.config();
+dotenv.load();
 
 const ops = new chrome.Options();
 if (!config.development?.headed) {

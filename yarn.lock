@@ -642,7 +642,20 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
-dotenv@^16.3.2:
+dotenv-expand@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/dotenv-expand/-/dotenv-expand-10.0.0.tgz#12605d00fb0af6d0a592e6558585784032e4ef37"
+  integrity sha512-GopVGCpVS1UKH75VKHGuQFqS1Gusej0z4FyQkPdwjil2gNIv+LNsqBlboOzpJFZKVT95GkCyWJbBSdFEFUWI2A==
+
+dotenv-mono@^1.3.13:
+  version "1.3.13"
+  resolved "https://registry.yarnpkg.com/dotenv-mono/-/dotenv-mono-1.3.13.tgz#5c5322343d7b16b321a9d5244ca98213bdc66daa"
+  integrity sha512-A9El6MGAxqeh/y9M/TmqmJSYTABLeek/o6JIWGYcT9YDcMSsF6OO/cC5FA5CeDOWxqjsJEb4dYMEjjJ2ayTcQA==
+  dependencies:
+    dotenv "^16.3.1"
+    dotenv-expand "^10.0.0"
+
+dotenv@^16.3.1:
   version "16.4.1"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.4.1.tgz#1d9931f1d3e5d2959350d1250efab299561f7f11"
   integrity sha512-CjA3y+Dr3FyFDOAMnxZEGtnW9KBR2M0JvvUtXNW+dYJL5ROWxP9DUHCwgFqpMk0OXCc0ljhaNTr2w/kutYIcHQ==
