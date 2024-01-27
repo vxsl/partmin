@@ -4,7 +4,8 @@ import {
   visitMarketplaceListing,
 } from "platforms/fb/ingest.js";
 import { decodeMapDevelopersURL } from "util/geo.js";
-import { debugLog, randomWait } from "util/misc.js";
+import { randomWait } from "util/misc.js";
+import { debugLog } from "util/log.js";
 import { Item } from "item.js";
 import { Platform } from "types/platform.js";
 import { withDOMChangesBlocked } from "util/selenium.js";

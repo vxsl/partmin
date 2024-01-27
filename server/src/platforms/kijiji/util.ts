@@ -3,7 +3,7 @@ import filterInteractions, {
   FilterInteractionsMap,
 } from "platforms/kijiji/filter-interactions.js";
 import { By, WebDriver, until } from "selenium-webdriver";
-import { debugLog } from "util/misc.js";
+import { debugLog } from "util/log.js";
 import {
   click,
   elementShouldBeInteractable,

@@ -9,7 +9,8 @@ import {
   until,
 } from "selenium-webdriver";
 import { readJSON, writeJSON } from "util/io.js";
-import { debugLog, waitSeconds } from "util/misc.js";
+import { debugLog } from "util/log.js";
+import { waitSeconds } from "util/misc.js";
 
 export const clearBrowsingData = async (driver: WebDriver) => {
   if (!(await driver.getCurrentUrl()).startsWith("data")) {
@@ -49,8 +50,7 @@ export const type = async (
   }
 };
 
-// for when .clear() doesn't work
-export const clearAlternate = async (el: WebElementPromise | WebElement) =>
+export const manualClear = async (el: WebElementPromise | WebElement) =>
   await el.sendKeys(Key.chord(Key.CONTROL, "a", Key.DELETE));
 
 export const clickByXPath = async (

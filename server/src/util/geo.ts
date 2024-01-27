@@ -1,6 +1,6 @@
 import haversine from "haversine";
 import config from "config.js";
-import { debugLog, verboseLog } from "util/misc.js";
+import { debugLog, verboseLog } from "util/log.js";
 import { tmpDir } from "constants.js";
 import { readJSON, writeJSON } from "util/io.js";
 import axios from "axios";

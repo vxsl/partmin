@@ -2,7 +2,7 @@ import config, { Config } from "config.js";
 import { ensureFilterIsOpen, getFilterXpath } from "platforms/kijiji/util.js";
 import { WebDriver } from "selenium-webdriver";
 import { RecursiveKeyMap } from "types/type-utils.js";
-import { debugLog } from "util/misc.js";
+import { debugLog } from "util/log.js";
 import {
   clickAllByXPath,
   clickByXPath,

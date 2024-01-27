@@ -2,7 +2,7 @@ import config from "config.js";
 import Discord from "discord.js";
 import dotenv from "dotenv";
 import { greetings } from "discord/chat.js";
-import { errorLog, log } from "util/misc.js";
+import { errorLog, log } from "util/log.js";
 
 dotenv.config();
 

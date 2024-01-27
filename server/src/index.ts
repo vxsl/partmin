@@ -16,14 +16,8 @@ import { Builder, WebDriver } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { Platform } from "types/platform.js";
 import { isValidAddress } from "util/geo.js";
-import {
-  discordLog,
-  errorLog,
-  log,
-  randomWait,
-  verboseLog,
-  waitSeconds,
-} from "util/misc.js";
+import { discordLog, errorLog, log, verboseLog } from "util/log.js";
+import { randomWait, waitSeconds } from "util/misc.js";
 
 process.title = "partmin";
 

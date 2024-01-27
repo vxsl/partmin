@@ -9,8 +9,9 @@ import { Item } from "item.js";
 import { PlatformKey } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
-import { log, notUndefined, waitSeconds } from "util/misc.js";
-import { clearAlternate, clickByXPath, type } from "util/selenium.js";
+import { notUndefined, waitSeconds } from "util/misc.js";
+import { log } from "util/log.js";
+import { manualClear, clickByXPath, type } from "util/selenium.js";
 
 const parser = new Parser({
   customFields: {
@@ -83,7 +84,7 @@ export const getKijijiRSS = async (driver: WebDriver) => {
   const el = await driver.findElement(
     By.xpath(`//div[@aria-modal='true']//input`)
   );
-  await clearAlternate(el);
+  await manualClear(el);
   await type(
     el,
     `${config.search.location.city}, ${config.search.location.region}`

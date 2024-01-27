@@ -4,7 +4,8 @@ import { By, WebDriver, WebElement } from "selenium-webdriver";
 import config from "config.js";
 import { findNestedProperty } from "util/data.js";
 import { Radius, getGoogleMapsLink } from "util/geo.js";
-import { debugLog, discordLog, log, notUndefined } from "util/misc.js";
+import { notUndefined } from "util/misc.js";
+import { debugLog, discordLog, log } from "util/log.js";
 import {
   clearBrowsingData,
   elementShouldExist,

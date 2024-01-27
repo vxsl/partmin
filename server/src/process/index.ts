@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { Item, SeenItemDict } from "item.js";
 import { isWithinRadii } from "util/geo.js";
 import { readJSON, writeJSON } from "util/io.js";
-import { log, verboseLog } from "util/misc.js";
+import { log, verboseLog } from "util/log.js";
 import { addLocationLink, addCommuteSummary } from "item.js";
 
 dotenv.config();

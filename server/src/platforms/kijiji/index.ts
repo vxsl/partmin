@@ -1,7 +1,7 @@
 import fs from "fs";
 import { tmpDir } from "constants.js";
 import { Platform } from "types/platform.js";
-import { log } from "util/misc.js";
+import { log } from "util/log.js";
 import {
   getKijijiRSS,
   visitKijijiListing,
