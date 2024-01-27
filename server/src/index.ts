@@ -31,48 +31,25 @@ if (!config.development?.headed) {
 }
 ops.addArguments("--no-sandbox");
 
-let notifyOnExit = true;
-// process.on("SIGINT", function () {
-//   console.error("\n\nCaught interrupt signal");
-//   process.exit();
-// });
+const ifConfigChanged = async (callback?: () => void) => {
+  const path = `${tmpDir}/configSearchParams.json`;
+  const cached = fs.existsSync(path) ? fs.readFileSync(path, "utf-8") : {};
+  const cur = JSON.stringify(config.search.params, null, 2);
+  let changed = cached !== cur;
+  if (changed) {
+    await (callback?.() ?? Promise.resolve());
+    log("Config change detected.");
+    fs.writeFileSync(path, cur);
+  }
+  return changed;
+};
 
 const runLoop = async (driver: WebDriver, runners: Platform[]) => {
-  // TODO don't do all this crap
-  const tmpDirExists = await fs.promises
-    .access(tmpDir)
-    .then(() => true)
-    .catch(() => false);
-  if (!tmpDirExists) {
-    await fs.promises.mkdir(tmpDir);
-  }
-  const configExists = await fs.promises
-    .access(`${tmpDir}/configSearchParams.json`)
-    .then(() => true)
-    .catch(() => false);
-  if (!configExists) {
-    await fs.promises.writeFile(
-      `${tmpDir}/configSearchParams.json`,
-      JSON.stringify({})
-    );
-  }
-
-  const cachedParams = await fs.promises.readFile(
-    `${tmpDir}/configSearchParams.json`,
-    "utf-8"
-  );
-  let configChanged =
-    cachedParams !== JSON.stringify(config.search.params, null, 2);
-  if (configChanged) {
-    log("Config change detected.");
-  }
-  for (const { pre } of runners) {
-    await (pre?.(driver, configChanged) ?? Promise.resolve());
-  }
-  await fs.promises.writeFile(
-    `${tmpDir}/configSearchParams.json`,
-    JSON.stringify(config.search.params, null, 2)
-  );
+  await ifConfigChanged(async () => {
+    for (const { pre } of runners) {
+      await (pre?.(driver, true) ?? Promise.resolve());
+    }
+  });
 
   while (true) {
     try {
@@ -151,13 +128,11 @@ const main = async () => {
 
     await runLoop(driver, [fb, kijiji]);
   } catch (e) {
-    if (notifyOnExit) {
-      if (discordClient?.isReady()) {
-        discordImportantError("Crashed.", e);
-      } else {
-        log("Crashed.");
-        log(e);
-      }
+    if (discordClient?.isReady()) {
+      discordImportantError("Crashed.", e);
+    } else {
+      log("Crashed.");
+      log(e);
     }
   } finally {
     if (driver) {
