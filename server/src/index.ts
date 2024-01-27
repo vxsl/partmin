@@ -1,10 +1,9 @@
-import config from "config.js";
-import { tmpDir } from "constants.js";
+import { ifConfigChanged, validateConfig } from "util/config.js";
 import { sendEmbedWithButtons } from "discord/embed.js";
 import { startDiscordBot } from "discord/index.js";
 import { discordImportantError } from "discord/util.js";
 import dotenv from "dotenv-mono";
-import fs from "fs";
+import { buildDriver } from "driver.js";
 import { Item } from "item.js";
 import fb from "platforms/fb/index.js";
 import kijiji from "platforms/kijiji/index.js";
@@ -13,36 +12,14 @@ import {
   processItems,
   withUnseenItems,
 } from "process/index.js";
-import { Builder, WebDriver } from "selenium-webdriver";
-import chrome from "selenium-webdriver/chrome.js";
+import { WebDriver } from "selenium-webdriver";
 import { Platform } from "types/platform.js";
-import { isValidAddress } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
 
 process.title = "partmin";
 
 dotenv.load();
-
-const ops = new chrome.Options();
-if (!config.development?.headed) {
-  ops.addArguments("--headless");
-  ops.addArguments("--disable-gpu");
-}
-ops.addArguments("--no-sandbox");
-
-const ifConfigChanged = async (callback?: () => void) => {
-  const path = `${tmpDir}/configSearchParams.json`;
-  const cached = fs.existsSync(path) ? fs.readFileSync(path, "utf-8") : {};
-  const cur = JSON.stringify(config.search.params, null, 2);
-  let changed = cached !== cur;
-  if (changed) {
-    await (callback?.() ?? Promise.resolve());
-    log("Config change detected.");
-    fs.writeFileSync(path, cur);
-  }
-  return changed;
-};
 
 const runLoop = async (driver: WebDriver, runners: Platform[]) => {
   await ifConfigChanged(async () => {
@@ -106,26 +83,13 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
   }
 };
 
-const main = async () => {
-  for (const address of config.options?.computeDistanceTo ?? []) {
-    if (!(await isValidAddress(address))) {
-      throw new Error(
-        `Invalid address provided to config.options.computeDistanceTo: ${address}`
-      );
-    }
-  }
+(async () => {
+  await validateConfig();
 
   let driver, discordClient;
   try {
-    driver = await new Builder()
-      .forBrowser("chrome")
-      .setChromeOptions(ops)
-      .build();
-
-    driver.manage().setTimeouts({ implicit: 10000 });
-
+    driver = await buildDriver();
     discordClient = await startDiscordBot();
-
     await runLoop(driver, [fb, kijiji]);
   } catch (e) {
     if (discordClient?.isReady()) {
@@ -140,7 +104,4 @@ const main = async () => {
       await driver.quit();
     }
   }
-};
-
-process.title = "partmin";
-main();
+})();
