@@ -13,7 +13,7 @@ import {
 } from "process/index.js";
 import { WebDriver } from "selenium-webdriver";
 import { Platform } from "types/platform.js";
-import { ifConfigChanged, validateConfig } from "util/config.js";
+import { detectConfigChange, validateConfig } from "util/config.js";
 import { log, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
 
@@ -22,9 +22,9 @@ process.title = "partmin";
 dotenv.load();
 
 const runLoop = async (driver: WebDriver, runners: Platform[]) => {
-  await ifConfigChanged(async () => {
+  await detectConfigChange(async (isChanged) => {
     for (const { pre } of runners) {
-      await (pre?.(driver, true) ?? Promise.resolve());
+      await (pre?.(driver, isChanged) ?? Promise.resolve());
     }
   });
 

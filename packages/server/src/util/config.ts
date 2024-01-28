@@ -16,15 +16,19 @@ export const validateConfig = async () => {
   }
 };
 
-export const ifConfigChanged = async (callback?: () => void) => {
+export const detectConfigChange = async (
+  callback?: (isChanged: boolean) => void
+) => {
   const path = `${tmpDir}/configSearchParams.json`;
   const cached = fs.existsSync(path) ? fs.readFileSync(path, "utf-8") : {};
   const cur = JSON.stringify(config.search.params, null, 2);
-  let changed = cached !== cur;
-  if (changed) {
-    await (callback?.() ?? Promise.resolve());
+  let v = cached !== cur;
+  await (callback?.(v) ?? Promise.resolve());
+  if (v) {
     log("Config change detected.");
     fs.writeFileSync(path, cur);
+  } else {
+    log("No config change detected since last run.");
   }
-  return changed;
+  return v;
 };

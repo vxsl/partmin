@@ -14,7 +14,10 @@ const cache = `${tmpDir}/kijiji-rss-url`;
 const kijiji: Platform = {
   key: "kijiji",
   pre: async (driver, configChanged) => {
-    const cached = await fs.promises.readFile(cache, "utf-8");
+    let cached;
+    if (fs.existsSync(cache)) {
+      cached = fs.readFileSync(cache, "utf-8");
+    }
     if (!configChanged && cached) {
       log("Using cached Kijiji RSS feed");
       rss = cached;
