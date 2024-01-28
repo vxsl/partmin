@@ -9,4 +9,4 @@ scratchpad
 scratchpad.md
 config.json
 *.log
-server/.puppeteer/*
+**/.puppeteer/*
