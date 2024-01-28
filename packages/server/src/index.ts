@@ -37,54 +37,49 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
   });
 
   while (true) {
-    try {
-      for (const { key: platform, main, perItem } of runners) {
-        log(
-          `\n=======================================================\n${platform}\n`
-        );
-        let allItems: Item[] | undefined;
-        try {
-          allItems = await main(driver);
-          if (!allItems?.length) {
-            log(`Somehow there are no items upon visiting ${platform}.`);
-            continue;
-          }
-        } catch (e) {
-          discordWarning(`Error while visiting ${platform}:`, e);
+    for (const { key: platform, main, perItem } of runners) {
+      log(
+        `\n=======================================================\n${platform}\n`
+      );
+      let allItems: Item[] | undefined;
+      try {
+        allItems = await main(driver);
+        if (!allItems?.length) {
+          log(`Somehow there are no items upon visiting ${platform}.`);
           continue;
         }
-
-        try {
-          const items = excludeItemsOutsideSearchArea(allItems);
-          if (!items.length) {
-            log(`No items found within the search area.`);
-            continue;
-          }
-          verboseLog({ items });
-
-          await withUnseenItems(items, async (unseenItems) => {
-            for (const item of unseenItems) {
-              await perItem?.(driver, item)?.then(() =>
-                randomWait({ short: true, suppressLog: true })
-              );
-            }
-            await processItems(unseenItems).then(async (arr) => {
-              for (const item of arr) {
-                await sendEmbedWithButtons(item);
-                await waitSeconds(0.5);
-              }
-            });
-          });
-        } catch (e) {
-          discordWarning(`Error while processing items from ${platform}:`, e);
-        }
-        log("\n----------------------------------------\n");
+      } catch (e) {
+        discordWarning(`Error while visiting ${platform}:`, e);
+        continue;
       }
-      await randomWait();
-    } catch (err) {
-      log(err, { error: true });
-      break;
+
+      try {
+        const items = excludeItemsOutsideSearchArea(allItems);
+        if (!items.length) {
+          log(`No items found within the search area.`);
+          continue;
+        }
+        verboseLog({ items });
+
+        await withUnseenItems(items, async (unseenItems) => {
+          for (const item of unseenItems) {
+            await perItem?.(driver, item)?.then(() =>
+              randomWait({ short: true, suppressLog: true })
+            );
+          }
+          await processItems(unseenItems).then(async (arr) => {
+            for (const item of arr) {
+              await sendEmbedWithButtons(item);
+              await waitSeconds(0.5);
+            }
+          });
+        });
+      } catch (e) {
+        discordWarning(`Error while processing items from ${platform}:`, e);
+      }
+      log("\n----------------------------------------\n");
     }
+    await randomWait();
   }
 };
 

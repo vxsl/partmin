@@ -30,7 +30,7 @@ const quickEmbed = ({
     .setDescription(discordFormat(errToString(content), { code: true }));
 
 export const discordError = (e: unknown) => {
-  log(e);
+  log(e, { skipDiscord: true });
   discordSend(
     quickEmbed({
       color: "#ff0000",
@@ -41,7 +41,7 @@ export const discordError = (e: unknown) => {
 };
 
 export const discordWarning = (title: string, e: unknown) => {
-  log(e);
+  log(e, { skipDiscord: true });
   discordSend(
     quickEmbed({
       color: "#ebb734",
