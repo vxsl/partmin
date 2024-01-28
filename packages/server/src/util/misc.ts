@@ -1,6 +1,8 @@
 import { stdout as singleLineStdOut } from "single-line-log";
 import { log } from "util/log.js";
 
+export const errToString = (e: unknown) =>
+  e instanceof Error ? `${e.stack || `${e.name}: ${e.message}`}` : `${e}`;
 export const notUndefined = <T>(value: T | undefined): value is T =>
   value !== undefined;
 

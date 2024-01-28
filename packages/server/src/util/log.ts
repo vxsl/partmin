@@ -1,6 +1,6 @@
 import config from "config.js";
 import { discordSend } from "discord/util.js";
-import { isPlainObject } from "util/misc.js";
+import { errToString, isPlainObject } from "util/misc.js";
 
 const time = () => new Date().toLocaleTimeString("it-IT");
 
@@ -15,7 +15,7 @@ export const log = (_v: any, options?: LogOptions) => {
     return;
   }
   const t = time();
-  const v = isPlainObject(_v) ? JSON.stringify(_v, null, 2) : _v;
+  const v = isPlainObject(_v) ? JSON.stringify(_v, null, 2) : errToString(_v);
   (options?.error ? console.error : console.log)(`${t}:`, v);
   if (options?.level === "verbose") {
     return;

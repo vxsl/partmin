@@ -1,6 +1,7 @@
 import { DiscordAPIError, EmbedBuilder, TextChannel } from "discord.js";
 import { discordChannelIDs, discordClient } from "discord/index.js";
 import { debugLog, log, verboseLog } from "util/log.js";
+import { errToString } from "util/misc.js";
 
 export type ChannelKey = "main" | "logs";
 
@@ -26,36 +27,43 @@ const quickEmbed = ({
   new EmbedBuilder()
     .setColor(color ?? null)
     .setTitle(title ?? null)
-    .setDescription(
-      content instanceof Error ? `\`\`\`${content.message}\`\`\`` : `${content}`
-    );
+    .setDescription(discordFormat(errToString(content), { code: true }));
 
-export const discordError = (err: unknown) =>
+export const discordError = (e: unknown) => {
+  log(e);
   discordSend(
     quickEmbed({
       color: "#ff0000",
       title: `🚨 Fatal error: partmin has crashed.`,
-      content: err,
+      content: e,
     })
   );
+};
 
-export const discordWarning = (title: string, err: unknown) =>
+export const discordWarning = (title: string, e: unknown) => {
+  log(e);
   discordSend(
     quickEmbed({
       color: "#ebb734",
       title: `⚠️ ${title}`,
-      content: err,
+      content: e,
     })
   );
+};
 
 interface FormatOptions {
   monospace?: true;
   bold?: true;
   italic?: true;
+  code?: true;
 }
 
 const discordFormat = (s: string, options?: FormatOptions) => {
-  let v = options?.monospace ? `\`${s}\`` : s;
+  let v = options?.code
+    ? `\`\`\`${s}\`\`\``
+    : options?.monospace
+    ? `\`${s}\``
+    : s;
   if (options?.bold) {
     v = `**${v}**`;
   }
@@ -113,7 +121,7 @@ const _discordSend = async (
   }
 
   const isErr = _msg instanceof Error;
-  let msg = isErr ? _msg.message : _msg;
+  let msg = errToString(_msg);
 
   const isLiteral = [
     "string",
