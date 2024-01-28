@@ -1,9 +1,16 @@
 import { stdout as singleLineStdOut } from "single-line-log";
 import { log } from "util/log.js";
 
-export function notUndefined<T>(value: T | undefined): value is T {
-  return value !== undefined;
-}
+export const notUndefined = <T>(value: T | undefined): value is T =>
+  value !== undefined;
+
+export const isPlainObject = (value: unknown): value is Record<string, any> => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const proto = Object.getPrototypeOf(value);
+  return proto === null || proto === Object.prototype;
+};
 
 export const waitSeconds = async (s: number) =>
   await new Promise((resolve) => setTimeout(resolve, s * 1000));

@@ -1,7 +1,6 @@
-import { ifConfigChanged, validateConfig } from "util/config.js";
 import { sendEmbedWithButtons } from "discord/embed.js";
 import { startDiscordBot } from "discord/index.js";
-import { discordImportantError } from "discord/util.js";
+import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import { Item } from "item.js";
@@ -14,6 +13,7 @@ import {
 } from "process/index.js";
 import { WebDriver } from "selenium-webdriver";
 import { Platform } from "types/platform.js";
+import { ifConfigChanged, validateConfig } from "util/config.js";
 import { log, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
 
@@ -42,7 +42,7 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
             continue;
           }
         } catch (e) {
-          discordImportantError(`Error while visiting ${platform}:`, e);
+          discordWarning(`Error while visiting ${platform}:`, e);
           continue;
         }
 
@@ -68,10 +68,7 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
             });
           });
         } catch (e) {
-          discordImportantError(
-            `Error while processing items from ${platform}:`,
-            e
-          );
+          discordWarning(`Error while processing items from ${platform}:`, e);
         }
         log("\n----------------------------------------\n");
       }
@@ -93,10 +90,10 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
     await runLoop(driver, [fb, kijiji]);
   } catch (e) {
     if (discordClient?.isReady()) {
-      discordImportantError("Crashed.", e);
+      await discordError(e);
     } else {
-      log("Crashed.");
-      log(e);
+      await log("Crashed.");
+      await log(e);
     }
   } finally {
     if (driver) {

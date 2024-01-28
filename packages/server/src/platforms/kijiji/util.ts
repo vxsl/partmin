@@ -4,6 +4,7 @@ import filterInteractions, {
 } from "platforms/kijiji/filter-interactions.js";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { debugLog } from "util/log.js";
+import { isPlainObject } from "util/misc.js";
 import {
   click,
   elementShouldBeInteractable,
@@ -54,7 +55,7 @@ export const setFilters = async (driver: WebDriver) => {
         debugLog(`Applying Kijiji filter ${k}`);
         await driver.sleep(1000);
         await v(driver);
-      } else if (typeof v === "object" && !!v) {
+      } else if (isPlainObject(v)) {
         await interactWithFilters(v as FilterInteractionsMap);
       }
     }
