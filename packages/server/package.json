@@ -15,13 +15,14 @@
     "rss-parser": "^3.12.0",
     "runtypes": "^6.7.0",
     "selenium-webdriver": "^4.8.1",
-    "single-line-log": "^1.1.2"
+    "single-line-log": "^1.1.2",
+    "tsx": "^4.6.1"
   },
   "scripts": {
-    "start": "tsc --noEmit && tsx src/index.ts",
+    "dev": "yarn typecheck && yarn lint && yarn start",
+    "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "circles": "cd py && python reverse_geocode.py"
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@types/chromedriver": "^81.0.1",
@@ -34,7 +35,6 @@
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-unused-imports": "^3.0.0",
     "prettier": "^2.8.4",
-    "tsx": "^4.6.1",
     "typescript": "^5.3.3"
   },
   "eslintConfig": {

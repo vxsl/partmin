@@ -10,7 +10,7 @@ import {
 } from "runtypes";
 import { RuntypeBase } from "runtypes/lib/runtype.js";
 import { LogLevel } from "util/log.js";
-import _config from "../config.json";
+import _config from "../../../config.json";
 
 const Options = RuntypeRecord({
   computeDistanceTo: Optional(Array(String)),
