@@ -2,6 +2,9 @@
   "name": "partmin",
   "private": true,
   "license": "MIT",
+  "scripts": {
+    "server": "cd packages/server && yarn start"
+  },
   "workspaces": [
     "packages/*"
   ]
