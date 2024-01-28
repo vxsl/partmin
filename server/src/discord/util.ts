@@ -1,6 +1,6 @@
 import Discord, { DiscordAPIError } from "discord.js";
 import { discordChannelIDs, discordClient } from "discord/index.js";
-import { log, verboseLog } from "util/log.js";
+import { debugLog, log, verboseLog } from "util/log.js";
 
 export type ChannelKey = "main" | "logs";
 
@@ -75,16 +75,22 @@ const _discordSend = async (
   const channel = options?.channel ?? "main";
   const c = await getChannel(channel);
 
-  const v = [
+  const stringLike = [
     "string",
     "number",
     "bigint",
     "boolean",
     "symbol",
     "undefined",
-  ].includes(typeof msg)
-    ? discordFormat(msg, options)
-    : msg;
+  ].includes(typeof msg);
+  let v = msg;
+  if (stringLike) {
+    if (`${msg}`.length === 0) {
+      debugLog("Refusing to send empty Discord message");
+      return;
+    }
+    v = discordFormat(msg, options);
+  }
 
   if (!c.client.isReady()) {
     throw new Error(
