@@ -13,7 +13,7 @@ const cache = `${tmpDir}/kijiji-rss-url`;
 
 const kijiji: Platform = {
   key: "kijiji",
-  pre: async (driver, configChanged) => {
+  prepare: async (driver, configChanged) => {
     let cached;
     if (fs.existsSync(cache)) {
       cached = fs.readFileSync(cache, "utf-8");

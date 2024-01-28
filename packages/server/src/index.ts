@@ -25,9 +25,9 @@ dotenv.load();
 
 const runLoop = async (driver: WebDriver, runners: Platform[]) => {
   await detectConfigChange(async (isChanged) => {
-    for (const { pre, key } of runners) {
+    for (const { prepare, key } of runners) {
       try {
-        await (pre?.(driver, isChanged) ?? Promise.resolve());
+        await (prepare?.(driver, isChanged) ?? Promise.resolve());
       } catch (e) {
         throw new Error(
           `Error while running preparation callback for ${key}: ${e}`
