@@ -81,12 +81,11 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
 };
 
 (async () => {
-  await validateConfig();
-
   let driver, discordClient;
   try {
-    driver = await buildDriver();
     discordClient = await startDiscordBot();
+    await validateConfig();
+    driver = await buildDriver();
     await runLoop(driver, [fb, kijiji]);
   } catch (e) {
     if (discordClient?.isReady()) {
