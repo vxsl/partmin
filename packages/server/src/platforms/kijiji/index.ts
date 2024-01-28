@@ -8,30 +8,28 @@ import {
   scrapeItems,
 } from "platforms/kijiji/ingest.js";
 
-let rssURL: string | undefined;
+let rss: string | undefined;
+const cache = `${tmpDir}/kijiji-rss-url`;
 
 const kijiji: Platform = {
   key: "kijiji",
   pre: async (driver, configChanged) => {
-    try {
-      if (!configChanged) {
-        rssURL = await fs.promises.readFile(
-          `${tmpDir}/kijiji-rss-url`,
-          "utf-8"
-        );
-      }
-    } catch {}
-    if (!rssURL) {
-      log("No cached RSS feed found, fetching new one");
-      rssURL = await getKijijiRSS(driver);
-      log(`New RSS feed URL: ${rssURL}`);
-      await fs.promises.writeFile(`${tmpDir}/kijiji-rss-url`, rssURL);
+    const cached = await fs.promises.readFile(cache, "utf-8");
+    if (!configChanged && cached) {
+      log("Using cached Kijiji RSS feed");
+      rss = cached;
+      return;
     }
+
+    log("Building new Kijiji RSS feed");
+    rss = await getKijijiRSS(driver);
+    log(`New RSS feed: ${rss}`);
+    await fs.promises.writeFile(cache, rss);
   },
   main: async () => {
-    if (!rssURL) throw new Error("No RSS feed found");
-    log(`Kijiji RSS feed URL: ${rssURL}`);
-    return await scrapeItems(rssURL);
+    if (!rss) throw new Error("No RSS feed found");
+    log(`Kijiji RSS feed URL: ${rss}`);
+    return await scrapeItems(rss);
   },
   perItem: visitKijijiListing,
 };
