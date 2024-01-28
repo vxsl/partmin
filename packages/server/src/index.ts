@@ -1,9 +1,11 @@
+import { puppeteerCacheDir, tmpDir } from "constants.js";
 import { sendEmbedWithButtons } from "discord/embed.js";
 import { startDiscordBot } from "discord/index.js";
 import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import { Item } from "item.js";
+import fs from "fs";
 import fb from "platforms/fb/index.js";
 import kijiji from "platforms/kijiji/index.js";
 import {
@@ -83,6 +85,10 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
 (async () => {
   let driver, discordClient;
   try {
+    [tmpDir, puppeteerCacheDir].forEach(
+      (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
+    );
+
     discordClient = await startDiscordBot();
     await validateConfig();
     driver = await buildDriver();
