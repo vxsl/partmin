@@ -19,7 +19,7 @@ export const validateConfig = async () => {
 export const detectConfigChange = async (
   callback?: (isChanged: boolean) => void
 ) => {
-  const path = `${tmpDir}/configSearchParams.json`;
+  const path = `${tmpDir}/config-search-params.json`;
   const cached = fs.existsSync(path)
     ? fs.readFileSync(path, "utf-8")
     : undefined;
