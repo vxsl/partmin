@@ -25,8 +25,11 @@ export const buildDriver = async () => {
   const driverOptions = new chrome.Options();
   driverOptions.addArguments("--disable-gpu");
   driverOptions.addArguments("--disable-software-rasterizer");
+  if (config.development?.noSandbox) {
+    driverOptions.addArguments("--no-sandbox");
+  }
   if (!config.development?.headed) {
-    driverOptions.addArguments("--headless");
+    driverOptions.addArguments("--headless=new");
     driverOptions.addArguments("--start-maximized");
     driverOptions.addArguments("--window-size=1920,1080");
   }

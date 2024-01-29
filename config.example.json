@@ -6,7 +6,8 @@
   "development": {
     "headed": false,
     "testing": false,
-    "skipGreeting": false
+    "skipGreeting": false,
+    "noSandbox": false
   },
   "options": {
     "computeDistanceTo": [

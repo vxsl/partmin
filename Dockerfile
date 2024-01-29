@@ -1,16 +1,11 @@
 FROM node:20 AS build
 
-RUN useradd -ms /bin/bash partmin
-
 WORKDIR /usr/src/app
 
 # RUN mkdir -p packages/server
 
-# RUN touch /etc/apt/sources.list
-# RUN sed -i 's/htt[p|ps]:\/\/archive.ubuntu.com\/ubuntu\//mirror:\/\/mirrors.ubuntu.com\/mirrors.txt/g' /etc/apt/sources.list
-
 RUN apt-get update && \
-    apt-get install -yq libgbm1 \
+    apt-get install -yq jq libgbm1 \
     gconf-service libasound2 libatk1.0-0 libc6 libcairo2 \
     libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 \
     libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 \
@@ -30,8 +25,9 @@ RUN yarn install
 
 COPY . .
 
-RUN chown -R partmin:partmin /usr/src/app
+# add .development.noSandbox property with value true to config.json using jq:
+RUN jq '.development.noSandbox = true' ./config.json > tmp.$$.json && mv tmp.$$.json config.json
 
-USER partmin
+CMD ["service", "dbus", "start"]
 
 CMD ["yarn", "server"]

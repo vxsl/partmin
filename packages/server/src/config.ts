@@ -42,6 +42,7 @@ const Development = RuntypeRecord({
   headed: Optional(Boolean),
   testing: Optional(Boolean),
   skipGreeting: Optional(Boolean),
+  noSandbox: Optional(Boolean),
 });
 
 const Config = RuntypeRecord({
