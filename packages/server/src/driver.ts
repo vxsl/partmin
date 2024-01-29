@@ -27,6 +27,8 @@ export const buildDriver = async () => {
   driverOptions.addArguments("--disable-software-rasterizer");
   if (!config.development?.headed) {
     driverOptions.addArguments("--headless");
+    driverOptions.addArguments("--start-maximized");
+    driverOptions.addArguments("--window-size=1920,1080");
   }
   await getInstalledBrowsers({
     cacheDir: puppeteerCacheDir,
