@@ -22,13 +22,13 @@ export const discordChannelIDs = (
 ) as Record<ChannelKey, string>;
 
 if (!token) {
-  throw new Error("No DISCORD_BOT_TOKEN provided in .env");
+  throw new Error("No DISCORD_BOT_TOKEN environment variable provided");
 }
 if (!discordChannelIDs.main) {
-  throw new Error("No DISCORD_CHANNEL_ID_MAIN provided in .env");
+  throw new Error("No DISCORD_CHANNEL_ID_MAIN environment variable provided");
 }
 if (!discordChannelIDs.logs) {
-  throw new Error("No DISCORD_CHANNEL_ID_LOGS provided in .env");
+  throw new Error("No DISCORD_CHANNEL_ID_LOGS environment variable provided");
 }
 
 discordClient.on("ready", () => {

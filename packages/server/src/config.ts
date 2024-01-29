@@ -2,8 +2,8 @@ import {
   Array,
   Boolean,
   Literal,
-  Number,
   Optional,
+  Number as RuntypeNumber,
   Record as RuntypeRecord,
   Static,
   String,
@@ -22,8 +22,8 @@ const SearchParams = RuntypeRecord({
   roommateNotAccepted: Optional(Literal(true)),
   petFriendly: Optional(Boolean),
   price: RuntypeRecord({
-    min: Number,
-    max: Number,
+    min: RuntypeNumber,
+    max: RuntypeNumber,
   }),
 });
 
@@ -64,6 +64,26 @@ config.search.blacklistRegex?.forEach((r) => {
     new RegExp(r);
   } catch (e) {
     throw new Error(`Invalid blacklistRegex in config: ${r}`);
+  }
+});
+
+process.argv.slice(2).forEach((arg) => {
+  const [_key, value] = arg.split("=");
+  if (_key && value) {
+    const key = _key.split("--")[1];
+    const path = key.split(".");
+    let obj = config;
+    for (let i = 0; i < path.length - 1; i++) {
+      obj = obj[path[i]];
+    }
+    const lastKey = path[path.length - 1];
+    if (typeof obj[lastKey] === "boolean") {
+      obj[lastKey] = value === "true";
+    } else if (typeof obj[lastKey] === "number") {
+      obj[lastKey] = Number(value);
+    } else {
+      obj[lastKey] = value;
+    }
   }
 });
 
