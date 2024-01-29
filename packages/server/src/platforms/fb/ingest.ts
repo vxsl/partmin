@@ -5,7 +5,7 @@ import { fbItemXpath } from "platforms/fb/constants.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { PlatformKey } from "types/platform.js";
 import { findNestedProperty } from "util/data.js";
-import { Radius, getGoogleMapsLink } from "util/geo.js";
+import { Coordinates, Radius, getGoogleMapsLink } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
 import { notUndefined } from "util/misc.js";
 import {
@@ -92,10 +92,7 @@ export const visitMarketplaceListing = async (
   try {
     const lat = productDetails.target.location.latitude;
     const lon = productDetails.target.location.longitude;
-    if (lat && lon) {
-      item.details.lat = lat;
-      item.details.lon = lon;
-    }
+    item.details.coords = Coordinates.build(lat, lon);
   } catch (e) {
     log(e);
     // TODO

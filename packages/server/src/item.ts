@@ -2,6 +2,7 @@ import config from "config.js";
 import { PlatformKey } from "types/platform.js";
 import {
   CommuteSummary,
+  Coordinates,
   approxLocationLink,
   getCommuteSummary,
 } from "util/geo.js";
@@ -16,8 +17,7 @@ export type Item = {
     longDescription?: string;
     shortAddress?: string;
     longAddress?: string;
-    lat?: number;
-    lon?: number;
+    coords?: Coordinates;
   };
   computed?: {
     locationLinkMD?: string;
@@ -33,21 +33,17 @@ export interface SeenItemDict {
 }
 
 export const addLocationLink = async (item: Item) => {
-  if (!item.computed?.locationLinkMD && item.details.lat && item.details.lon) {
+  if (!item.computed?.locationLinkMD && item.details.coords) {
     item.computed = {
       ...(item.computed ?? {}),
-      locationLinkMD: await approxLocationLink(
-        item.details.lat,
-        item.details.lon
-      ),
+      locationLinkMD: await approxLocationLink(item.details.coords),
     };
   }
 };
 
 export const getCommuteOrigin = (item: Item) =>
-  item.details.lat && item.details.lon
-    ? `${item.details.lat},${item.details.lon}`
-    : item.details.longAddress || item.details.shortAddress;
+  item.details.coords?.toString({ raw: true }) ??
+  (item.details.longAddress || item.details.shortAddress);
 
 export const addCommuteSummary = async (item: Item) => {
   const origin = getCommuteOrigin(item);

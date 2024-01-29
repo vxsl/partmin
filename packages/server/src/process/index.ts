@@ -120,9 +120,8 @@ export const processItems = async (unseenItems: Item[]) => {
 
 export const excludeItemsOutsideSearchArea = (items: Item[]) =>
   items.filter((item) => {
-    if (item.details.lat === undefined || item.details.lon === undefined)
-      return true;
-    const v = isWithinRadii(item.details.lat, item.details.lon);
+    if (!item.details.coords) return true;
+    const v = isWithinRadii(item.details.coords);
     if (!v) {
       log(`Item ${getSeenItemKey(item)} is outside of the search area:`);
       log(item);

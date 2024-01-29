@@ -20,9 +20,7 @@ export const convertItemToDiscordEmbed = (item: Item) => {
     }`,
     item.computed?.locationLinkMD ??
       item.details.shortAddress ??
-      (item.details.lat && item.details.lon
-        ? `(${item.details.lat}, ${item.details.lon})`
-        : undefined),
+      item.details.coords?.toString(),
   ]
     .filter(notUndefined)
     .join(" / ");
@@ -83,20 +81,8 @@ export const convertItemToDiscordEmbed = (item: Item) => {
 };
 
 const getButtons = (item: Item) => {
-  let descButton, prevImgButton, imgButton, nextImgButton, distanceToButton;
+  let descButton, prevImgButton, imgButton, nextImgButton;
 
-  const loc =
-    item.details.longAddress ||
-    item.details.shortAddress ||
-    (item.details.lat && item.details.lon
-      ? `(${item.details.lat}, ${item.details.lon})`
-      : undefined);
-  if (loc) {
-    distanceToButton = new Discord.ButtonBuilder()
-      .setCustomId("distanceTo")
-      .setLabel(`📏`)
-      .setStyle(Discord.ButtonStyle.Secondary);
-  }
   if (item.details.longDescription !== undefined) {
     descButton = new Discord.ButtonBuilder()
       .setCustomId("desc")
@@ -117,7 +103,7 @@ const getButtons = (item: Item) => {
       .setLabel(`➡`)
       .setStyle(Discord.ButtonStyle.Secondary);
   }
-  return { prevImgButton, imgButton, nextImgButton, descButton };
+  return { descButton, prevImgButton, imgButton, nextImgButton };
 };
 
 export const sendEmbedWithButtons = async (

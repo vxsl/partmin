@@ -1,21 +1,78 @@
 import haversine from "haversine";
 import config from "config.js";
-import { debugLog, verboseLog } from "util/log.js";
+import { debugLog, log, verboseLog } from "util/log.js";
 import { tmpDir } from "constants.js";
 import { readJSON, writeJSON } from "util/io.js";
 import axios from "axios";
 import { abbreviateDuration } from "util/data.js";
+import { notUndefined } from "util/misc.js";
 
 const gMaps = "https://www.google.com/maps";
 const gMapsAPIs = "https://maps.googleapis.com/maps/api";
 
-// TODO move to types?
-// TODO ensure everything is using this instead of { lat, lon, radius }
-export type Radius = {
+export class Coordinates {
   lat: number;
   lon: number;
+
+  constructor(lat: number, lon: number) {
+    this.lat = lat;
+    this.lon = lon;
+  }
+
+  static build(
+    lat: number | undefined,
+    lon: number | undefined
+  ): Coordinates | undefined {
+    if (lat !== undefined && lon !== undefined) {
+      return new Coordinates(lat, lon);
+    }
+  }
+
+  toString(options?: { raw?: boolean }) {
+    return options?.raw
+      ? `${this.lat},${this.lon}`
+      : `(${this.lat}, ${this.lon})`;
+  }
+}
+export class Radius {
+  coords: Coordinates;
   diam: number;
-};
+
+  constructor(lat: number, lon: number, diam: number) {
+    this.coords = new Coordinates(lat, lon);
+    this.diam = diam;
+  }
+
+  static build({
+    lat,
+    lon,
+    diam,
+  }: {
+    lat: number | undefined;
+    lon: number | undefined;
+    diam: number | undefined;
+  }): Radius | undefined {
+    if (lat !== undefined && lon !== undefined && diam !== undefined) {
+      return new Radius(lat, lon, diam);
+    }
+    log(
+      `Error building radius: ${Object.entries({ lat, lon, diam })
+        .filter(([, v]) => v === undefined)
+        .map(([k]) => k)
+        .join(", ")} undefined`
+    );
+  }
+
+  get lat() {
+    return this.coords.lat;
+  }
+  get lon() {
+    return this.coords.lon;
+  }
+  toString() {
+    return `${this.coords.toString({ raw: true })},${this.diam}`;
+  }
+}
 
 export const decodeMapDevelopersURL = (url: string): Radius[] => {
   const circlesParam = url.match(/circles=([^&]*)/)?.[1];
@@ -23,47 +80,46 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
     throw new Error("Error parsing mapDevelopersURL");
   }
   const decodedCirclesParam = decodeURIComponent(circlesParam);
-  const circleData = JSON.parse(decodedCirclesParam);
-  return circleData.map((circle: string) => {
-    const [radius, lat, lon] = circle;
-    return {
-      lat: parseFloat(lat),
-      lon: parseFloat(lon),
-      diam: parseFloat(radius) / 1000,
-    };
-  });
+  const circleData: string[] = JSON.parse(decodedCirclesParam);
+  return circleData
+    .map((circle) => {
+      const [radius, lat, lon] = circle;
+      return Radius.build({
+        lat: parseFloat(lat),
+        lon: parseFloat(lon),
+        diam: parseFloat(radius) / 1000,
+      });
+    })
+    .filter(notUndefined);
 };
 
-export const isWithinRadii = (lat: number, lon: number) => {
+export const isWithinRadii = (coords: Coordinates) => {
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
-  verboseLog(`checking if ${lat}, ${lon} is within ${radii.length} radii:`);
-  verboseLog(radii);
-  let success: { lat: number; lon: number } | undefined;
-  const result = radii.some((radius) => {
-    const result =
+  verboseLog(
+    `checking if ${coords.lat}, ${coords.lon} is within ${radii.length} radii:`
+  );
+  verboseLog(radii.map((r) => r.toString()));
+  const success = radii.find(
+    (radius) =>
       haversine(
         { latitude: radius.lat, longitude: radius.lon },
-        { latitude: lat, longitude: lon },
+        { latitude: coords.lat, longitude: coords.lon },
         { unit: "km" }
-      ) <= radius.diam;
-    if (result) {
-      success = radius;
-    }
-    return result;
-  });
-  verboseLog(
-    success
-      ? `(${lat}, ${lon}) is within (${success.lat}, ${success.lon})`
-      : `(${lat}, ${lon}) is not within any of the ${radii.length} radii`
+      ) <= radius.diam
   );
-  return result;
+  verboseLog(
+    `${coords.toString()} is ${
+      success ? `within ${success.toString()}` : "not within any of the radii"
+    }`
+  );
+  return success !== undefined;
 };
 
 export const getGoogleMapsLink = (query: string) =>
   `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
-export const approxLocationLink = async (lat: number, lon: number) => {
-  const key = `${lat},${lon}`;
+export const approxLocationLink = async (coords: Coordinates) => {
+  const key = coords.toString({ raw: true });
   const cacheFile = `${tmpDir}/approximate-addresses.json`;
   const cache = await readJSON<{ [k: string]: [string, string] }>(cacheFile);
   const cached = cache?.[key];
@@ -76,7 +132,7 @@ export const approxLocationLink = async (lat: number, lon: number) => {
 
   const { data } = await axios.get(
     `${gMapsAPIs}/geocode/json?latlng=\
-      ${lat},${lon}\
+      ${coords.lat},${coords.lon}\
       &key=${process.env.GOOGLE_MAPS_API_KEY}`
   );
   const comps = data.results[0].address_components;

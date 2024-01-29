@@ -18,8 +18,9 @@ const fb: Platform = {
     const radii = decodeMapDevelopersURL(
       config.search.location.mapDevelopersURL
     );
-    for (const r of radii) {
-      debugLog(`visiting fb marketplace for radius ${JSON.stringify(r)}`);
+    for (let i = 0; i < radii.length; i++) {
+      const r = radii[i];
+      debugLog(`visiting fb marketplace for radius ${i} (${r.toString()})`);
       await visitMarketplace(driver, r);
       await withDOMChangesBlocked(driver, async () => {
         await scrapeItems(driver).then((arr) => items.push(...(arr ?? [])));

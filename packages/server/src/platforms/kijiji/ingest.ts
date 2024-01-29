@@ -123,8 +123,10 @@ export const scrapeItems = (rssUrl: string): Promise<Item[]> =>
           title: item.title ? he.decode(item.title) : id,
           longDescription: item.contentSnippet,
           price: item.price,
-          lat: item.lat,
-          lon: item.lon,
+          coords: {
+            lat: item.lat,
+            lon: item.lon,
+          },
         },
         url,
         imgURLs: item.enclosure?.url ? [item.enclosure.url] : [],
