@@ -27,7 +27,6 @@ export const buildDriver = async () => {
     driverOptions.addArguments("--headless");
     driverOptions.addArguments("--disable-gpu");
   }
-  driverOptions.addArguments("--no-sandbox");
   await getInstalledBrowsers({
     cacheDir: puppeteerCacheDir,
   }).then(([b]) => {
