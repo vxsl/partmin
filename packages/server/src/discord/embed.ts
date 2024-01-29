@@ -81,7 +81,7 @@ export const convertItemToDiscordEmbed = (item: Item) => {
 };
 
 const getButtons = (item: Item) => {
-  let descButton, prevImgButton, imgButton, nextImgButton;
+  let prevImgButton, imgButton, nextImgButton, descButton;
 
   if (item.details.longDescription !== undefined) {
     descButton = new Discord.ButtonBuilder()
@@ -103,7 +103,7 @@ const getButtons = (item: Item) => {
       .setLabel(`➡`)
       .setStyle(Discord.ButtonStyle.Secondary);
   }
-  return { descButton, prevImgButton, imgButton, nextImgButton };
+  return { prevImgButton, imgButton, nextImgButton, descButton };
 };
 
 export const sendEmbedWithButtons = async (
