@@ -1,31 +1,11 @@
 {
   "compilerOptions": {
     "baseUrl": "./src",
-    "target": "ES2017",
-    "lib": [
-      // "dom",
-      // "dom.iterable",
-      "ESNext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    // "module": "esnext",
+    "target": "es2020",
     "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
+    "resolveJsonModule": true
   },
   "include": [
     "src",
   ],
-  // "ts-node": {
-  //   "esm": true
-  // }
 }
