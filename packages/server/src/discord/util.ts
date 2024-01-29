@@ -86,10 +86,11 @@ export const discordSend = (
       e.code === 50035 &&
       e.message.includes("or fewer")
     ) {
-      log(`Message too long, splitting into parts`, {
+      log(`Message too long, splitting into parts:`, {
         error: true,
         skipDiscord: true,
       });
+      log(msg, { error: true, skipDiscord: true });
       const parts = `${msg}`.match(/.{1,1900}/g) ?? [];
       for (let i = 0; i < parts.length; i++) {
         if (i === parts.length - 1) {

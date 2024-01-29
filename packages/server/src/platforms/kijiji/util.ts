@@ -26,13 +26,13 @@ export const getFilterXpath = (id: string) =>
   `//div[@id="accordion__panel-${id}"]`;
 
 export const ensureFilterIsOpen = async (id: string, driver: WebDriver) => {
-  const xpath = getFilterXpath(id);
+  const xpath = `${getFilterXpath(id)}/..`;
   debugLog(`Ensuring filter ${id} is open`);
   await withElement(
-    () => driver.findElement(By.xpath(`${xpath}/..`)),
+    () => driver.findElement(By.xpath(xpath)),
     async (el) => {
       debugLog(`Ensuring filter ${id} is interactable`);
-      await elementShouldBeInteractable(driver, el);
+      await elementShouldBeInteractable(driver, el, { xpath });
       debugLog(`Checking whether ${id} is already expanded`);
       await el.getAttribute("aria-expanded").then(async (v) => {
         if (!v) {

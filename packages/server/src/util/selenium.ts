@@ -61,13 +61,11 @@ export const clickByXPath = async (
     parentXpath?: string;
   }
 ) => {
+  const xpath = `${options?.parentXpath ?? ""}${selector}`;
   await withElement(
-    () =>
-      (options?.parent ?? driver).findElement(
-        By.xpath(`${options?.parentXpath ?? ""}${selector}`)
-      ),
+    () => (options?.parent ?? driver).findElement(By.xpath(xpath)),
     async (el) => {
-      await elementShouldBeInteractable(driver, el);
+      await elementShouldBeInteractable(driver, el, { xpath });
       await click(el);
     }
   );
@@ -87,13 +85,11 @@ export const clickAllByXPath = async (
     .findElements(By.xpath(selector))
     .then((els) => els.length);
   for (let i = 0; i < len; i++) {
+    const xpath = `(${selector})[${i + 1}]`;
     await withElement(
-      () =>
-        (options?.parent ?? driver).findElement(
-          By.xpath(`(${selector})[${i + 1}]`)
-        ),
+      () => (options?.parent ?? driver).findElement(By.xpath(xpath)),
       async (el) => {
-        await elementShouldBeInteractable(driver, el);
+        await elementShouldBeInteractable(driver, el, { xpath });
         await click(el);
         if (options?.afterClick) {
           await options.afterClick();
@@ -160,19 +156,23 @@ export const loadCookies = async (driver: WebDriver) => {
   }
 };
 
-const getWebElementIdentifier = async (el: WebElement): Promise<string> => {
-  const idAttribute = await el.getAttribute("id");
-  return idAttribute ? `#${idAttribute}` : "element without id";
-};
-
 export const elementShouldBeInteractable = async (
   driver: WebDriver,
-  el: WebElement
+  el: WebElement,
+  log:
+    | {
+        xpath: string;
+        name?: undefined;
+      }
+    | {
+        xpath?: undefined;
+        name: string;
+      }
 ) => {
-  const elementName = await getWebElementIdentifier(el);
-  debugLog(`Waiting for ${elementName} to be visible`);
+  const str = log.xpath ?? log.name;
+  debugLog(`Waiting for ${str} to be visible`);
   await driver.wait(until.elementIsVisible(el), 10 * 1000);
-  debugLog(`Waiting for ${elementName} to be enabled`);
+  debugLog(`Waiting for ${str} to be enabled`);
   await driver.wait(until.elementIsEnabled(el), 10 * 1000);
 };
 
