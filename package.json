@@ -3,8 +3,9 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "server": "cd packages/server && yarn start",
-    "server-dev": "cd packages/server && yarn dev"
+    "server": "yarn start server",
+    "server-dev": "yarn start server-dev",
+    "start": "sh start.sh"
   },
   "workspaces": [
     "packages/*"
