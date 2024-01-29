@@ -6,6 +6,7 @@ print_usage() {
 }
 
 prog="$1"
+shift
 if [ "$prog" != "server" ] && [ "$prog" != "server-dev"]; then
     print_usage
     exit 1

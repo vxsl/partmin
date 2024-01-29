@@ -1,0 +1,14 @@
+version: "2"
+
+services:
+  partmin:
+    env_file: ./.env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./config.json:/usr/src/app/config.json
+      - /dev/shm:/dev/shm
+    container_name: partmin
+    image: partmin:latest
+    command: bash -c "yarn server --development.noSandbox=true"

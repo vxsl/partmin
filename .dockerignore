@@ -1,0 +1,8 @@
+**/node_modules
+scratchpad
+.git
+.gitignore
+.vscode
+**/config.json
+**/.env
+**/.tmp
