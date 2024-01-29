@@ -52,11 +52,19 @@ const Config = RuntypeRecord({
     params: SearchParams,
     location: Location,
     blacklist: Optional(Array(String)),
+    blacklistRegex: Optional(Array(String)),
   }),
 });
 
 export type Config = Static<typeof Config>;
 
 const config = Config.check(_config);
+config.search.blacklistRegex?.forEach((r) => {
+  try {
+    new RegExp(r);
+  } catch (e) {
+    throw new Error(`Invalid blacklistRegex in config: ${r}`);
+  }
+});
 
 export default config;

@@ -9,42 +9,26 @@ import { addLocationLink, addCommuteSummary } from "item.js";
 
 dotenv.load();
 
-const blacklist = config.search.blacklist?.map((b) => b.toLowerCase());
+const findBlacklistedWords = ({ id, details }: Item): string | undefined => {
+  const report = (v: string | RegExp, f: string) =>
+    `'${v}' in item ${id}'s ${f}`;
 
-const findBlacklistedWords = (i: Item): string[] | null => {
-  const result: string[] = [];
+  const desc = details.longDescription?.toLowerCase();
+  const title = details.title?.toLowerCase();
+  const loc = (details.longAddress ?? details.shortAddress)?.toLowerCase();
 
-  if (
-    blacklist?.some((_b) => {
-      const b = _b.toLowerCase();
-
-      const descriptionMatch = i.details.longDescription
-        ?.toLowerCase()
-        .includes(b);
-      if (descriptionMatch) {
-        result.push(`'${_b}' in item ${i.id}'s description`);
-        return true;
-      }
-
-      const titleMatch = i.details.title?.toLowerCase().includes(b);
-      if (titleMatch) {
-        result.push(`'${_b}' in item ${i.id}'s title`);
-        return true;
-      }
-
-      const locationMatch = i.details.shortAddress?.toLowerCase().includes(b);
-      if (locationMatch) {
-        result.push(`'${_b}' in item ${i.id}'s location`);
-        return true;
-      }
-
-      return false;
-    })
-  ) {
-    return result;
+  for (const b of config.search.blacklist?.map((b) => b.toLowerCase()) ?? []) {
+    if (desc?.includes(b)) return report(b, "description");
+    if (title?.includes(b)) return report(b, "title");
+    if (loc?.includes(b)) return report(b, "location");
   }
 
-  return null;
+  for (const _r of config.search.blacklistRegex ?? []) {
+    const r = new RegExp(_r, "i");
+    if (desc?.match(r)) return report(r, "description");
+    if (title?.match(r)) return report(r, "title");
+    if (loc?.match(r)) return report(r, "location");
+  }
 };
 
 const seenPath = config.development?.testing
@@ -92,7 +76,7 @@ export const processItems = async (unseenItems: Item[]) => {
     const [_results, _blacklistLogs] = await promises;
     const bl = findBlacklistedWords(item);
     if (bl) {
-      _blacklistLogs.push(...bl);
+      _blacklistLogs.push(bl);
     } else {
       await addLocationLink(item);
       await addCommuteSummary(item);

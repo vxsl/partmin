@@ -50,6 +50,10 @@
       "colocataire",
       "pas d animaux",
       "animaux non autorisés"
+    ],
+    "blacklistRegex": [
+      "/for (\\d+) months only/",
+      "/pour (\\d+) mois seulement/"
     ]
   }
 }
