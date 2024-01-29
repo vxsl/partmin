@@ -12,8 +12,8 @@ if [ "$prog" != "server" ] && [ "$prog" != "server-dev"]; then
     exit 1
 fi
 
-if [ ! -f "config.json" ]; then
-    echo "config.json not found, please create one from config.json.example and place it in the project root"
+if [ ! -f "../config/config.json" ]; then
+    echo "config/config.json not found, please create one from config/config.example.json and place it in the same directory"
     exit 1
 fi
 

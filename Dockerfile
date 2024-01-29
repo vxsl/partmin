@@ -2,6 +2,8 @@ FROM node:20 AS build
 
 WORKDIR /usr/src/app
 
+RUN mkdir -p app/packages/server 
+
 RUN apt-get update && \
     apt-get install -yq libgbm1 \
     gconf-service libasound2 libatk1.0-0 libc6 libcairo2 \
@@ -15,11 +17,15 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+COPY app/package.json ./app
+COPY app/yarn.lock ./app
+COPY app/packages/server/package.json ./app/packages/server/
 
-COPY package.json ./
-COPY yarn.lock ./
-COPY packages/server/package.json ./packages/server/
+WORKDIR /usr/src/app/app
+
 RUN yarn install 
+
+WORKDIR /usr/src/app
 
 COPY . .
 

@@ -7,8 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./config.json:/usr/src/app/config.json
+      - ./config:/usr/src/app/config
       - /dev/shm:/dev/shm
     container_name: partmin
     image: partmin:latest
-    command: bash -c "yarn server --development.noSandbox=true"
+    command: bash -c "cd app && yarn server --development.noSandbox=true"
