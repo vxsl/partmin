@@ -20,15 +20,21 @@ export const detectConfigChange = async (
   callback?: (isChanged: boolean) => void
 ) => {
   const path = `${tmpDir}/configSearchParams.json`;
-  const cached = fs.existsSync(path) ? fs.readFileSync(path, "utf-8") : {};
+  const cached = fs.existsSync(path)
+    ? fs.readFileSync(path, "utf-8")
+    : undefined;
   const cur = JSON.stringify(config.search.params, null, 2);
   let v = cached !== cur;
+  log(
+    v
+      ? !cached
+        ? "No cached search found."
+        : "Change in search parameters detected."
+      : "No change in search parameters since last run."
+  );
   await (callback?.(v) ?? Promise.resolve());
   if (v) {
-    log("Config change detected.");
     fs.writeFileSync(path, cur);
-  } else {
-    log("No config change detected since last run.");
   }
   return v;
 };

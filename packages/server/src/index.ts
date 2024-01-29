@@ -16,7 +16,7 @@ import {
 import { WebDriver } from "selenium-webdriver";
 import { Platform } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
-import { log, verboseLog } from "util/log.js";
+import { debugLog, log, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
 
 process.title = "partmin";
@@ -59,12 +59,13 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
           log(`No items found within the search area.`);
           continue;
         }
+        debugLog(`Found ${items.length} items within the search area.`);
         verboseLog({ items });
 
         await withUnseenItems(items, async (unseenItems) => {
           for (const item of unseenItems) {
             await perItem?.(driver, item)?.then(() =>
-              randomWait({ short: true, suppressLog: true })
+              randomWait({ short: true, suppressProgressLog: true })
             );
           }
           await processItems(unseenItems).then(async (arr) => {

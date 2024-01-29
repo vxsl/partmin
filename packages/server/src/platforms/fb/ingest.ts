@@ -24,7 +24,7 @@ export const visitMarketplaceListing = async (
   await clearBrowsingData(driver);
 
   let url = `https://facebook.com/marketplace/item/${item.id}`;
-  debugLog(url);
+  debugLog(`visiting listing: ${url}`);
 
   await driver.get(url);
 
@@ -171,7 +171,7 @@ export const visitMarketplace = async (
       url += `${k}=${v}&`;
     }
   }
-  debugLog(url);
+  debugLog(`url: ${url}`);
 
   await driver.get(url);
 

@@ -1,7 +1,7 @@
 import config from "config.js";
 import Discord from "discord.js";
 import { greetings } from "discord/chat.js";
-import { ChannelKey, discordSend as discordSend } from "discord/util.js";
+import { ChannelKey, discordSend } from "discord/util.js";
 import dotenv from "dotenv-mono";
 
 dotenv.load();
@@ -22,16 +22,13 @@ export const discordChannelIDs = (
 ) as Record<ChannelKey, string>;
 
 if (!token) {
-  console.error("No DISCORD_BOT_TOKEN provided in .env");
-  process.exit(1);
+  throw new Error("No DISCORD_BOT_TOKEN provided in .env");
 }
 if (!discordChannelIDs.main) {
-  console.error("No DISCORD_CHANNEL_ID_MAIN provided in .env");
-  process.exit(1);
+  throw new Error("No DISCORD_CHANNEL_ID_MAIN provided in .env");
 }
 if (!discordChannelIDs.logs) {
-  console.error("No DISCORD_CHANNEL_ID_LOGS provided in .env");
-  process.exit(1);
+  throw new Error("No DISCORD_CHANNEL_ID_LOGS provided in .env");
 }
 
 discordClient.on("ready", () => {

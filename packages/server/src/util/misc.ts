@@ -1,5 +1,5 @@
 import { stdout as singleLineStdOut } from "single-line-log";
-import { log } from "util/log.js";
+import { debugLog } from "util/log.js";
 
 export const errToString = (e: unknown) =>
   e instanceof Error ? `${e.stack || `${e.name}: ${e.message}`}` : `${e}`;
@@ -20,6 +20,7 @@ export const waitSeconds = async (s: number) =>
 export const randomWait = async (options?: {
   short?: true;
   suppressLog?: boolean;
+  suppressProgressLog?: boolean;
 }) => {
   const minShort = 2;
   const maxShort = 10;
@@ -36,13 +37,13 @@ export const randomWait = async (options?: {
 
   const mins = Math.round(toWait / 60);
   !options?.suppressLog &&
-    log(
+    debugLog(
       `Waiting ${toWait} seconds${
         mins < 2 ? "" : ` (${mins} minute${mins !== 1 ? "s" : ""})`
       }`
     );
   for (let i = 0; i < toWait; i++) {
-    !options?.suppressLog &&
+    !options?.suppressProgressLog &&
       singleLineStdOut(toWait - i === 1 ? "" : `Waiting ${toWait - i} seconds`);
     await waitSeconds(1);
   }

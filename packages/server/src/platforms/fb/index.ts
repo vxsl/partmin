@@ -4,7 +4,7 @@ import {
   visitMarketplaceListing,
 } from "platforms/fb/ingest.js";
 import { decodeMapDevelopersURL } from "util/geo.js";
-import { randomWait } from "util/misc.js";
+import { notUndefined, randomWait } from "util/misc.js";
 import { debugLog } from "util/log.js";
 import { Item } from "item.js";
 import { Platform } from "types/platform.js";
@@ -18,14 +18,23 @@ const fb: Platform = {
     const radii = decodeMapDevelopersURL(
       config.search.location.mapDevelopersURL
     );
+    let itemCount = 0;
     for (let i = 0; i < radii.length; i++) {
       const r = radii[i];
       debugLog(`visiting fb marketplace for radius ${i} (${r.toString()})`);
       await visitMarketplace(driver, r);
       await withDOMChangesBlocked(driver, async () => {
-        await scrapeItems(driver).then((arr) => items.push(...(arr ?? [])));
+        await scrapeItems(driver).then((arr) =>
+          items.push(...(arr?.filter(notUndefined) ?? []))
+        );
       });
-      await randomWait({ short: true, suppressLog: true });
+      debugLog(
+        `found ${
+          items.length - itemCount
+        } listings in radius ${i} (${r.toString()})`
+      );
+      itemCount = items.length;
+      await randomWait({ short: true, suppressProgressLog: true });
     }
     return items;
   },

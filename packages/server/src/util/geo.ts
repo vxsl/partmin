@@ -28,10 +28,8 @@ export class Coordinates {
     }
   }
 
-  toString(options?: { raw?: boolean }) {
-    return options?.raw
-      ? `${this.lat},${this.lon}`
-      : `(${this.lat}, ${this.lon})`;
+  static toString(c: Coordinates, options?: { raw?: boolean }) {
+    return options?.raw ? `${c.lat},${c.lon}` : `(${c.lat}, ${c.lon})`;
   }
 }
 export class Radius {
@@ -70,7 +68,7 @@ export class Radius {
     return this.coords.lon;
   }
   toString() {
-    return `${this.coords.toString({ raw: true })},${this.diam}`;
+    return `${Coordinates.toString(this.coords, { raw: true })},${this.diam}`;
   }
 }
 
@@ -96,9 +94,11 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
 export const isWithinRadii = (coords: Coordinates) => {
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
   verboseLog(
-    `checking if ${coords.lat}, ${coords.lon} is within ${radii.length} radii:`
+    `checking if ${Coordinates.toString(coords)} is within any of ${
+      radii.length
+    } radii:`
   );
-  verboseLog(radii.map((r) => r.toString()));
+  verboseLog(radii.map((r) => r.toString()).join("\n"));
   const success = radii.find(
     (radius) =>
       haversine(
@@ -108,8 +108,10 @@ export const isWithinRadii = (coords: Coordinates) => {
       ) <= radius.diam
   );
   verboseLog(
-    `${coords.toString()} is ${
-      success ? `within ${success.toString()}` : "not within any of the radii"
+    `${Coordinates.toString(coords)} is ${
+      success
+        ? `within ${success.toString()}`
+        : `not within any of the ${radii.length} radii`
     }`
   );
   return success !== undefined;
@@ -119,7 +121,7 @@ export const getGoogleMapsLink = (query: string) =>
   `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
 export const approxLocationLink = async (coords: Coordinates) => {
-  const key = coords.toString({ raw: true });
+  const key = Coordinates.toString(coords, { raw: true });
   const cacheFile = `${tmpDir}/approximate-addresses.json`;
   const cache = await readJSON<{ [k: string]: [string, string] }>(cacheFile);
   const cached = cache?.[key];
@@ -227,10 +229,8 @@ export const getCommuteSummary = async (origin: string, dest: string) => {
     return undefined;
   }
 
-  console.log(JSON.stringify(rawData, null, 2));
   const result = Object.fromEntries(
     commuteModes.map((mode) => {
-      console.log(rawData[mode]);
       return [
         mode,
         rawData[mode]?.[0]?.elements?.[0]?.duration?.text ?? "<missing>",

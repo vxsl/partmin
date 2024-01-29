@@ -42,7 +42,9 @@ export const addLocationLink = async (item: Item) => {
 };
 
 export const getCommuteOrigin = (item: Item) =>
-  item.details.coords?.toString({ raw: true }) ??
+  (item.details.coords
+    ? Coordinates.toString(item.details.coords, { raw: true })
+    : undefined) ??
   (item.details.longAddress || item.details.shortAddress);
 
 export const addCommuteSummary = async (item: Item) => {
