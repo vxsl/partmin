@@ -32,7 +32,7 @@ export const detectConfigChange = async (
         : "Change in search parameters detected."
       : "No change in search parameters since last run."
   );
-  await (callback?.(v) ?? Promise.resolve());
+  await (callback ? callback(v) : Promise.resolve());
   if (v) {
     fs.writeFileSync(path, cur);
   }

@@ -5,18 +5,14 @@ import filterInteractions, {
 import { By, WebDriver, until } from "selenium-webdriver";
 import { debugLog } from "util/log.js";
 import { isPlainObject } from "util/misc.js";
-import {
-  click,
-  elementShouldBeInteractable,
-  withElement,
-} from "util/selenium.js";
+import { elementShouldBeInteractable, withElement } from "util/selenium.js";
 
 export const kijijiGet = async (url: string, driver: WebDriver) => {
   await driver.get(url);
   const xpath = "//button[contains(@class, 'cookieBannerCloseButton')]";
   await driver
     .wait(until.elementLocated(By.xpath(xpath)), 1000)
-    .then((el) => click(el))
+    .then((el) => el.click())
     .catch((e) => {
       debugLog(e);
     });
@@ -34,13 +30,12 @@ export const ensureFilterIsOpen = async (id: string, driver: WebDriver) => {
       debugLog(`Ensuring filter ${id} is interactable`);
       await elementShouldBeInteractable(driver, el, { xpath });
       debugLog(`Checking whether ${id} is already expanded`);
-      await el.getAttribute("aria-expanded").then(async (v) => {
-        if (!v) {
-          debugLog(`Expanding ${id}`);
-          await click(el);
-          await driver.sleep(1000);
-        }
-      });
+      const expanded = await el.getAttribute("aria-expanded");
+      if (!expanded) {
+        debugLog(`Expanding ${id}`);
+        await el.click();
+        await driver.sleep(1000);
+      }
     }
   );
 };

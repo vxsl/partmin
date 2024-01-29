@@ -10,7 +10,7 @@ import { PlatformKey } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
 import { notUndefined, waitSeconds } from "util/misc.js";
-import { log } from "util/log.js";
+import { debugLog, log } from "util/log.js";
 import { manualClear, clickByXPath, type } from "util/selenium.js";
 
 const parser = new Parser({
@@ -98,6 +98,7 @@ export const getKijijiRSS = async (driver: WebDriver) => {
   await waitSeconds(1);
   await clickByXPath(driver, `//button[@data-testid="set-location-button"]`);
 
+  debugLog(`Waiting for URL to change`);
   await driver.wait(until.urlMatches(/^(?!.*canada).*$/));
 
   await setFilters(driver);

@@ -66,7 +66,7 @@ export const clickByXPath = async (
     () => (options?.parent ?? driver).findElement(By.xpath(xpath)),
     async (el) => {
       await elementShouldBeInteractable(driver, el, { xpath });
-      await click(el);
+      await el.click();
     }
   );
 };
@@ -90,7 +90,7 @@ export const clickAllByXPath = async (
       () => (options?.parent ?? driver).findElement(By.xpath(xpath)),
       async (el) => {
         await elementShouldBeInteractable(driver, el, { xpath });
-        await click(el);
+        await el.click();
         if (options?.afterClick) {
           await options.afterClick();
         }
@@ -121,13 +121,6 @@ export const fillInputByLabel = async (
     }
   );
 };
-
-export const click = async (element: WebElementPromise | WebElement) =>
-  await new Promise((resolve) => {
-    setTimeout(() => {
-      return element.click().then(resolve);
-    }, Math.random() * 200);
-  });
 
 export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
   writeJSON(

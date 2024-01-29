@@ -64,7 +64,7 @@ export const withUnseenItems = async <T>(
       unseenItems.length !== 1 ? "s" : ""
     } out of ${items.length}${config.logging?.verbose ? ":" : "."}`
   );
-  verboseLog(unseenItems);
+  verboseLog({ unseenItems });
 
   return result;
 };
@@ -93,7 +93,7 @@ export const processItems = async (unseenItems: Item[]) => {
       config.logging?.verbose ? ":" : "."
     }`
   );
-  verboseLog(results);
+  verboseLog({ results });
   if (blacklistLogs.length) {
     log(`${blacklistLogs.length} blacklisted:`);
     log(blacklistLogs.map((b) => `  - found ${b}`).join("\n"));
