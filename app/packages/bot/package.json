@@ -1,5 +1,5 @@
 {
-  "name": "partmin-server",
+  "name": "partmin-bot",
   "version": "1.0.0",
   "main": "ts/index.ts",
   "license": "MIT",

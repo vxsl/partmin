@@ -46,7 +46,6 @@ export const setFilters = async (driver: WebDriver) => {
   }) => {
     for (const [k, v] of Object.entries(obj)) {
       if (typeof v === "function") {
-        debugLog(`\n`);
         debugLog(`Applying Kijiji filter ${k}`);
         await driver.sleep(1000);
         await v(driver);

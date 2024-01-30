@@ -1,13 +1,13 @@
 #!/bin/bash
 
 print_usage() {
-    echo "Usage: $0 <server|server-dev> [overrides]"
+    echo "Usage: $0 <bot|bot-dev> [overrides]"
     echo "  [overrides] : Config parameters to override (ex. --development.headed=true)"
 }
 
 prog="$1"
 shift
-if [ "$prog" != "server" ] && [ "$prog" != "server-dev"]; then
+if [ "$prog" != "bot" ] && [ "$prog" != "bot-dev"]; then
     print_usage
     exit 1
 fi
@@ -19,13 +19,13 @@ fi
 
 # ====================================================================
 
-if [ "$prog" = "server-dev" ]; then
+if [ "$prog" = "bot-dev" ]; then
     echo "Typechecking, linting, and starting bot"
-    cd packages/server && yarn dev "$@"
+    cd packages/bot && yarn dev "$@"
     exit 0
 fi
-if [ "$prog" = "server" ]; then
+if [ "$prog" = "bot" ]; then
     echo "Starting bot"
-    cd packages/server && yarn start "$@"
+    cd packages/bot && yarn start "$@"
     exit 0
 fi

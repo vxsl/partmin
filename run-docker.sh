@@ -18,4 +18,4 @@ docker run \
     -v /dev/shm:/dev/shm \
     --name partmin \
     $img \
-    bash -c "cd app && yarn server --development.noSandbox=true"
+    bash -c "cd app && yarn bot --development.noSandbox=true"

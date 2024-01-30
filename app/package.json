@@ -3,8 +3,8 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "server": "yarn start server",
-    "server-dev": "yarn start server-dev",
+    "bot": "yarn start bot",
+    "bot-dev": "yarn start bot-dev",
     "start": "sh start.sh"
   },
   "workspaces": [
