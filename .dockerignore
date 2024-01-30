@@ -6,3 +6,4 @@ scratchpad
 **/config.json
 **/.env
 **/.tmp
+run-docker.sh
