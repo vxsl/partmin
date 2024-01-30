@@ -19,9 +19,15 @@
       "excludeBasements": true,
       "excludeShared": true,
       "outdoorSpace": true,
+      "excludeSwaps": true,
       "price": {
         "min": 800,
         "max": 1390
+      },
+      "pets": {
+        "cats": true,
+        "dogs": false,
+        "other": false
       }
     },
     "location": {
@@ -30,31 +36,10 @@
       "mapDevelopersURL": "https://www.mapdevelopers.com/draw-circle-tool.php?circles=%5B%5B1370.95%2C45.5501984%2C-73.630593%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B596.02%2C45.5265169%2C-73.5922184%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B1003.55%2C45.5240489%2C-73.6077625%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B786.03%2C45.5535669%2C-73.6553127%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B1370%2C45.5406434%2C-73.6051017%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B446.91%2C45.5527856%2C-73.6121398%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%2C%5B740.73%2C45.5360744%2C-73.6205512%2C%22%23AAAAAA%22%2C%22%23000000%22%2C0.4%5D%5D"
     },
     "blacklist": [
-      "swap",
-      "echange",
-      "échange",
-      "pas d'animaux",
-      "no animals",
-      "animaux non acceptés",
-      "animaux non permis",
-      "animals not allowed",
-      "no pets",
-      "no cats",
-      "sous louer",
-      "sous-louer",
-      "sous location",
-      "sous-location",
-      "sublet",
-      "coloc",
-      "coloque",
-      "colocation",
-      "colocataire",
-      "pas d animaux",
-      "animaux non autorisés"
+      "this is some string I don't want to see in a listing"
     ],
     "blacklistRegex": [
-      "/for (\\d+) months only/",
-      "/pour (\\d+) mois seulement/"
+      "/I don't want to see [a-z]+ in a listing/"
     ]
   }
 }

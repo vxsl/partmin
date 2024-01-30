@@ -20,7 +20,15 @@ const SearchParams = RuntypeRecord({
   outdoorSpace: Optional(Boolean),
   excludeBasements: Optional(Literal(true)),
   excludeShared: Optional(Literal(true)),
-  petFriendly: Optional(Boolean),
+  excludeSwaps: Optional(Literal(true)),
+  excludeSublets: Optional(Boolean),
+  pets: Optional(
+    RuntypeRecord({
+      cat: Optional(Boolean),
+      dog: Optional(Boolean),
+      other: Optional(Boolean),
+    })
+  ),
   price: RuntypeRecord({
     min: RuntypeNumber,
     max: RuntypeNumber,

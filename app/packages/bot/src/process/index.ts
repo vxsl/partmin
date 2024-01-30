@@ -1,35 +1,18 @@
 import config from "config.js";
 import { tmpDir } from "constants.js";
 import dotenv from "dotenv-mono";
-import { Item, SeenItemDict } from "item.js";
+import {
+  Item,
+  SeenItemDict,
+  addCommuteSummary,
+  addLocationLink,
+  getBlacklistedString,
+} from "item.js";
 import { isWithinRadii } from "util/geo.js";
 import { readJSON, writeJSON } from "util/io.js";
 import { log, verboseLog } from "util/log.js";
-import { addLocationLink, addCommuteSummary } from "item.js";
 
 dotenv.load();
-
-const findBlacklistedWords = ({ id, details }: Item): string | undefined => {
-  const report = (v: string | RegExp, f: string) =>
-    `'${v}' in item ${id}'s ${f}`;
-
-  const desc = details.longDescription?.toLowerCase();
-  const title = details.title?.toLowerCase();
-  const loc = (details.longAddress ?? details.shortAddress)?.toLowerCase();
-
-  for (const b of config.search.blacklist?.map((b) => b.toLowerCase()) ?? []) {
-    if (desc?.includes(b)) return report(b, "description");
-    if (title?.includes(b)) return report(b, "title");
-    if (loc?.includes(b)) return report(b, "location");
-  }
-
-  for (const _r of config.search.blacklistRegex ?? []) {
-    const r = new RegExp(_r, "i");
-    if (desc?.match(r)) return report(r, "description");
-    if (title?.match(r)) return report(r, "title");
-    if (loc?.match(r)) return report(r, "location");
-  }
-};
 
 const seenPath = config.development?.testing
   ? `${tmpDir}/test-seen.json`
@@ -74,7 +57,7 @@ export const processItems = async (unseenItems: Item[]) => {
     Promise<[Item[], string[]]>
   >(async (promises, item) => {
     const [_results, _blacklistLogs] = await promises;
-    const bl = findBlacklistedWords(item);
+    const bl = getBlacklistedString(item);
     if (bl) {
       _blacklistLogs.push(bl);
     } else {

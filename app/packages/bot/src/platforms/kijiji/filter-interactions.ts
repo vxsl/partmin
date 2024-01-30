@@ -14,7 +14,7 @@ export type FilterInteraction = (d: WebDriver) => void;
 export type FilterInteractionsMap = RecursiveKeyMap<
   Config["search"]["params"],
   FilterInteraction | undefined
->; // TODO don't allow undefined?
+>;
 
 const filterInteractions: FilterInteractionsMap = {
   excludeBasements: async (d) => {
@@ -59,34 +59,6 @@ const filterInteractions: FilterInteractionsMap = {
     });
     await waitUntilUrlChanges(d);
   },
-
-  // TODO verify whether this rules out options that don't have the value set
-  // petFriendly: async (d) => {
-  //   const filterID = "petsallowed";
-  //   const filterXpath = getFilterXpath(filterID);
-  //   await ensureFilterIsOpen(filterID, d);
-  //   const v = config.search.params.petFriendly;
-  //   if (v === undefined) {
-  //     return;
-  //   }
-  //   if (!v) {
-  //     await clickByXPath(d, `//label[contains(text(), 'No')]`, {
-  //       parentXpath: `${filterXpath}/..`,
-  //     });
-  //     return;
-  //   }
-  //   await clickAllByXPath(d, `//label[not(text()='No')]`, {
-  //     parentXpath: `${filterXpath}/..`,
-  //     afterClick: async () => {
-  //       debugLog("Waiting for URL change");
-  //       await waitUntilUrlChanges(d);
-  //       debugLog("sleeping");
-  //       await d.sleep(1000);
-  //       debugLog("ensuring filter is open");
-  //       await ensureFilterIsOpen(filterID, d);
-  //     },
-  //   });
-  // },
 
   // bedrooms: {
   //   min: async (d) => {

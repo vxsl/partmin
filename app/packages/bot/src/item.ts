@@ -1,4 +1,5 @@
 import config from "config.js";
+import { petsBlacklist, searchParamsBlacklist } from "constants.js";
 import { PlatformKey } from "types/platform.js";
 import {
   CommuteSummary,
@@ -64,4 +65,49 @@ export const addCommuteSummary = async (item: Item) => {
       });
     }
   }
+};
+
+type BlacklistEntry = string | RegExp;
+
+const blacklistMatch = (v: BlacklistEntry, s: string | undefined) =>
+  s === undefined ? false : typeof v === "string" ? s.includes(v) : s.match(v);
+
+export const getBlacklistedString = ({
+  id,
+  details,
+}: Item): string | undefined => {
+  const report = (v: BlacklistEntry, f: string) =>
+    `'${v}' in item ${id}'s ${f}`;
+
+  const desc = details.longDescription?.toLowerCase();
+  const title = details.title?.toLowerCase();
+  const loc = (details.longAddress ?? details.shortAddress)?.toLowerCase();
+
+  const check = (els: BlacklistEntry[] | undefined) => {
+    for (const b of els ?? []) {
+      if (blacklistMatch(b, desc)) return report(b, "description");
+      if (blacklistMatch(b, title)) return report(b, "title");
+      if (blacklistMatch(b, loc)) return report(b, "location");
+    }
+  };
+
+  const petsEntries = Object.entries(config.search.params.pets ?? {}).reduce<
+    BlacklistEntry[]
+  >((bl, [k, v]) => {
+    if (!v) return bl;
+    return [...bl, ...petsBlacklist[k]];
+  }, []);
+
+  return check([
+    ...petsEntries,
+    ...(petsEntries.length > 0 && petsBlacklist.general),
+    ...(config.search.params.excludeSwaps &&
+      searchParamsBlacklist.excludeSwaps),
+    ...(config.search.params.excludeSublets &&
+      searchParamsBlacklist.excludeSublets),
+    ...(config.search.params.excludeShared &&
+      searchParamsBlacklist.excludeShared),
+    ...config.search.blacklist?.map((b) => b.toLowerCase()),
+    ...config.search.blacklistRegex.map((b) => new RegExp(b, "i")),
+  ]);
 };
