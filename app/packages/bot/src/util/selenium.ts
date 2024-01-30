@@ -1,4 +1,4 @@
-import { tmpDir } from "constants.js";
+import { seleniumImplicitWait, tmpDir } from "constants.js";
 import {
   By,
   Condition,
@@ -253,5 +253,17 @@ export const withDOMChangesBlocked = async (
       Node.prototype.insertBefore = window.ogInsertBefore;
     `
     );
+  }
+};
+
+export const withoutImplicitWait = async <T>(
+  driver: WebDriver,
+  fn: () => Promise<T>
+) => {
+  await driver.manage().setTimeouts({ implicit: 0 });
+  try {
+    return await fn();
+  } finally {
+    await driver.manage().setTimeouts({ implicit: seleniumImplicitWait });
   }
 };

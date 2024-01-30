@@ -4,18 +4,25 @@ import filterInteractions, {
 } from "platforms/kijiji/filter-interactions.js";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { debugLog } from "util/log.js";
-import { isPlainObject } from "util/misc.js";
-import { elementShouldBeInteractable, withElement } from "util/selenium.js";
+import { isPlainObject, waitSeconds } from "util/misc.js";
+import {
+  elementShouldBeInteractable,
+  withElement,
+  withoutImplicitWait,
+} from "util/selenium.js";
 
 export const kijijiGet = async (url: string, driver: WebDriver) => {
   await driver.get(url);
   const xpath = "//button[contains(@class, 'cookieBannerCloseButton')]";
-  await driver
-    .wait(until.elementLocated(By.xpath(xpath)), 1000)
-    .then((el) => el.click())
-    .catch((e) => {
-      debugLog(e);
-    });
+
+  await withoutImplicitWait(driver, async () => {
+    try {
+      await driver
+        .wait(until.elementLocated(By.xpath(xpath)), 1000)
+        .then((el) => el.click())
+        .then(() => debugLog("Dismissed kijiji cookie banner"));
+    } catch {}
+  });
 };
 
 export const getFilterXpath = (id: string) =>
@@ -34,7 +41,7 @@ export const ensureFilterIsOpen = async (id: string, driver: WebDriver) => {
       if (!expanded) {
         debugLog(`Expanding ${id}`);
         await el.click();
-        await driver.sleep(1000);
+        await waitSeconds(1);
       }
     }
   );
@@ -47,7 +54,7 @@ export const setFilters = async (driver: WebDriver) => {
     for (const [k, v] of Object.entries(obj)) {
       if (typeof v === "function") {
         debugLog(`Applying Kijiji filter ${k}`);
-        await driver.sleep(1000);
+        await waitSeconds(1);
         await v(driver);
       } else if (isPlainObject(v)) {
         await interactWithFilters(v as FilterInteractionsMap);

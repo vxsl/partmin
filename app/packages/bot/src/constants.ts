@@ -3,6 +3,7 @@ import { Config } from "config.js";
 export const tmpDir = `${process.cwd()}/.tmp`;
 export const chromeVersion = "120.0.6099.109";
 export const puppeteerCacheDir = `${process.cwd()}/.puppeteer`;
+export const seleniumImplicitWait = 10 * 1000;
 
 export const searchParamsBlacklist: Partial<
   Record<keyof Config["search"]["params"], (string | RegExp)[]>

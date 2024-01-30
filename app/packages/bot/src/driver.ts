@@ -1,6 +1,10 @@
 import { Browser, getInstalledBrowsers, install } from "@puppeteer/browsers";
 import config from "config.js";
-import { chromeVersion, puppeteerCacheDir } from "constants.js";
+import {
+  chromeVersion,
+  puppeteerCacheDir,
+  seleniumImplicitWait,
+} from "constants.js";
 import { Builder } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { stdout as singleLineStdOut } from "single-line-log";
@@ -43,7 +47,7 @@ export const buildDriver = async () => {
     .setChromeOptions(driverOptions)
     .build();
 
-  driver.manage().setTimeouts({ implicit: 10000 });
+  driver.manage().setTimeouts({ implicit: seleniumImplicitWait });
 
   return driver;
 };
