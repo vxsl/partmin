@@ -16,14 +16,14 @@ rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-RUN mkdir -p app/packages/bot 
-RUN mkdir -p app/packages/presence-auditor 
+RUN mkdir -p packages/bot 
+RUN mkdir -p packages/presence-auditor 
 
-COPY app/package.json ./app
-COPY app/yarn.lock ./app
-COPY app/packages/bot/package.json ./app/packages/bot/
-COPY app/packages/presence-auditor/package.json ./app/packages/presence-auditor/
+COPY package.json .
+COPY yarn.lock .
+COPY packages/bot/package.json ./packages/bot/
+COPY packages/presence-auditor/package.json ./packages/presence-auditor/
 
-RUN cd app && yarn install 
+RUN yarn install 
 
 COPY . .

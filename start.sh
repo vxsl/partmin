@@ -38,7 +38,7 @@ case "$prog" in
     ;;
 esac
 
-if [ ! -f "../config/config.json" ]; then
+if [ ! -f "./config/config.json" ]; then
     echo "config/config.json not found, please create one from config/config.example.json and place it in the same directory"
     exit 1
 fi

@@ -7,10 +7,10 @@ services:
     volumes:
       - ./config:/usr/src/app/config
       - /dev/shm:/dev/shm
-    entrypoint: ["./app/start.sh", "bot", "--development.noSandbox=true"]
+    entrypoint: ["./start.sh", "bot", "--development.noSandbox=true"]
   presence-auditor:
     build: .
     env_file: .env
     volumes:
       - ./config:/usr/src/app/config
-    entrypoint: ["./app/start.sh", "presence-auditor"]
+    entrypoint: ["./start.sh", "presence-auditor"]

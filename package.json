@@ -17,6 +17,7 @@
     "tsx": "^4.6.1"
   },
   "devDependencies": {
+    "@types/node": "^20.11.11",
     "@typescript-eslint/parser": "^6.19.1",
     "eslint": "^8.34.0",
     "eslint-config-prettier": "^8.6.0",
