@@ -16,8 +16,8 @@
   },
   "search": {
     "params": {
-      "basementNotAccepted": true,
-      "roommateNotAccepted": true,
+      "excludeBasements": true,
+      "excludeShared": true,
       "outdoorSpace": true,
       "price": {
         "min": 800,

@@ -17,11 +17,11 @@ export type FilterInteractionsMap = RecursiveKeyMap<
 >; // TODO don't allow undefined?
 
 const filterInteractions: FilterInteractionsMap = {
-  basementNotAccepted: async (d) => {
+  excludeBasements: async (d) => {
     const filterID = "unittype";
     const filterXpath = getFilterXpath(filterID);
     await ensureFilterIsOpen(filterID, d);
-    const v = config.search.params.basementNotAccepted;
+    const v = config.search.params.excludeBasements;
     if (!v) {
       return;
     }

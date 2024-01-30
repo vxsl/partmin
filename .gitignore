@@ -5,8 +5,7 @@ images
 tmp
 todo.md
 .tmp*
-scratchpad
-scratchpad.md
+.scratchpad.md
 config.json
 *.log
 **/.puppeteer/*

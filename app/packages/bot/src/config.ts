@@ -18,8 +18,8 @@ const Options = RuntypeRecord({
 
 const SearchParams = RuntypeRecord({
   outdoorSpace: Optional(Boolean),
-  basementNotAccepted: Optional(Literal(true)),
-  roommateNotAccepted: Optional(Literal(true)),
+  excludeBasements: Optional(Literal(true)),
+  excludeShared: Optional(Literal(true)),
   petFriendly: Optional(Boolean),
   price: RuntypeRecord({
     min: RuntypeNumber,

@@ -143,7 +143,7 @@ export const visitMarketplace = async (
     sortBy: "creation_time_descend",
     exact: true,
     // propertyType: config.search.propertyType,
-    ...(config.search.params.roommateNotAccepted && {
+    ...(config.search.params.excludeShared && {
       propertyType: ["house", "townhouse", "apartment-condo"].join(","),
     }),
     minPrice: config.search.params.price.min,
@@ -245,7 +245,7 @@ export const scrapeItems = async (
       // sometimes facebook will show a private room for rent
       // even when the search parameters exclude "room only":
       if (
-        config.search.params.roommateNotAccepted &&
+        config.search.params.excludeShared &&
         ["Private room for rent", "Chambre privée à louer"].includes(title)
       ) {
         log(`Skipping room-only listing: ${title} (${id})`);
