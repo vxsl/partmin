@@ -5,6 +5,8 @@
   "scripts": {
     "bot": "yarn start bot",
     "bot-dev": "yarn start bot-dev",
+    "presence-auditor": "yarn start presence-auditor",
+    "presence-auditor-dev": "yarn start presence-auditor-dev",
     "start": "sh start.sh"
   },
   "workspaces": [

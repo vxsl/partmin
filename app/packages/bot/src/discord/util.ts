@@ -1,5 +1,6 @@
 import { DiscordAPIError, EmbedBuilder, TextChannel } from "discord.js";
-import { discordChannelIDs, discordClient } from "discord/index.js";
+import { discordClient } from "discord/client.js";
+import { discordChannelIDs } from "discord/index.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { errToString } from "util/misc.js";
 

@@ -1,11 +1,6 @@
 FROM node:20 AS build
 
-WORKDIR /usr/src/app
-
-RUN mkdir -p app/packages/bot 
-
 RUN apt-get update 
-
 RUN apt-get install -yq libgbm1 \
 gconf-service libasound2 libatk1.0-0 libc6 libcairo2 \
 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 \
@@ -18,16 +13,17 @@ lsb-release xdg-utils wget && \
 apt-get clean && \
 rm -rf /var/lib/apt/lists/*
 
-COPY app/package.json ./app
-COPY app/yarn.lock ./app
-COPY app/packages/bot/package.json ./app/packages/bot/
-
-WORKDIR /usr/src/app/app
-
-RUN yarn install 
 
 WORKDIR /usr/src/app
 
-COPY . .
+RUN mkdir -p app/packages/bot 
+RUN mkdir -p app/packages/presence-auditor 
 
-Run service dbus start
+COPY app/package.json ./app
+COPY app/yarn.lock ./app
+COPY app/packages/bot/package.json ./app/packages/bot/
+COPY app/packages/presence-auditor/package.json ./app/packages/presence-auditor/
+
+RUN cd app && yarn install 
+
+COPY . .

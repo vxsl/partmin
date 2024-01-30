@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "target": "es2020",
+    "module": "nodenext",
+    "resolveJsonModule": true,
+    "paths": {
+      "discord/*": [
+        "../../bot/src/discord/*"
+      ],
+    },
+  },
+  "include": [
+    ".",
+  ]
+}

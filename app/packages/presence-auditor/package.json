@@ -1,0 +1,13 @@
+{
+  "name": "partmin-presence-auditor",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "kill-dev": "yarn typecheck && yarn lint && yarn kill",
+    "kill": "tsx kill.ts",
+    "start": "bash daemon.sh",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  }
+}

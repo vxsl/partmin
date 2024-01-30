@@ -1,12 +1,10 @@
 import config from "config.js";
-import Discord from "discord.js";
 import { greetings } from "discord/chat.js";
+import { discordClient } from "discord/client.js";
 import { ChannelKey, discordSend } from "discord/util.js";
 import dotenv from "dotenv-mono";
 
 dotenv.load();
-
-export const discordClient = new Discord.Client({ intents: 512 });
 
 const token = process.env.DISCORD_BOT_TOKEN;
 export const discordChannelIDs = (

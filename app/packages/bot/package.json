@@ -1,7 +1,7 @@
 {
   "name": "partmin-bot",
   "version": "1.0.0",
-  "main": "ts/index.ts",
+  "main": "src/index.ts",
   "license": "MIT",
   "type": "module",
   "scripts": {

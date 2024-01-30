@@ -27,15 +27,22 @@ export const buildDriver = async () => {
   await installChrome();
 
   const driverOptions = new chrome.Options();
-  driverOptions.addArguments("--disable-gpu");
-  driverOptions.addArguments("--disable-software-rasterizer");
+  driverOptions.addArguments("--disable-gpu", "--disable-software-rasterizer");
   if (config.development?.noSandbox) {
     driverOptions.addArguments("--no-sandbox");
   }
   if (!config.development?.headed) {
-    driverOptions.addArguments("--headless=new");
-    driverOptions.addArguments("--start-maximized");
-    driverOptions.addArguments("--window-size=1920,1080");
+    driverOptions.addArguments(
+      "--headless",
+      "--start-maximized",
+      "--window-size=1920,1080",
+      "--autoplay-policy=no-user-gesture-required",
+      "--no-first-run",
+      "--use-fake-ui-for-media-stream",
+      "--use-fake-device-for-media-stream",
+      "--disable-sync",
+      "--remote-debugging-port=9222"
+    );
   }
   await getInstalledBrowsers({
     cacheDir: puppeteerCacheDir,
