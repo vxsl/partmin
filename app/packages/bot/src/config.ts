@@ -9,7 +9,7 @@ import {
   String,
 } from "runtypes";
 import { RuntypeBase } from "runtypes/lib/runtype.js";
-import { LogLevel } from "util/log.js";
+import { LogLevel, log } from "util/log.js";
 import _config from "../../../../config/config.json";
 
 const Options = RuntypeRecord({
@@ -78,13 +78,18 @@ process.argv.slice(2).forEach((arg) => {
       obj = obj[path[i]];
     }
     const lastKey = path[path.length - 1];
-    if (typeof obj[lastKey] === "boolean") {
-      obj[lastKey] = value === "true";
-    } else if (typeof obj[lastKey] === "number") {
-      obj[lastKey] = Number(value);
+    let v;
+    if (value === "true" || value === "false") {
+      v = value === "true";
+    } else if (!isNaN(Number(value))) {
+      v = Number(value);
     } else {
-      obj[lastKey] = value;
+      v = value;
     }
+    log(
+      `Overriding config value ${key}: ${v} (original value ${obj[lastKey]})`
+    );
+    obj[lastKey] = v;
   }
 });
 

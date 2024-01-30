@@ -22,11 +22,19 @@ export const log = (_v: any, options?: LogOptions) => {
   }
 
   if (!options?.skipDiscord) {
-    return discordSend(`${t}: ${v}`, {
-      channel: "logs",
-      monospace: true,
-      skipLog: true,
-    });
+    try {
+      return discordSend(`${t}: ${v}`, {
+        channel: "logs",
+        monospace: true,
+        skipLog: true,
+      });
+    } catch (e) {
+      if (e instanceof ReferenceError) {
+        console.log("Discord client not initialized, skipping discord log.");
+        return;
+      }
+      throw e;
+    }
   }
 };
 
