@@ -9,5 +9,71 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "dotenv-mono": "^1.3.13",
+    "tsx": "^4.6.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^6.19.1",
+    "eslint": "^8.34.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-unused-imports": "^3.0.0",
+    "prettier": "^2.8.4",
+    "typescript": "^5.3.3"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "unused-imports"
+    ],
+    "extends": [
+      "prettier"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "**/*.ts",
+          "**/*.tsx"
+        ],
+        "rules": {
+          "unused-imports/no-unused-imports": "error",
+          "require-await": "warn",
+          "no-multiple-empty-lines": [
+            "error",
+            {
+              "max": 1
+            }
+          ],
+          "no-restricted-imports": [
+            "error",
+            {
+              "patterns": [
+                ".*"
+              ]
+            }
+          ]
+        },
+        "parserOptions": {
+          "project": [
+            "./tsconfig.json"
+          ]
+        }
+      },
+      {
+        "files": [
+          "config.ts"
+        ],
+        "rules": {
+          "no-restricted-imports": "off"
+        }
+      }
+    ],
+    "parserOptions": {
+      "ecmaVersion": "latest"
+    },
+    "env": {
+      "es6": true
+    }
+  }
 }
