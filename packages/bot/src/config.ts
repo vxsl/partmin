@@ -1,7 +1,6 @@
 import {
   Array,
   Boolean,
-  Literal,
   Optional,
   Number as RuntypeNumber,
   Record as RuntypeRecord,
@@ -15,18 +14,22 @@ import _config from "../../../config/config.json";
 const Options = RuntypeRecord({
   computeDistanceTo: Optional(Array(String)),
 });
+const PetParams = RuntypeRecord({
+  cat: Optional(Boolean),
+  dog: Optional(Boolean),
+  other: Optional(Boolean),
+});
+
+export type PetType = keyof Static<typeof PetParams>;
 
 const SearchParams = RuntypeRecord({
-  outdoorSpace: Optional(Boolean),
-  excludeBasements: Optional(Literal(true)),
-  excludeShared: Optional(Literal(true)),
-  excludeSwaps: Optional(Literal(true)),
-  excludeSublets: Optional(Boolean),
-  pets: Optional(
+  pets: Optional(PetParams),
+  exclude: Optional(
     RuntypeRecord({
-      cat: Optional(Boolean),
-      dog: Optional(Boolean),
-      other: Optional(Boolean),
+      basements: Optional(Boolean),
+      shared: Optional(Boolean),
+      swaps: Optional(Boolean),
+      sublets: Optional(Boolean),
     })
   ),
   price: RuntypeRecord({

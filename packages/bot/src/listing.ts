@@ -101,12 +101,9 @@ export const getBlacklistedString = ({
   return check([
     ...petsEntries,
     ...(petsEntries.length > 0 && petsBlacklist.general),
-    ...(config.search.params.excludeSwaps &&
-      searchParamsBlacklist.excludeSwaps),
-    ...(config.search.params.excludeSublets &&
-      searchParamsBlacklist.excludeSublets),
-    ...(config.search.params.excludeShared &&
-      searchParamsBlacklist.excludeShared),
+    ...(config.search.params.exclude.swaps && searchParamsBlacklist.swaps),
+    ...(config.search.params.exclude.sublets && searchParamsBlacklist.sublets),
+    ...(config.search.params.exclude.shared && searchParamsBlacklist.shared),
     ...config.search.blacklist?.map((b) => b.toLowerCase()),
     ...config.search.blacklistRegex.map((b) => new RegExp(b, "i")),
   ]);

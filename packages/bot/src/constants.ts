@@ -6,10 +6,10 @@ export const puppeteerCacheDir = `${process.cwd()}/.puppeteer`;
 export const seleniumImplicitWait = 10 * 1000;
 
 export const searchParamsBlacklist: Partial<
-  Record<keyof Config["search"]["params"], (string | RegExp)[]>
+  Record<keyof Config["search"]["params"]["exclude"], (string | RegExp)[]>
 > = {
-  excludeSwaps: ["swap", "echange", "échange"],
-  excludeSublets: [
+  swaps: ["swap", "echange", "échange"],
+  sublets: [
     "sous-location",
     "sublet",
     "sous location",
@@ -28,7 +28,7 @@ export const searchParamsBlacklist: Partial<
     new RegExp("for (\\d+) months only"),
     new RegExp("pour (\\d+) mois seulement"),
   ],
-  excludeShared: [
+  shared: [
     "room in a shared",
     "chambre dans un appartement",
     "chambre dans un logement",

@@ -17,27 +17,28 @@ export type FilterInteractionsMap = RecursiveKeyMap<
 >;
 
 const filterInteractions: FilterInteractionsMap = {
-  excludeBasements: async (d) => {
-    const filterID = "unittype";
-    const filterXpath = getFilterXpath(filterID);
-    await ensureFilterIsOpen(filterID, d);
-    const v = config.search.params.excludeBasements;
-    if (!v) {
-      return;
-    }
-    await clickAllByXPath(d, `//label[not(text()='Basement')]`, {
-      parentXpath: `${filterXpath}/..`,
-      afterClick: async () => {
-        debugLog("Waiting for URL change");
-        await waitUntilUrlChanges(d);
-        debugLog("sleeping");
-        await d.sleep(1000);
-        debugLog("ensuring filter is open");
-        await ensureFilterIsOpen(filterID, d);
-      },
-    });
+  exclude: {
+    basements: async (d) => {
+      const filterID = "unittype";
+      const filterXpath = getFilterXpath(filterID);
+      await ensureFilterIsOpen(filterID, d);
+      const v = config.search.params.exclude.basements;
+      if (!v) {
+        return;
+      }
+      await clickAllByXPath(d, `//label[not(text()='Basement')]`, {
+        parentXpath: `${filterXpath}/..`,
+        afterClick: async () => {
+          debugLog("Waiting for URL change");
+          await waitUntilUrlChanges(d);
+          debugLog("sleeping");
+          await d.sleep(1000);
+          debugLog("ensuring filter is open");
+          await ensureFilterIsOpen(filterID, d);
+        },
+      });
+    },
   },
-
   price: async (d) => {
     const filterID = "price";
     const filterXpath = getFilterXpath(filterID);

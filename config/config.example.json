@@ -16,10 +16,13 @@
   },
   "search": {
     "params": {
-      "excludeBasements": true,
-      "excludeShared": true,
+      "exclude": {
+        "basements": true,
+        "shared": true,
+        "swaps": true,
+        "sublets": true
+      },
       "outdoorSpace": true,
-      "excludeSwaps": true,
       "price": {
         "min": 800,
         "max": 1390
