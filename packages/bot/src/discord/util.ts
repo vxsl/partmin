@@ -20,15 +20,21 @@ const quickEmbed = ({
   title,
   color,
   content,
+  monospace,
 }: Partial<{
   title: Parameters<EmbedBuilder["setTitle"]>[0];
   color: Parameters<EmbedBuilder["setColor"]>[0];
   content: any;
+  monospace?: boolean;
 }>) =>
   new EmbedBuilder()
     .setColor(color ?? null)
     .setTitle(title ?? null)
-    .setDescription(discordFormat(errToString(content), { code: true }));
+    .setDescription(
+      discordFormat(errToString(content), {
+        code: monospace || content instanceof Error,
+      })
+    );
 
 export const discordError = (e: unknown) => {
   log(e, { skipDiscord: true });
@@ -37,17 +43,23 @@ export const discordError = (e: unknown) => {
       color: "#ff0000",
       title: `🚨 Fatal error: partmin has crashed.`,
       content: e,
+      monospace: true,
     })
   );
 };
 
-export const discordWarning = (title: string, e: unknown) => {
+export const discordWarning = (
+  title: string,
+  e: unknown,
+  options?: { monospace?: boolean }
+) => {
   log(e, { skipDiscord: true });
   discordSend(
     quickEmbed({
       color: "#ebb734",
       title: `⚠️ ${title}`,
       content: e,
+      monospace: options?.monospace,
     })
   );
 };
@@ -56,10 +68,10 @@ interface FormatOptions {
   monospace?: true;
   bold?: true;
   italic?: true;
-  code?: true;
+  code?: boolean;
 }
 
-const discordFormat = (s: string, options?: FormatOptions) => {
+export const discordFormat = (s: string, options?: FormatOptions) => {
   let v = options?.code
     ? `\`\`\`${s}\`\`\``
     : options?.monospace
