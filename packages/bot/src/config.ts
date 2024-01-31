@@ -70,6 +70,24 @@ const Config = RuntypeRecord({
 
 export type Config = Static<typeof Config>;
 
+export const throwOnUnknownKey = (obj: any, path: string[] = []) => {
+  let fields = Config.fields;
+  for (const p of path) {
+    const target = "underlying" in fields[p] ? fields[p].underlying : fields[p];
+    fields = target.fields;
+  }
+  const expectedKeys = Object.keys(fields);
+  Object.keys(obj).forEach((k) => {
+    if (!expectedKeys.includes(k)) {
+      throw new Error(`Unexpected config option ${path.concat(k).join(".")}`);
+    }
+    const target = "underlying" in fields[k] ? fields[k].underlying : fields[k];
+    if (target.tag === "record") {
+      throwOnUnknownKey(obj[k], path.concat(k));
+    }
+  });
+};
+
 process.argv.slice(2).forEach((arg) => {
   const [_key, value] = arg.split("=");
   if (_key && value) {
@@ -102,5 +120,8 @@ try {
   log("Config.json is invalid:", { error: true, skipDiscord: true });
   throw e;
 }
+
+throwOnUnknownKey(config);
+log("No unexpected config keys found.");
 
 export default config;
