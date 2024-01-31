@@ -11,6 +11,28 @@ import { RuntypeBase } from "runtypes/lib/runtype.js";
 import { LogLevel, log } from "util/log.js";
 import _config from "../../../config/config.json";
 
+const UnreliableParams = RuntypeRecord({
+  minAreaSqFt: Optional(RuntypeNumber),
+  outdoorSpace: Optional(Boolean),
+  parking: Optional(Boolean),
+  petsStrict: Optional(Boolean),
+});
+
+export const unreliabilityExplanations: Record<
+  keyof Static<typeof UnreliableParams>,
+  string
+> = {
+  // TODO ensure functionality matches these descriptions:
+  minAreaSqFt:
+    "This will exclude listings that specify a square footage less than the configured value. Posters often report the area of their listing using the wrong units.",
+  outdoorSpace:
+    "This will exclude listings that don't explicitly offer a yard, balcony, etc. Posters often don't bother to fill out this field, even if their listing has outdoor space.",
+  parking:
+    "This will exclude listings that don't explicitly offer parking. Posters often don't bother to fill out this field, even if their listing has parking.",
+  petsStrict:
+    "This will exclude listings that don't explicitly allow your type of pet. Posters often don't bother to fill out the pets field, even if their listing does allow pets.",
+};
+
 const Options = RuntypeRecord({
   computeDistanceTo: Optional(Array(String)),
 });
@@ -36,6 +58,7 @@ const SearchParams = RuntypeRecord({
     min: RuntypeNumber,
     max: RuntypeNumber,
   }),
+  unreliableParams: Optional(UnreliableParams),
 });
 
 const Location = RuntypeRecord({

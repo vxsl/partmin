@@ -1,5 +1,6 @@
-import config from "config.js";
+import config, { unreliabilityExplanations } from "config.js";
 import { tmpDir } from "constants.js";
+import { discordFormat, discordWarning } from "discord/util.js";
 import fs from "fs";
 import { isValidAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
@@ -22,6 +23,30 @@ export const validateConfig = async () => {
       throw new Error(`Invalid blacklistRegex in config: ${r}`);
     }
   });
+
+  const unreliableParams = Object.entries(
+    config.search.params.unreliableParams ?? {}
+  ).filter(([k, v]) => !!v && k in config.search.params.unreliableParams);
+  if (unreliableParams.length) {
+    discordWarning(
+      `Warning: you have specified ${
+        unreliableParams.length > 1
+          ? "search parameters that are"
+          : "a search parameter that is"
+      } prone to false negatives.`,
+      `${unreliableParams
+        .map(
+          ([k, v]) =>
+            `- ${discordFormat(`"${k}": ${v}`, { monospace: true })}\n> ${
+              unreliabilityExplanations[k]
+            }`
+        )
+        .join("\n")}\n\n${discordFormat(
+        "This means that some listings that match your criteria may be ignored. Consider removing these parameters from your config.",
+        { bold: true }
+      )}`
+    );
+  }
 };
 
 export const detectConfigChange = async (

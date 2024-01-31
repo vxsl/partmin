@@ -22,7 +22,6 @@
         "swaps": true,
         "sublets": true
       },
-      "outdoorSpace": true,
       "price": {
         "min": 800,
         "max": 1390
@@ -31,6 +30,11 @@
         "cats": true,
         "dogs": false,
         "other": false
+      },
+      "unreliableParams": {
+        "minAreaSqFt": 500,
+        "parking": true,
+        "outdoorSpace": true
       }
     },
     "location": {
