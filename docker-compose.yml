@@ -8,9 +8,3 @@ services:
       - ./config:/usr/src/app/config
       - /dev/shm:/dev/shm
     entrypoint: ["./start.sh", "bot", "--development.noSandbox=true"]
-  presence-auditor:
-    build: .
-    env_file: .env
-    volumes:
-      - ./config:/usr/src/app/config
-    entrypoint: ["./start.sh", "presence-auditor"]

@@ -6,7 +6,7 @@ while true; do
     processes=$(ps -A -o pid,comm)
     proc=$(echo "$processes" | grep "partmin-bot")
     if [ -z "$proc" ]; then
-        echo "Process named \"partmin-bot\" is no longer running. Setting presence to \"offline\""
+        echo "[presence-auditor] Process named \"partmin-bot\" is no longer running. Setting discord bot presence to \"invisible\""
         yarn kill
         exit
     fi

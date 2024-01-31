@@ -4,7 +4,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$script_dir" || (echo "Failed to change directory to $script_dir" && exit 1)
 
 print_usage() {
-    echo "Usage: $0 <bot|presence-auditor> [overrides]"
+    echo "Usage: $0 <bot> [overrides]"
     echo "  [overrides] : Config parameters to override (ex. --development.headed=true)"
 }
 
@@ -15,10 +15,6 @@ case "$prog" in
     bot)
         msg="Starting bot"
         cmd="yarn bot $@"
-    ;;
-    presence-auditor)
-        msg="Starting presence auditor"
-        cmd="yarn presence-auditor $@"
     ;;
     *)
         print_usage

@@ -3,8 +3,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "bot": "yarn workspace bot start",
-    "presence-auditor": "yarn workspace presence-auditor start"
+    "bot": "yarn workspace presence-auditor start & yarn workspace bot start & "
   },
   "workspaces": [
     "packages/*"
