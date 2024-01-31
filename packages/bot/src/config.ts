@@ -67,21 +67,12 @@ const Config = RuntypeRecord({
 
 export type Config = Static<typeof Config>;
 
-const config = Config.check(_config);
-config.search.blacklistRegex?.forEach((r) => {
-  try {
-    new RegExp(r);
-  } catch (e) {
-    throw new Error(`Invalid blacklistRegex in config: ${r}`);
-  }
-});
-
 process.argv.slice(2).forEach((arg) => {
   const [_key, value] = arg.split("=");
   if (_key && value) {
     const key = _key.split("--")[1];
     const path = key.split(".");
-    let obj = config;
+    let obj = _config;
     for (let i = 0; i < path.length - 1; i++) {
       obj = obj[path[i]];
     }
@@ -100,5 +91,13 @@ process.argv.slice(2).forEach((arg) => {
     obj[lastKey] = v;
   }
 });
+
+let config: Config;
+try {
+  config = Config.check(_config);
+} catch (e) {
+  log("Config.json is invalid:", { error: true, skipDiscord: true });
+  throw e;
+}
 
 export default config;

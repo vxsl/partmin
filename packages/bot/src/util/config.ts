@@ -14,6 +14,14 @@ export const validateConfig = async () => {
       );
     }
   }
+
+  config.search.blacklistRegex?.forEach((r) => {
+    try {
+      new RegExp(r);
+    } catch (e) {
+      throw new Error(`Invalid blacklistRegex in config: ${r}`);
+    }
+  });
 };
 
 export const detectConfigChange = async (
