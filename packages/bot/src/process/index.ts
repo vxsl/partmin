@@ -2,12 +2,12 @@ import config from "config.js";
 import { tmpDir } from "constants.js";
 import dotenv from "dotenv-mono";
 import {
-  Item,
-  SeenItemDict,
+  Listing,
+  SeenListingDict,
   addCommuteSummary,
   addLocationLink,
   getBlacklistedString,
-} from "item.js";
+} from "listing.js";
 import { isWithinRadii } from "util/geo.js";
 import { readJSON, writeJSON } from "util/io.js";
 import { log, verboseLog } from "util/log.js";
@@ -17,53 +17,53 @@ dotenv.load();
 const seenPath = config.development?.testing
   ? `${tmpDir}/test-seen.json`
   : `${tmpDir}/seen.json`;
-export const loadSeenItems = async () =>
-  await readJSON<SeenItemDict>(seenPath).then((arr) => arr ?? {});
-export const saveSeenItems = async (v: SeenItemDict) =>
+export const loadSeenListings = async () =>
+  await readJSON<SeenListingDict>(seenPath).then((arr) => arr ?? {});
+export const saveSeenListings = async (v: SeenListingDict) =>
   await writeJSON(seenPath, v);
 export const getSeenKey = (platform: string, id: string) => `${platform}-${id}`;
-const getSeenItemKey = (item: Item) => getSeenKey(item.platform, item.id);
+const getSeenListingKey = (l: Listing) => getSeenKey(l.platform, l.id);
 
-export const withUnseenItems = async <T>(
-  items: Item[],
-  fn: (items: Item[]) => Promise<T>
+export const withUnseenListings = async <T>(
+  listings: Listing[],
+  fn: (listings: Listing[]) => Promise<T>
 ) => {
-  const seenItems = await loadSeenItems();
-  const unseenItems: Item[] = [];
-  for (const item of items) {
-    const k = getSeenItemKey(item);
-    if (seenItems[k]) {
+  const seenListings = await loadSeenListings();
+  const unseenListings: Listing[] = [];
+  for (const l of listings) {
+    const k = getSeenListingKey(l);
+    if (seenListings[k]) {
       continue;
     }
-    seenItems[k] = 1;
-    unseenItems.push(item);
+    seenListings[k] = 1;
+    unseenListings.push(l);
   }
 
-  const result = await fn(unseenItems);
+  const result = await fn(unseenListings);
 
-  await saveSeenItems(seenItems);
+  await saveSeenListings(seenListings);
   log(
-    `${unseenItems.length} unseen item${
-      unseenItems.length !== 1 ? "s" : ""
-    } out of ${items.length}${config.logging?.verbose ? ":" : "."}`
+    `${unseenListings.length} unseen listing${
+      unseenListings.length !== 1 ? "s" : ""
+    } out of ${listings.length}${config.logging?.verbose ? ":" : "."}`
   );
-  verboseLog({ unseenItems });
+  verboseLog({ unseenListings });
 
   return result;
 };
 
-export const processItems = async (unseenItems: Item[]) => {
-  const [results, blacklistLogs] = await unseenItems.reduce<
-    Promise<[Item[], string[]]>
-  >(async (promises, item) => {
+export const processListings = async (unseenListings: Listing[]) => {
+  const [results, blacklistLogs] = await unseenListings.reduce<
+    Promise<[Listing[], string[]]>
+  >(async (promises, l) => {
     const [_results, _blacklistLogs] = await promises;
-    const bl = getBlacklistedString(item);
+    const bl = getBlacklistedString(l);
     if (bl) {
       _blacklistLogs.push(bl);
     } else {
-      await addLocationLink(item);
-      await addCommuteSummary(item);
-      _results.push(item);
+      await addLocationLink(l);
+      await addCommuteSummary(l);
+      _results.push(l);
     }
     return [_results, _blacklistLogs];
   }, Promise.resolve([[], []]));
@@ -85,13 +85,13 @@ export const processItems = async (unseenItems: Item[]) => {
   return results;
 };
 
-export const excludeItemsOutsideSearchArea = (items: Item[]) =>
-  items.filter((item) => {
-    if (!item.details.coords) return true;
-    const v = isWithinRadii(item.details.coords);
+export const excludeListingsOutsideSearchArea = (listings: Listing[]) =>
+  listings.filter((l) => {
+    if (!l.details.coords) return true;
+    const v = isWithinRadii(l.details.coords);
     if (!v) {
-      log(`Item ${getSeenItemKey(item)} is outside of the search area:`);
-      log(item);
+      log(`Listing ${getSeenListingKey(l)} is outside of the search area:`);
+      log(l);
     }
     return v;
   });

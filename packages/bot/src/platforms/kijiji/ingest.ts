@@ -5,7 +5,7 @@ import { setFilters } from "platforms/kijiji/util.js";
 import { kijijiGet } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
-import { Item } from "item.js";
+import { Listing } from "listing.js";
 import { PlatformKey } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
@@ -23,8 +23,8 @@ const parser = new Parser({
   },
 });
 
-export const visitKijijiListing = async (driver: WebDriver, item: Item) => {
-  await kijijiGet(item.url, driver);
+export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
+  await kijijiGet(l.url, driver);
   const data: any = await driver.executeScript("return window.__data;");
   if (!data || typeof data !== "object") {
     // TODO do something else.
@@ -36,7 +36,7 @@ export const visitKijijiListing = async (driver: WebDriver, item: Item) => {
       .map((p: any) => p?.href)
       .filter(notUndefined);
     if (imgs.length) {
-      item.imgURLs = imgs;
+      l.imgURLs = imgs;
     }
   } catch {
     // TODO
@@ -48,7 +48,7 @@ export const visitKijijiListing = async (driver: WebDriver, item: Item) => {
       .map((p: any) => p?.href)
       .filter(notUndefined);
     if (vids.length) {
-      item.videoURLs = vids;
+      l.videoURLs = vids;
     }
   } catch {
     // TODO
@@ -57,11 +57,11 @@ export const visitKijijiListing = async (driver: WebDriver, item: Item) => {
   try {
     const loc = data.viewItemPage.viewItemData.adLocation.mapAddress;
     if (loc) {
-      item.details.shortAddress = trimAddress(loc);
-      item.details.longAddress = loc;
-      item.computed = {
-        ...(item.computed ?? {}),
-        locationLinkMD: `[**${item.details.shortAddress}**](${getGoogleMapsLink(
+      l.details.shortAddress = trimAddress(loc);
+      l.details.longAddress = loc;
+      l.computed = {
+        ...(l.computed ?? {}),
+        locationLinkMD: `[**${l.details.shortAddress}**](${getGoogleMapsLink(
           loc
         )})`,
       };
@@ -69,7 +69,7 @@ export const visitKijijiListing = async (driver: WebDriver, item: Item) => {
   } catch {
     // TODO
   }
-  item.details.longDescription = await driver
+  l.details.longDescription = await driver
     .findElement(
       By.xpath(`//*[starts-with(@class, 'descriptionContainer')]//div`)
     )
@@ -110,7 +110,7 @@ export const getKijijiRSS = async (driver: WebDriver) => {
     .then((el) => el.getAttribute("href"));
 };
 
-export const scrapeItems = (rssUrl: string): Promise<Item[]> =>
+export const getListings = (rssUrl: string): Promise<Listing[]> =>
   parser.parseURL(rssUrl).then((output) =>
     output.items.reduce((acc, item) => {
       const url = item.link;
@@ -119,7 +119,7 @@ export const scrapeItems = (rssUrl: string): Promise<Item[]> =>
         log(`No URL or ID found for item: ${JSON.stringify(item)}`);
         return acc;
       }
-      const result: Item = {
+      const result: Listing = {
         platform: "kijiji" as PlatformKey,
         id,
         details: {
@@ -137,5 +137,5 @@ export const scrapeItems = (rssUrl: string): Promise<Item[]> =>
       };
       acc.push(result);
       return acc;
-    }, [] as Item[])
+    }, [] as Listing[])
   );

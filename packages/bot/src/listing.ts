@@ -8,7 +8,7 @@ import {
   getCommuteSummary,
 } from "util/geo.js";
 
-export type Item = {
+export type Listing = {
   id: string;
   platform: PlatformKey;
   url: string;
@@ -29,35 +29,35 @@ export type Item = {
   videoURLs: string[];
 };
 
-export interface SeenItemDict {
+export interface SeenListingDict {
   [k: string]: 1 | undefined;
 }
 
-export const addLocationLink = async (item: Item) => {
-  if (!item.computed?.locationLinkMD && item.details.coords) {
-    item.computed = {
-      ...(item.computed ?? {}),
-      locationLinkMD: await approxLocationLink(item.details.coords),
+export const addLocationLink = async (l: Listing) => {
+  if (!l.computed?.locationLinkMD && l.details.coords) {
+    l.computed = {
+      ...(l.computed ?? {}),
+      locationLinkMD: await approxLocationLink(l.details.coords),
     };
   }
 };
 
-export const getCommuteOrigin = (item: Item) =>
-  (item.details.coords
-    ? Coordinates.toString(item.details.coords, { raw: true })
+export const getCommuteOrigin = (l: Listing) =>
+  (l.details.coords
+    ? Coordinates.toString(l.details.coords, { raw: true })
     : undefined) ??
-  (item.details.longAddress || item.details.shortAddress);
+  (l.details.longAddress || l.details.shortAddress);
 
-export const addCommuteSummary = async (item: Item) => {
-  const origin = getCommuteOrigin(item);
+export const addCommuteSummary = async (l: Listing) => {
+  const origin = getCommuteOrigin(l);
   if (origin && config.options?.computeDistanceTo?.length) {
     for (const dest of config.options?.computeDistanceTo) {
       await getCommuteSummary(origin, dest).then((summ) => {
         if (summ) {
-          item.computed = {
-            ...(item.computed ?? {}),
+          l.computed = {
+            ...(l.computed ?? {}),
             distanceTo: {
-              ...(item.computed?.distanceTo ?? {}),
+              ...(l.computed?.distanceTo ?? {}),
               [dest]: summ,
             },
           };
@@ -75,9 +75,9 @@ const blacklistMatch = (v: BlacklistEntry, s: string | undefined) =>
 export const getBlacklistedString = ({
   id,
   details,
-}: Item): string | undefined => {
+}: Listing): string | undefined => {
   const report = (v: BlacklistEntry, f: string) =>
-    `'${v}' in item ${id}'s ${f}`;
+    `'${v}' in listing ${id}'s ${f}`;
 
   const desc = details.longDescription?.toLowerCase();
   const title = details.title?.toLowerCase();

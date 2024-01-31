@@ -1,6 +1,6 @@
 import Discord from "discord.js";
 import { ChannelKey, getChannel } from "discord/util.js";
-import { Item, getCommuteOrigin } from "item.js";
+import { Listing, getCommuteOrigin } from "listing.js";
 import { PlatformKey } from "types/platform.js";
 import { mdQuote, trimAddress } from "util/data.js";
 import { formatCommuteSummaryMD } from "util/geo.js";
@@ -11,28 +11,28 @@ const platformIcons: Record<PlatformKey, string> = {
   fb: "https://www.facebook.com/favicon.ico",
 };
 
-export const convertItemToDiscordEmbed = (item: Item) => {
+const listingEmbed = (l: Listing) => {
   let descriptionHeader = [
     `${
-      item.details.price
-        ? `**$${parseFloat(`${item.details.price}`).toFixed(2)}**`
+      l.details.price
+        ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
         : undefined
     }`,
-    item.computed?.locationLinkMD ??
-      item.details.shortAddress ??
-      item.details.coords?.toString(),
+    l.computed?.locationLinkMD ??
+      l.details.shortAddress ??
+      l.details.coords?.toString(),
   ]
     .filter(notUndefined)
     .join(" / ");
 
-  const dests = Object.keys(item.computed?.distanceTo ?? {});
+  const dests = Object.keys(l.computed?.distanceTo ?? {});
   if (dests.length) {
     descriptionHeader = [
       descriptionHeader,
       dests
         .map((d) => {
-          const o = getCommuteOrigin(item);
-          const summ = item.computed?.distanceTo?.[d];
+          const o = getCommuteOrigin(l);
+          const summ = l.computed?.distanceTo?.[d];
           return !summ || !o
             ? ""
             : [
@@ -47,56 +47,56 @@ export const convertItemToDiscordEmbed = (item: Item) => {
   }
 
   return new Discord.EmbedBuilder()
-    .setTitle(item.details.title ?? null)
+    .setTitle(l.details.title ?? null)
     .setDescription(
       [
         descriptionHeader,
-        item.computed?.bulletPoints?.map((p) => `- ${p}`).join("\n") ?? "",
+        l.computed?.bulletPoints?.map((p) => `- ${p}`).join("\n") ?? "",
       ]
         .filter(Boolean)
         .join("\n")
     )
-    .setURL(item.url)
-    .setImage(item.imgURLs[0] ?? null)
+    .setURL(l.url)
+    .setImage(l.imgURLs[0] ?? null)
     .setFooter({
-      text: item.platform,
-      iconURL: platformIcons[item.platform],
+      text: l.platform,
+      iconURL: platformIcons[l.platform],
     })
     .setTimestamp(new Date())
     .setFields(
-      !item.videoURLs.length
+      !l.videoURLs.length
         ? []
         : [
-            item.videoURLs.length > 1
+            l.videoURLs.length > 1
               ? {
-                  name: `🎥 Video${item.videoURLs.length !== 1 ? "s" : ""}`,
-                  value: item.videoURLs.join("\n"),
+                  name: `🎥 Video${l.videoURLs.length !== 1 ? "s" : ""}`,
+                  value: l.videoURLs.join("\n"),
                 }
               : {
-                  name: `🎥 Video: ${item.videoURLs[0]}`,
+                  name: `🎥 Video: ${l.videoURLs[0]}`,
                   value: " ",
                 },
           ]
     );
 };
 
-const getButtons = (item: Item) => {
+const getButtons = (l: Listing) => {
   let prevImgButton, imgButton, nextImgButton, descButton;
 
-  if (item.details.longDescription !== undefined) {
+  if (l.details.longDescription !== undefined) {
     descButton = new Discord.ButtonBuilder()
       .setCustomId("desc")
       .setLabel(`📄`)
       .setStyle(Discord.ButtonStyle.Secondary);
   }
-  if (item.imgURLs.length > 1) {
+  if (l.imgURLs.length > 1) {
     prevImgButton = new Discord.ButtonBuilder()
       .setCustomId("prevImg")
       .setLabel("⬅")
       .setStyle(Discord.ButtonStyle.Secondary);
     imgButton = new Discord.ButtonBuilder()
       .setCustomId("img")
-      .setLabel(`️${1} / ${item.imgURLs.length}`)
+      .setLabel(`️${1} / ${l.imgURLs.length}`)
       .setStyle(Discord.ButtonStyle.Secondary);
     nextImgButton = new Discord.ButtonBuilder()
       .setCustomId("nextImg")
@@ -107,14 +107,14 @@ const getButtons = (item: Item) => {
 };
 
 export const sendEmbedWithButtons = async (
-  item: Item,
+  l: Listing,
   c: ChannelKey = "main"
 ) => {
   const channel = await getChannel(c);
 
-  const embed = convertItemToDiscordEmbed(item);
+  const embed = listingEmbed(l);
 
-  const buttons = getButtons(item);
+  const buttons = getButtons(l);
   const buttonsArr = Object.values(buttons).filter(notUndefined);
 
   const components = !buttonsArr.length
@@ -138,10 +138,10 @@ export const sendEmbedWithButtons = async (
   let origDesc = embed.data.description ?? null;
 
   const navigateImg = async (backwards = false) => {
-    const len = item.imgURLs.length;
+    const len = l.imgURLs.length;
     i = (backwards ? i - 1 + len : i + 1) % len;
     imgButton?.setLabel(`${i + 1} / ${len}`);
-    embed.setImage(item.imgURLs[i]);
+    embed.setImage(l.imgURLs[i]);
     await msg.edit({ embeds: [embed], components });
   };
 
@@ -167,7 +167,7 @@ export const sendEmbedWithButtons = async (
           await navigateImg(true);
           break;
         case "desc":
-          if (item.details.longDescription === undefined) {
+          if (l.details.longDescription === undefined) {
             break;
           }
           descButton?.setDisabled(true);
@@ -175,7 +175,7 @@ export const sendEmbedWithButtons = async (
 
           if (!descOpened) {
             embed.setDescription(
-              [origDesc, mdQuote(item.details.longDescription)]
+              [origDesc, mdQuote(l.details.longDescription)]
                 .filter(Boolean)
                 .join("\n")
             );

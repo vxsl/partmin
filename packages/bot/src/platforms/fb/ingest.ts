@@ -1,7 +1,7 @@
 import config from "config.js";
 import { discordSend } from "discord/util.js";
-import { Item } from "item.js";
-import { fbItemXpath } from "platforms/fb/constants.js";
+import { Listing } from "listing.js";
+import { fbListingXpath } from "platforms/fb/constants.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { PlatformKey } from "types/platform.js";
 import { findNestedProperty } from "util/data.js";
@@ -19,11 +19,11 @@ const platform: PlatformKey = "fb";
 
 export const visitMarketplaceListing = async (
   driver: WebDriver,
-  item: Item
+  l: Listing
 ) => {
   await clearBrowsingData(driver);
 
-  let url = `https://facebook.com/marketplace/item/${item.id}`;
+  let url = `https://facebook.com/marketplace/item/${l.id}`;
   debugLog(`visiting listing: ${url}`);
 
   await driver.get(url);
@@ -61,7 +61,7 @@ export const visitMarketplaceListing = async (
   try {
     const desc = productDetails.target.redacted_description.text;
     if (desc) {
-      item.details.longDescription = desc;
+      l.details.longDescription = desc;
     }
   } catch (e) {
     log(e);
@@ -71,14 +71,14 @@ export const visitMarketplaceListing = async (
   try {
     const loc = productDetails.target.home_address.street;
     if (loc) {
-      item.details.shortAddress = loc;
+      l.details.shortAddress = loc;
       const full =
         productDetails.target.pdp_display_sections
           .find((s: any) => s.section_type === "UNIT_SUBTITLE")
           .pdp_fields.find((f: any) => f.icon_name === "pin")?.display_label ??
         "";
-      item.computed = {
-        ...(item.computed ?? {}),
+      l.computed = {
+        ...(l.computed ?? {}),
         locationLinkMD: `[**${loc}**](${getGoogleMapsLink(
           full.length > loc.length ? full : loc
         )})`,
@@ -92,7 +92,7 @@ export const visitMarketplaceListing = async (
   try {
     const lat = productDetails.target.location.latitude;
     const lon = productDetails.target.location.longitude;
-    item.details.coords = Coordinates.build(lat, lon);
+    l.details.coords = Coordinates.build(lat, lon);
   } catch (e) {
     log(e);
     // TODO
@@ -103,7 +103,7 @@ export const visitMarketplaceListing = async (
       .map((p: any) => p?.image?.uri)
       .filter(notUndefined);
     if (imgs.length) {
-      item.imgURLs = imgs;
+      l.imgURLs = imgs;
     }
   } catch (e) {
     log(e);
@@ -122,8 +122,8 @@ export const visitMarketplaceListing = async (
           : display_label
       )
       .filter(notUndefined);
-    item.computed = {
-      ...(item.computed ?? {}),
+    l.computed = {
+      ...(l.computed ?? {}),
       bulletPoints: points,
     };
   } catch (e) {
@@ -182,7 +182,7 @@ export const visitMarketplace = async (
     return state === "complete";
   });
 
-  await elementShouldExist("xpath", fbItemXpath, driver);
+  await elementShouldExist("xpath", fbListingXpath, driver);
 
   // ensure facebook didn't ignore our requested radius:
   // TODO ensure lat and lon as well?
@@ -208,19 +208,19 @@ export const visitMarketplace = async (
   }
 };
 
-export const scrapeItems = async (
+export const getListings = async (
   driver: WebDriver
-): Promise<Item[] | undefined> => {
+): Promise<Listing[] | undefined> => {
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
   return await withElementsByXpath(
     driver,
-    fbItemXpath,
-    async (e: WebElement): Promise<Item | undefined> => {
+    fbListingXpath,
+    async (e: WebElement): Promise<Listing | undefined> => {
       const href = await e.getAttribute("href");
       const id = href.match(/\d+/)?.[0];
 
       if (!id) {
-        log(`Unable to parse item ID from ${href}`);
+        log(`Unable to parse listing ID from ${href}`);
         return undefined;
       }
 

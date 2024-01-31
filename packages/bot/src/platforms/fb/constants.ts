@@ -1,1 +1,1 @@
-export const fbItemXpath = `.//a[contains(@href,'/marketplace/item/')]`;
+export const fbListingXpath = `.//a[contains(@href,'/marketplace/item/')]`;

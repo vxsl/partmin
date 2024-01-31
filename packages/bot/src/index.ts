@@ -10,13 +10,13 @@ import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import fs from "fs";
-import { Item } from "item.js";
+import { Listing } from "listing.js";
 import fb from "platforms/fb/index.js";
 import kijiji from "platforms/kijiji/index.js";
 import {
-  excludeItemsOutsideSearchArea,
-  processItems,
-  withUnseenItems,
+  excludeListingsOutsideSearchArea,
+  processListings,
+  withUnseenListings,
 } from "process/index.js";
 import { WebDriver } from "selenium-webdriver";
 import { Platform } from "types/platform.js";
@@ -42,15 +42,15 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
   });
 
   while (true) {
-    for (const { key: platform, main, perItem } of runners) {
+    for (const { key: platform, main, perListing } of runners) {
       log(
         `\n=======================================================\n${platform}\n`
       );
-      let allItems: Item[] | undefined;
+      let allListings: Listing[] | undefined;
       try {
-        allItems = await main(driver);
-        if (!allItems?.length) {
-          log(`Somehow there are no items upon visiting ${platform}.`);
+        allListings = await main(driver);
+        if (!allListings?.length) {
+          log(`Somehow there are no listings upon visiting ${platform}.`);
           continue;
         }
       } catch (e) {
@@ -61,30 +61,33 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
       }
 
       try {
-        const items = excludeItemsOutsideSearchArea(allItems);
-        if (!items.length) {
-          log(`No items found within the search area.`);
+        const listings = excludeListingsOutsideSearchArea(allListings);
+        if (!listings.length) {
+          log(`No listings found within the search area.`);
           continue;
         }
-        debugLog(`Found ${items.length} items within the search area.`);
-        verboseLog({ items });
+        debugLog(`Found ${listings.length} listings within the search area.`);
+        verboseLog({ listings });
 
-        await withUnseenItems(items, async (unseenItems) => {
-          for (const item of unseenItems) {
-            await perItem?.(driver, item)?.then(() =>
+        await withUnseenListings(listings, async (unseenListings) => {
+          for (const l of unseenListings) {
+            await perListing?.(driver, l)?.then(() =>
               randomWait({ short: true, suppressProgressLog: true })
             );
           }
-          await processItems(unseenItems).then(async (arr) => {
-            for (const item of arr) {
-              await sendEmbedWithButtons(item);
+          await processListings(unseenListings).then(async (unseen) => {
+            for (const l of unseen) {
+              await sendEmbedWithButtons(l);
               await waitSeconds(0.5);
             }
           });
         });
       } catch (e) {
         if (!shuttingDown) {
-          discordWarning(`Error while processing items from ${platform}:`, e);
+          discordWarning(
+            `Error while processing listings from ${platform}:`,
+            e
+          );
         }
       }
       log("\n----------------------------------------\n");

@@ -1,10 +1,10 @@
 import { WebDriver } from "selenium-webdriver";
-import { Item } from "item.js";
+import { Listing } from "listing.js";
 
 export type PlatformKey = "kijiji" | "fb";
 export type Platform = {
   key: PlatformKey;
-  main: (d: WebDriver) => Promise<Item[] | undefined>;
+  main: (d: WebDriver) => Promise<Listing[] | undefined>;
   prepare?: (d: WebDriver, configChanged?: boolean) => Promise<void>;
-  perItem?: (d: WebDriver, i: Item) => Promise<void>;
+  perListing?: (d: WebDriver, i: Listing) => Promise<void>;
 };

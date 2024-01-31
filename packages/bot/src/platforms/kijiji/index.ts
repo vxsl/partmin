@@ -5,7 +5,7 @@ import { log } from "util/log.js";
 import {
   getKijijiRSS,
   visitKijijiListing,
-  scrapeItems,
+  getListings,
 } from "platforms/kijiji/ingest.js";
 
 let rss: string | undefined;
@@ -32,9 +32,9 @@ const kijiji: Platform = {
   main: async () => {
     if (!rss) throw new Error("No RSS feed found");
     log(`Kijiji RSS feed URL: ${rss}`);
-    return await scrapeItems(rss);
+    return await getListings(rss);
   },
-  perItem: visitKijijiListing,
+  perListing: visitKijijiListing,
 };
 
 export default kijiji;
