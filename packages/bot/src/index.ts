@@ -54,7 +54,9 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
           continue;
         }
       } catch (e) {
-        discordWarning(`Error while visiting ${platform}:`, e);
+        if (!shuttingDown) {
+          discordWarning(`Error while visiting ${platform}:`, e);
+        }
         continue;
       }
 
@@ -81,7 +83,9 @@ const runLoop = async (driver: WebDriver, runners: Platform[]) => {
           });
         });
       } catch (e) {
-        discordWarning(`Error while processing items from ${platform}:`, e);
+        if (!shuttingDown) {
+          discordWarning(`Error while processing items from ${platform}:`, e);
+        }
       }
       log("\n----------------------------------------\n");
     }
@@ -106,13 +110,16 @@ let driver: WebDriver | undefined;
     await setDiscordPresence("online");
     await runLoop(driver, [fb, kijiji]);
   } catch (e) {
-    if (!shuttingDown) {
-      if (discordClient?.isReady()) {
-        await discordError(e);
-      } else {
-        await log("Crashed.", { skipDiscord: true });
-        await log(e, { skipDiscord: true });
-      }
+    if (shuttingDown) {
+      log("Caught error during shutdown:");
+      log(e);
+      return;
+    }
+    if (discordClient?.isReady()) {
+      await discordError(e);
+    } else {
+      await log("Crashed.", { skipDiscord: true });
+      await log(e, { skipDiscord: true });
     }
   } finally {
     shutdown();
@@ -120,37 +127,60 @@ let driver: WebDriver | undefined;
 })();
 
 let shuttingDown = false;
+
 const shutdownWebdriver = async () => {
+  log("Closing the browser...");
   if (!driver) {
+    log("The browser is already closed.");
     return;
   }
-  log("Closing the browser...");
-  try {
-    const handles = await driver.getAllWindowHandles();
-    for (const handle of handles) {
-      console.log("Closing window", handle);
-      await driver.switchTo().window(handle);
-      console.log(
-        "Closing window",
-        handle,
-        "with URL",
-        await driver.getCurrentUrl()
-      );
-      await driver.close();
-      console.log("Closed window");
-    }
-    await driver.quit();
-  } catch (e) {
-    console.error("Error while shutting down webdriver:", e);
-  }
+  await driver
+    .getAllWindowHandles()
+    .catch((e) => {
+      log("Error getting window handles:");
+      log(e);
+    })
+    .then(async (handles) => {
+      for (const handle of handles || []) {
+        await driver.switchTo().window(handle);
+        log("Closing window:");
+        log(handle);
+        log(`(url ${await driver.getCurrentUrl()})`);
+        await driver.close();
+        log("Closed window");
+      }
+    })
+    .catch((e) => {
+      log("Error closing windows:", e);
+    })
+    .then(async () => {
+      log("Closing the browser...");
+      await driver.quit();
+      log("Closed the browser.");
+    })
+    .catch((e) => {
+      log("Error calling driver.quit():", e);
+    });
 };
-const shutdown = () => {
-  if (!shuttingDown) {
+
+const shutdown = async () => {
+  try {
+    if (shuttingDown) {
+      log("Called shutdown() but already shutting down.");
+      return;
+    }
     shuttingDown = true;
-    console.log("Shutting down...");
-    setDiscordPresence("shuttingDown")
-      .then(shutdownWebdriver)
-      .then(shutdownDiscordBot);
+    log("Shutting down...");
+    await setDiscordPresence("shuttingDown");
+    await shutdownWebdriver();
+    log("Closed the browser.");
+    await shutdownDiscordBot();
+    log("Stopped the discord bot.", { skipDiscord: true });
+    log("Shutdown completed successfully.", { skipDiscord: true });
+    process.exit(0);
+  } catch (e) {
+    console.error("Error during shutdown:", e);
+    process.exit(1);
   }
 };
 process.on("SIGINT", shutdown);

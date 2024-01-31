@@ -4,7 +4,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$script_dir" || (echo "Failed to change directory to $script_dir" && exit 1)
 
 print_usage() {
-    echo "Usage: $0 <bot|presence-auditor|bot-dev|presence-auditor-dev> [overrides]"
+    echo "Usage: $0 <bot|presence-auditor> [overrides]"
     echo "  [overrides] : Config parameters to override (ex. --development.headed=true)"
 }
 
@@ -12,25 +12,13 @@ prog="$1"
 shift
 
 case "$prog" in
-    bot-dev)
-        start_message="Typechecking, linting, and starting bot"
-        prog_dir="packages/bot"
-        cmd="yarn dev $@"
-    ;;
     bot)
-        start_message="Starting bot"
-        prog_dir="packages/bot"
-        cmd="yarn start $@"
-    ;;
-    presence-auditor-dev)
-        start_message="Typechecking, linting, and starting presence auditor"
-        prog_dir="packages/presence-auditor"
-        cmd="yarn typecheck && yarn lint && yarn start"
+        msg="Starting bot"
+        cmd="yarn bot $@"
     ;;
     presence-auditor)
-        start_message="Starting presence auditor"
-        prog_dir="packages/presence-auditor"
-        cmd="yarn start"
+        msg="Starting presence auditor"
+        cmd="yarn presence-auditor $@"
     ;;
     *)
         print_usage
@@ -45,12 +33,18 @@ fi
 
 
 function cleanup {
-    kill -- -$$
+    echo "Sending SIGINT to child process: $child_pid"
+    kill -s INT -$$
+    echo "Waiting for child process to exit: $child_pid"
+    wait $child_pid
+    echo "Child process exited: $child_pid"
     exit 0
 }
 
 trap cleanup TERM INT
+echo "$msg"
+eval $cmd &
+child_pid=$!
 
-echo "$start_message"
-cd "$prog_dir" && eval "$cmd" &
+sleep infinity &
 wait $!

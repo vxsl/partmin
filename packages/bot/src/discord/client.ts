@@ -37,20 +37,21 @@ const defs: Record<Presence, Discord.PresenceData> = {
 };
 
 export const setDiscordPresence = async (p: Presence) => {
+  const { log } = await import("util/log.js");
   if (!discordClient.isReady()) {
-    console.log("Discord client not ready, skipping presence update");
+    log("Discord client not ready, skipping presence update", {
+      skipDiscord: true,
+    });
     return;
   }
   await discordClient.user.setPresence(defs[p]);
+  log(`Discord presence set to ${p}`);
 };
 
 export const shutdownDiscordBot = () => {
   console.log("Setting bot presence to offline");
-  setDiscordPresence("offline").then(() => {
+  return setDiscordPresence("offline").then(() => {
     console.log("Destroying discord client");
-    discordClient?.destroy().then(() => {
-      console.log("Exiting");
-      process.exit();
-    });
+    return discordClient?.destroy();
   });
 };
