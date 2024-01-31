@@ -83,10 +83,10 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
         l,
         attrs
           .filter((a) => a.machineValue !== "0")
-          .map(
-            (a) =>
-              `${a.localeSpecificValues.en.label}: ${a.localeSpecificValues.en.value}`
-          )
+          .map((a) => ({
+            key: a.localeSpecificValues.en.label,
+            value: a.localeSpecificValues.en.value,
+          }))
       );
     }
   } catch {
@@ -104,10 +104,10 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
         "Doesn't explicity offer parking"
       );
     } else {
-      addBulletPoints(
-        l,
-        `${attr.localeSpecificValues.en.label}: ${attr.localeSpecificValues.en.value}`
-      );
+      addBulletPoints(l, {
+        key: attr.localeSpecificValues.en.label,
+        value: attr.localeSpecificValues.en.value,
+      });
     }
   } catch {
     // TODO
@@ -126,10 +126,10 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
           `Area too small (${n} sq ft less than specified value of ${config.search.params.unreliableParams.minAreaSqFt})`
         );
       } else {
-        addBulletPoints(
-          l,
-          `${attr.localeSpecificValues.en.label}: ${attr.localeSpecificValues.en.value}`
-        );
+        addBulletPoints(l, {
+          key: attr.localeSpecificValues.en.label,
+          value: attr.localeSpecificValues.en.value,
+        });
       }
     }
   } catch {
@@ -143,10 +143,10 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
     if (attr.machineValue === "0") {
       invalidateListing(l, "paramsMismatch", "Explicitly disallows pets");
     } else {
-      addBulletPoints(
-        l,
-        `${attr.localeSpecificValues.en.label}: ${attr.localeSpecificValues.en.value}`
-      );
+      addBulletPoints(l, {
+        key: attr.localeSpecificValues.en.label,
+        value: attr.localeSpecificValues.en.value,
+      });
     }
   } catch {
     // TODO

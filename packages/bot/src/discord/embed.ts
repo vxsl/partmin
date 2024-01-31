@@ -46,7 +46,20 @@ const listingEmbed = (l: Listing) => {
     .setDescription(
       [
         descriptionHeader,
-        l.computed?.bulletPoints?.map((p) => `- ${p}`).join("\n") ?? "",
+        l.computed?.bulletPoints
+          ?.map(
+            (p) =>
+              `- ${
+                typeof p === "string"
+                  ? p
+                  : p.value.toLowerCase() === "yes"
+                  ? `✅ ${p.key}`
+                  : p.value.toLowerCase() === "no"
+                  ? `❌ ${p.key}`
+                  : `${p.key}: ${p.value}`
+              }`
+          )
+          .join("\n") ?? "",
       ]
         .filter(Boolean)
         .join("\n")
@@ -172,7 +185,7 @@ export const sendEmbedWithButtons = async (
             embed.setDescription(
               [origDesc, mdQuote(l.details.longDescription)]
                 .filter(Boolean)
-                .join("\n")
+                .join("\n\n")
             );
             descButton?.setStyle(Discord.ButtonStyle.Primary);
             // TODO consider automatically closing the description after a minute or so

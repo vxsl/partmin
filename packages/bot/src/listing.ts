@@ -15,6 +15,8 @@ type InvalidReason =
   | "paramsMismatch"
   | "unreliableParamsMismatch";
 
+type BulletPoint = string | { key: string; value: string };
+
 export type Listing = {
   id: string;
   platform: PlatformKey;
@@ -29,7 +31,7 @@ export type Listing = {
   };
   computed?: {
     locationLinkMD?: string;
-    bulletPoints?: string[];
+    bulletPoints?: BulletPoint[];
     distanceTo?: Record<string, CommuteSummary>;
   };
   imgURLs: string[];
@@ -55,7 +57,10 @@ export const invalidateListing = (
   };
 };
 
-export const addBulletPoints = (l: Listing, _points: string | string[]) => {
+export const addBulletPoints = (
+  l: Listing,
+  _points: BulletPoint | BulletPoint[]
+) => {
   const points = Array.isArray(_points) ? _points : [_points];
   l.computed = {
     ...(l.computed ?? {}),
