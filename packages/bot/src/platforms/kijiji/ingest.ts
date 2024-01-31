@@ -103,6 +103,8 @@ export const getKijijiRSS = async (driver: WebDriver) => {
 
   await setFilters(driver);
 
+  log(`Kijiji results after applying filters: ${await driver.getCurrentUrl()}`);
+
   return await driver
     .findElement(By.xpath(`//div[@data-testid="srp-rss-feed-button"]//a`))
     .then((el) => el.getAttribute("href"));

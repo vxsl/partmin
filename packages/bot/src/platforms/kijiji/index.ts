@@ -1,6 +1,10 @@
 import { tmpDir } from "constants.js";
 import fs from "fs";
 import {
+  rentalCategory,
+  rentalCategoryRSS,
+} from "platforms/kijiji/constants.js";
+import {
   getKijijiRSS,
   getListings,
   visitKijijiListing,
@@ -27,7 +31,8 @@ const kijiji: Platform = {
 
     log("Building new Kijiji RSS feed");
     rss = await getKijijiRSS(driver);
-    log(`New RSS feed: ${rss}`);
+    log(`Kijiji RSS feed: ${rss}`);
+    log(`(search URL: ${rss.replace(rentalCategoryRSS, rentalCategory)})`);
     await fs.promises.writeFile(cache, rss);
   },
   main: async () => {
