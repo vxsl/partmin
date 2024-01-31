@@ -1,5 +1,5 @@
 {
-  "name": "partmin-presence-auditor",
+  "name": "presence-auditor",
   "version": "1.0.0",
   "license": "MIT",
   "type": "module",
