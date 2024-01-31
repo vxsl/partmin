@@ -86,62 +86,6 @@ const filterInteractions: FilterInteractionsMap = {
       });
     }
   },
-  // outdoorSpace: async (d) => {
-  //   const filterID = "personaloutdoorspace";
-  //   const filterXpath = getFilterXpath(filterID);
-  //   await ensureFilterIsOpen(filterID, d);
-  //   const v = config.search.params.outdoorSpace;
-  //   if (!v) {
-  //     // return;
-  //   }
-  //   await clickAllByXPath(d, `//label[not(text()='0')]`, {
-  //     parentXpath: `${filterXpath}/..`,
-  //     afterClick: async () => {
-  //       debugLog("Waiting for URL change");
-  //       await waitUntilUrlChanges(d);
-  //       debugLog("sleeping");
-  //       await d.sleep(1000);
-  //       debugLog("ensuring filter is open");
-  //       await ensureFilterIsOpen(filterID, d);
-  //     },
-  //   });
-  // },
-
-  // minArea: async (d) => {
-  //   const filterID = "areainfeet";
-  //   const filterXpath = getFilterXpath(filterID);
-  //   await ensureFilterIsOpen(filterID, d);
-  //   const v = config.search.params.minArea;
-  //   if (v === undefined) {
-  //     return;
-  //   }
-  //   await fillInputByLabel(d, "Min", v, { parentXpath: filterXpath });
-  //   await clickByXPath(d, `//button[contains(text(), 'Apply')]`, {
-  //     parentXpath: `${filterXpath}/..`,
-  //   });
-  //   await waitUntilUrlChanges(d);
-  // },
-
-  // parkingIncluded: async (d) => {
-  //   const filterID = "numberparkingspots";
-  //   const filterXpath = getFilterXpath(filterID);
-  //   await ensureFilterIsOpen(filterID, d);
-  //   const v = config.search.params.parkingIncluded;
-  //   if (v === undefined) {
-  //     return;
-  //   }
-  //   await clickAllByXPath(d, `//label[not(text()='0')]`, {
-  //     parentXpath: `${filterXpath}/..`,
-  //     afterClick: async () => {
-  //       debugLog("Waiting for URL change");
-  //       await waitUntilUrlChanges(d);
-  //       debugLog("sleeping");
-  //       await d.sleep(1000);
-  //       debugLog("ensuring filter is open");
-  //       await ensureFilterIsOpen(filterID, d);
-  //     },
-  //   });
-  // },
 };
 
 export default filterInteractions;

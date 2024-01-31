@@ -1,6 +1,6 @@
 import config from "config.js";
 import he from "he";
-import { Listing } from "listing.js";
+import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import { baseURL } from "platforms/kijiji/constants.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
@@ -67,6 +67,91 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
   } catch {
     // TODO
   }
+
+  try {
+    const attrs = data.viewItemPage.viewItemData.adAttributes.attributes.filter(
+      (a: any) => ["yard", "balcony"].includes(a.machineKey)
+    );
+    if (!attrs.some((a) => a.machineValue === "1")) {
+      invalidateListing(
+        l,
+        "unreliableParamsMismatch",
+        "Doesn't explicity offer a yard or balcony"
+      );
+    } else {
+      addBulletPoints(
+        l,
+        attrs
+          .filter((a) => a.machineValue !== "0")
+          .map(
+            (a) =>
+              `${a.localeSpecificValues.en.label}: ${a.localeSpecificValues.en.value}`
+          )
+      );
+    }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const attr = data.viewItemPage.viewItemData.adAttributes.attributes.find(
+      (a: any) => a.machineKey === "numberparkingspots"
+    );
+    if (attr.machineValue === "0") {
+      invalidateListing(
+        l,
+        "unreliableParamsMismatch",
+        "Doesn't explicity offer parking"
+      );
+    } else {
+      addBulletPoints(
+        l,
+        `${attr.localeSpecificValues.en.label}: ${attr.localeSpecificValues.en.value}`
+      );
+    }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const attr = data.viewItemPage.viewItemData.adAttributes.attributes.find(
+      (a: any) => a.machineKey === "areainfeet"
+    );
+    const n = parseInt(attr.machineValue);
+    if (!isNaN(n) && attr.machineValue !== 0) {
+      if (n < config.search.params.unreliableParams.minAreaSqFt) {
+        invalidateListing(
+          l,
+          "unreliableParamsMismatch",
+          `Area too small (${n} sq ft less than specified value of ${config.search.params.unreliableParams.minAreaSqFt})`
+        );
+      } else {
+        addBulletPoints(
+          l,
+          `${attr.localeSpecificValues.en.label}: ${attr.localeSpecificValues.en.value}`
+        );
+      }
+    }
+  } catch {
+    // TODO
+  }
+
+  try {
+    const attr = data.viewItemPage.viewItemData.adAttributes.attributes.find(
+      (a: any) => a.machineKey === "petsallowed"
+    );
+    if (attr.machineValue === "0") {
+      invalidateListing(l, "paramsMismatch", "Explicitly disallows pets");
+    } else {
+      addBulletPoints(
+        l,
+        `${attr.localeSpecificValues.en.label}: ${attr.localeSpecificValues.en.value}`
+      );
+    }
+  } catch {
+    // TODO
+  }
+
   l.details.longDescription = await driver
     .findElement(
       By.xpath(`//*[starts-with(@class, 'descriptionContainer')]//div`)

@@ -1,10 +1,10 @@
-import config from "config.js";
+import config, { PetType } from "config.js";
 import { discordSend } from "discord/util.js";
-import { Listing } from "listing.js";
+import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { PlatformKey } from "types/platform.js";
-import { findNestedProperty } from "util/data.js";
+import { acresToSqft, findNestedProperty, sqMetersToSqft } from "util/data.js";
 import { Coordinates, Radius, getGoogleMapsLink } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
 import { notUndefined } from "util/misc.js";
@@ -40,7 +40,9 @@ export const visitMarketplaceListing = async (
     "marketplace_product_details_page"
   );
 
-  if (!productDetails) {
+  const info = productDetails?.target;
+
+  if (!info) {
     discordSend(
       `Warning: couldn't retrieve info for the following Marketplace listing: ${url}.\nThe retrieval method may have changed.`,
       { bold: true }
@@ -59,7 +61,7 @@ export const visitMarketplaceListing = async (
   }
 
   try {
-    const desc = productDetails.target.redacted_description.text;
+    const desc = info.redacted_description.text; // TODO is redacted_description always present? Maybe fall back to something else.
     if (desc) {
       l.details.longDescription = desc;
     }
@@ -68,15 +70,132 @@ export const visitMarketplaceListing = async (
     // TODO
   }
 
+  let unitIncludes, unitSubtitle;
   try {
-    const loc = productDetails.target.home_address.street;
+    unitSubtitle = info.pdp_display_sections.find(
+      (s: any) => s.section_type === "UNIT_SUBTITLE"
+    );
+  } catch {
+    // TODO
+  }
+  try {
+    unitIncludes = info.pdp_display_sections.find(
+      (s: any) => s.section_type === "UNIT_INCLUDES"
+    );
+  } catch {
+    // TODO
+  }
+
+  try {
+    const params = config.search.params;
+    const unreliableParams = params.unreliableParams;
+
+    try {
+      if (
+        unreliableParams?.outdoorSpace &&
+        !unitIncludes.pdp_fields.some((f: any) =>
+          f.display_label.match(/balcony|terrace|deck|yard/i)
+        )
+      ) {
+        invalidateListing(
+          l,
+          "unreliableParamsMismatch",
+          "Doesn't explicitly offer outdoor space"
+        );
+      }
+    } catch (e) {
+      log(e);
+      // TODO
+    }
+
+    try {
+      if (
+        unreliableParams?.parking &&
+        !unitIncludes.pdp_fields.some((f: any) =>
+          f.display_label.match(/parking|garage/i)
+        )
+      ) {
+        invalidateListing(
+          l,
+          "unreliableParamsMismatch",
+          "Doesn't explicitly offer parking"
+        );
+      }
+    } catch (e) {
+      log(e);
+      // TODO
+    }
+
+    try {
+      const userPets = Object.entries(params.pets ?? {})
+        .filter(([, v]) => v)
+        .map(([k]) => k as PetType);
+      if (unreliableParams?.petsStrict && userPets.length) {
+        const listingPets: string[] = unitIncludes.pdp_fields
+          .filter((f: any) => f.display_label.match(/friendly/i))
+          .map((f: any) =>
+            f.display_label.match(/(.+) friendly/)?.[1]?.toLowerCase()
+          )
+          .filter(notUndefined);
+
+        const implicityDisallowedPets = userPets.filter((p) =>
+          p === "other" ? !!listingPets.length : !listingPets.includes(p)
+        );
+
+        if (implicityDisallowedPets.length) {
+          invalidateListing(
+            l,
+            "unreliableParamsMismatch",
+            `Doesn't explicitly allow pet types ${implicityDisallowedPets.join(
+              ", "
+            )}`
+          );
+        }
+      }
+    } catch (e) {
+      log(e);
+      // TODO
+    }
+
+    try {
+      const areaStr = info.unit_area_info;
+      if (areaStr) {
+        const _n: string | undefined = areaStr.match(/(\d+)/)?.[1];
+        const n = _n === undefined ? undefined : parseInt(_n);
+        const sqFt =
+          n === undefined || isNaN(n)
+            ? undefined
+            : areaStr.match(/sq\.?\s?(ft|feet)/i)
+            ? n
+            : areaStr.includes("acres")
+            ? acresToSqft(n)
+            : sqMetersToSqft(n);
+        if (sqFt) {
+          if (sqFt < unreliableParams?.minAreaSqFt) {
+            invalidateListing(
+              l,
+              "unreliableParamsMismatch",
+              `Area too small (${sqFt} sq ft less than specified value of ${unreliableParams?.minAreaSqFt})`
+            );
+          }
+        }
+      }
+    } catch (e) {
+      log(e);
+      // TODO
+    }
+  } catch (e) {
+    log(e);
+    // TODO
+  }
+
+  try {
+    const loc = info.home_address.street;
     if (loc) {
       l.details.shortAddress = loc;
       const full =
-        productDetails.target.pdp_display_sections
-          .find((s: any) => s.section_type === "UNIT_SUBTITLE")
-          .pdp_fields.find((f: any) => f.icon_name === "pin")?.display_label ??
-        "";
+        unitSubtitle?.pdp_fields.find((f: any) => f.icon_name === "pin")
+          ?.display_label ?? "";
       l.computed = {
         ...(l.computed ?? {}),
         locationLinkMD: `[**${loc}**](${getGoogleMapsLink(
@@ -90,8 +209,8 @@ export const visitMarketplaceListing = async (
   }
 
   try {
-    const lat = productDetails.target.location.latitude;
-    const lon = productDetails.target.location.longitude;
+    const lat = info.location.latitude;
+    const lon = info.location.longitude;
     l.details.coords = Coordinates.build(lat, lon);
   } catch (e) {
     log(e);
@@ -99,7 +218,7 @@ export const visitMarketplaceListing = async (
   }
 
   try {
-    const imgs = productDetails.target.listing_photos
+    const imgs = info.listing_photos
       .map((p: any) => p?.image?.uri)
       .filter(notUndefined);
     if (imgs.length) {
@@ -111,9 +230,8 @@ export const visitMarketplaceListing = async (
   }
 
   try {
-    const points: string[] = productDetails.target.pdp_display_sections
-      .find((s: any) => s.section_type === "UNIT_SUBTITLE")
-      ?.pdp_fields.filter((f: any) => f.icon_name !== "pin")
+    const points: string[] = unitSubtitle?.pdp_fields
+      .filter((f: any) => f.icon_name !== "pin")
       .map(({ display_label }: { display_label: string }) =>
         display_label.includes("Available ")
           ? display_label.match(/Available (.+)/)?.[0] ?? display_label
@@ -122,10 +240,7 @@ export const visitMarketplaceListing = async (
           : display_label
       )
       .filter(notUndefined);
-    l.computed = {
-      ...(l.computed ?? {}),
-      bulletPoints: points,
-    };
+    addBulletPoints(l, points);
   } catch (e) {
     log(e);
     // TODO
@@ -140,20 +255,7 @@ export const visitMarketplace = async (
   await clearBrowsingData(driver);
 
   const vals = {
-    sortBy: "creation_time_descend",
-    exact: true,
-    // propertyType: config.search.propertyType,
-    ...(config.search.params.exclude.shared && {
-      propertyType: ["house", "townhouse", "apartment-condo"].join(","),
-    }),
-    minPrice: config.search.params.price.min,
-    maxPrice: config.search.params.price.max,
-    minBedrooms: config.search.params.minBedrooms,
-
-    // minAreaSize: config.search.minArea
-    //   ? Math.floor(config.search.minArea * 0.09290304 * 100) / 100
-    //   : undefined,
-
+    // location:
     latitude: radius.lat,
     longitude: radius.lon,
     radius:
@@ -162,6 +264,18 @@ export const visitMarketplace = async (
       Math.random() * 0.0000001 +
       Math.random() * 0.000001 +
       Math.random() * 0.00001,
+
+    // results configuration:
+    sortBy: "creation_time_descend",
+    exact: true,
+
+    // search parameters:
+    ...(config.search.params.exclude?.shared && {
+      propertyType: ["house", "townhouse", "apartment-condo"].join(","),
+    }),
+    minPrice: config.search.params.price.min,
+    maxPrice: config.search.params.price.max,
+    minBedrooms: config.search.params.minBedrooms,
   };
 
   const city = config.search.location.city;
@@ -242,16 +356,6 @@ export const getListings = async (
           : undefined;
       const title = tokens.slice(1, tokens.length - 1).join(SEP);
 
-      // sometimes facebook will show a private room for rent
-      // even when the search parameters exclude "room only":
-      if (
-        config.search.params.exclude.shared &&
-        ["Private room for rent", "Chambre privée à louer"].includes(title)
-      ) {
-        log(`Skipping room-only listing: ${title} (${id})`);
-        return undefined;
-      }
-
       return {
         platform,
         id,
@@ -262,6 +366,18 @@ export const getListings = async (
         url: `https://facebook.com/marketplace/item/${id}`,
         imgURLs: [thumb].filter(notUndefined),
         videoURLs: [],
+
+        // sometimes facebook will show a private room for rent
+        // even when the search parameters exclude "room only":
+        ...(config.search.params.exclude?.shared &&
+          ["Private room for rent", "Chambre privée à louer"].includes(
+            title
+          ) && {
+            invalidDueTo: {
+              paramsMismatch:
+                "Room-only listing, configured to exclude shared units",
+            },
+          }),
       };
     }
   );
