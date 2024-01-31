@@ -73,8 +73,8 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
               randomWait({ short: true, suppressProgressLog: true })
             );
           }
-          await processListings(unseenListings).then(async (unseen) => {
-            for (const l of unseen) {
+          await processListings(unseenListings).then(async (valid) => {
+            for (const l of valid) {
               await sendEmbedWithButtons(l);
               await waitSeconds(0.5);
             }

@@ -6,7 +6,8 @@ import {
   SeenListingDict,
   addCommuteSummary,
   addLocationLink,
-  getBlacklistedString,
+  checkForBlacklist,
+  isValid,
 } from "listing.js";
 import { isWithinRadii } from "util/geo.js";
 import { readJSON, writeJSON } from "util/io.js";
@@ -53,36 +54,54 @@ export const withUnseenListings = async <T>(
 };
 
 export const processListings = async (unseenListings: Listing[]) => {
-  const [results, blacklistLogs] = await unseenListings.reduce<
-    Promise<[Listing[], string[]]>
-  >(async (promises, l) => {
-    const [_results, _blacklistLogs] = await promises;
-    const bl = getBlacklistedString(l);
-    if (bl) {
-      _blacklistLogs.push(bl);
-    } else {
-      await addLocationLink(l);
-      await addCommuteSummary(l);
-      _results.push(l);
-    }
-    return [_results, _blacklistLogs];
-  }, Promise.resolve([[], []]));
-
-  // TODO sort based on time?
-  // TODO compute duplicates?
+  const [allResults, validResults, invalidResults] =
+    await unseenListings.reduce<Promise<[Listing[], Listing[], Listing[]]>>(
+      async (promises, l) => {
+        const [all, valid, invalid] = await promises;
+        checkForBlacklist(l);
+        if (isValid(l)) {
+          valid.push(l);
+          await addLocationLink(l);
+          await addCommuteSummary(l);
+        } else {
+          invalid.push(l);
+        }
+        all.push(l);
+        return [all, valid, invalid];
+      },
+      Promise.resolve([[], [], []])
+    );
 
   log(
-    `${results.length} new result${results.length !== 1 ? "s" : ""}${
-      config.logging?.verbose ? ":" : "."
-    }`
+    `${validResults.length} new valid result${
+      validResults.length !== 1 ? "s" : ""
+    }${validResults.length && config.logging?.verbose ? ":" : "."}`
   );
-  verboseLog({ results });
-  if (blacklistLogs.length) {
-    log(`${blacklistLogs.length} blacklisted:`);
-    log(blacklistLogs.map((b) => `  - found ${b}`).join("\n"));
+  verboseLog({ validResults });
+
+  if (invalidResults.length) {
+    log(
+      `${invalidResults.length} invalid result${
+        invalidResults.length !== 1 ? "s" : ""
+      }${config.logging?.verbose ? ":" : "."}`
+    );
+    verboseLog(
+      invalidResults
+        .map(
+          (l) =>
+            `  - ${l.platform}-${l.id}: ${
+              l.invalidDueTo
+                ? Object.entries(l.invalidDueTo)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(", ")
+                : "unknown"
+            } `
+        )
+        .join("\n")
+    );
   }
 
-  return results;
+  return validResults;
 };
 
 export const excludeListingsOutsideSearchArea = (listings: Listing[]) =>

@@ -7,6 +7,13 @@ import {
   approxLocationLink,
   getCommuteSummary,
 } from "util/geo.js";
+import { notUndefined } from "util/misc.js";
+
+type InvalidReason =
+  | "blacklisted"
+  | "outsideSearch"
+  | "paramsMismatch"
+  | "unreliableParamsMismatch";
 
 export type Listing = {
   id: string;
@@ -27,11 +34,34 @@ export type Listing = {
   };
   imgURLs: string[];
   videoURLs: string[];
+  invalidDueTo?: { [k in InvalidReason]?: string };
 };
+
+export const isValid = (l: Listing) =>
+  Object.values(l.invalidDueTo ?? {}).filter(notUndefined).length === 0;
 
 export interface SeenListingDict {
   [k: string]: 1 | undefined;
 }
+
+export const invalidateListing = (
+  l: Listing,
+  reason: InvalidReason,
+  message: string
+) => {
+  l.invalidDueTo = {
+    ...(l.invalidDueTo ?? {}),
+    [reason]: message,
+  };
+};
+
+export const addBulletPoints = (l: Listing, _points: string | string[]) => {
+  const points = Array.isArray(_points) ? _points : [_points];
+  l.computed = {
+    ...(l.computed ?? {}),
+    bulletPoints: [...(l.computed?.bulletPoints ?? []), ...points],
+  };
+};
 
 export const addLocationLink = async (l: Listing) => {
   if (!l.computed?.locationLinkMD && l.details.coords) {
@@ -72,24 +102,12 @@ type BlacklistEntry = string | RegExp;
 const blacklistMatch = (v: BlacklistEntry, s: string | undefined) =>
   s === undefined ? false : typeof v === "string" ? s.includes(v) : s.match(v);
 
-export const getBlacklistedString = ({
-  id,
-  details,
-}: Listing): string | undefined => {
-  const report = (v: BlacklistEntry, f: string) =>
-    `'${v}' in listing ${id}'s ${f}`;
+export const checkForBlacklist = (l: Listing) => {
+  const report = (v: BlacklistEntry, f: string) => `'${v}' in ${f}`;
 
-  const desc = details.longDescription?.toLowerCase();
-  const title = details.title?.toLowerCase();
-  const loc = (details.longAddress ?? details.shortAddress)?.toLowerCase();
-
-  const check = (els: BlacklistEntry[] | undefined) => {
-    for (const b of els ?? []) {
-      if (blacklistMatch(b, desc)) return report(b, "description");
-      if (blacklistMatch(b, title)) return report(b, "title");
-      if (blacklistMatch(b, loc)) return report(b, "location");
-    }
-  };
+  const desc = l.details.longDescription?.toLowerCase();
+  const title = l.details.title?.toLowerCase();
+  const loc = (l.details.longAddress ?? l.details.shortAddress)?.toLowerCase();
 
   const petsEntries = Object.entries(config.search.params.pets ?? {}).reduce<
     BlacklistEntry[]
@@ -98,13 +116,22 @@ export const getBlacklistedString = ({
     return [...bl, ...petsBlacklist[k]];
   }, []);
 
-  return check([
+  const result = [];
+  for (const b of [
     ...petsEntries,
     ...(petsEntries.length > 0 && petsBlacklist.general),
-    ...(config.search.params.exclude.swaps && searchParamsBlacklist.swaps),
-    ...(config.search.params.exclude.sublets && searchParamsBlacklist.sublets),
-    ...(config.search.params.exclude.shared && searchParamsBlacklist.shared),
+    ...(config.search.params.exclude?.swaps && searchParamsBlacklist.swaps),
+    ...(config.search.params.exclude?.sublets && searchParamsBlacklist.sublets),
+    ...(config.search.params.exclude?.shared && searchParamsBlacklist.shared),
     ...config.search.blacklist?.map((b) => b.toLowerCase()),
     ...config.search.blacklistRegex.map((b) => new RegExp(b, "i")),
-  ]);
+  ]) {
+    if (blacklistMatch(b, desc)) result.push(report(b, "description"));
+    if (blacklistMatch(b, title)) result.push(report(b, "title"));
+    if (blacklistMatch(b, loc)) result.push(report(b, "location"));
+  }
+
+  if (result.length) {
+    invalidateListing(l, "blacklisted", result.join(", "));
+  }
 };
