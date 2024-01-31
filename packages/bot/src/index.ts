@@ -21,6 +21,7 @@ import { Platform, platforms } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
+import { stdout as singleLineStdOut } from "single-line-log";
 
 process.title = "partmin-bot";
 
@@ -65,16 +66,28 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
           continue;
         }
         debugLog(`Found ${listings.length} listings within the search area.`);
-        verboseLog({ listings });
+        verboseLog(listings.map((l) => l.url).join(", "));
 
         await withUnseenListings(listings, async (unseenListings) => {
-          for (const l of unseenListings) {
-            await perListing?.(driver, l)?.then(() =>
-              randomWait({ short: true, suppressProgressLog: true })
-            );
+          if (perListing) {
+            for (let i = 0; i < unseenListings.length; i++) {
+              const l = unseenListings[i];
+              debugLog(
+                `visiting listing (${i + 1}/${unseenListings.length}): ${l.url}`
+              );
+              await perListing(driver, l)?.then(() =>
+                randomWait({ short: true, suppressProgressLog: true })
+              );
+            }
           }
           await processListings(unseenListings).then(async (valid) => {
-            for (const l of valid) {
+            for (let i = 0; i < valid.length; i++) {
+              const l = valid[i];
+              singleLineStdOut(
+                `Sending Discord embed for listing (${i + 1}/${
+                  valid.length
+                }): ${l.url}`
+              );
               await sendEmbedWithButtons(l);
               await waitSeconds(0.5);
             }

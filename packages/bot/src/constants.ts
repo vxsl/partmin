@@ -10,15 +10,9 @@ export const searchParamsBlacklist: Partial<
 > = {
   swaps: ["swap", "echange", "échange"],
   sublets: [
+    "sous location",
     "sous-location",
     "sublet",
-    "sous location",
-    "sous-louer",
-    "sous-loue",
-    "sous-loué",
-    "sous louer",
-    "sous loue",
-    "sous loué",
     "sous-louer",
     "sous-loue",
     "sous-loué",

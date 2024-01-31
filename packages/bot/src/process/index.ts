@@ -48,7 +48,7 @@ export const withUnseenListings = async <T>(
       unseenListings.length !== 1 ? "s" : ""
     } out of ${listings.length}${config.logging?.verbose ? ":" : "."}`
   );
-  verboseLog({ unseenListings });
+  verboseLog(unseenListings.map((l) => l.url).join(", "));
 
   return result;
 };
@@ -77,7 +77,9 @@ export const processListings = async (unseenListings: Listing[]) => {
       validResults.length !== 1 ? "s" : ""
     }${validResults.length && config.logging?.verbose ? ":" : "."}`
   );
-  verboseLog({ validResults });
+  if (validResults.length) {
+    verboseLog(validResults.map((l) => l.url).join(", "));
+  }
 
   if (invalidResults.length) {
     log(
@@ -89,7 +91,7 @@ export const processListings = async (unseenListings: Listing[]) => {
       invalidResults
         .map(
           (l) =>
-            `  - ${l.platform}-${l.id}: ${
+            `  - ${l.url}: ${
               l.invalidDueTo
                 ? Object.entries(l.invalidDueTo)
                     .map(([k, v]) => `${k}: ${v}`)
@@ -109,8 +111,12 @@ export const excludeListingsOutsideSearchArea = (listings: Listing[]) =>
     if (!l.details.coords) return true;
     const v = isWithinRadii(l.details.coords);
     if (!v) {
-      log(`Listing ${getSeenListingKey(l)} is outside of the search area:`);
-      log(l);
+      log(
+        `Listing ${getSeenListingKey(l)} is outside of the search area${
+          config.logging?.verbose ? "." : ""
+        }`
+      );
+      verboseLog(l);
     }
     return v;
   });

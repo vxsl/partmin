@@ -30,7 +30,7 @@ export const unreliabilityExplanations: Record<
   parking:
     "This will exclude listings that don't explicitly offer parking. Posters often don't bother to fill out this field, even if their listing has parking.",
   petsStrict:
-    "This will exclude listings that don't explicitly allow your type of pet. Posters often don't bother to fill out the pets field, even if their listing does allow pets.",
+    "This will exclude listings that don't explicitly allow your type(s) of pet defined in `search.params.pets`. Posters often don't bother to fill out the pets field, even if their listing does allow pets.",
 };
 
 const Options = RuntypeRecord({

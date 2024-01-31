@@ -37,6 +37,7 @@ const quickEmbed = ({
     );
 
 export const discordError = (e: unknown) => {
+  log("Sending Discord error embed:");
   log(e, { skipDiscord: true });
   discordSend(
     quickEmbed({
@@ -53,6 +54,7 @@ export const discordWarning = (
   e: unknown,
   options?: { monospace?: boolean }
 ) => {
+  log("Sending Discord warning embed:");
   log(e, { skipDiscord: true });
   discordSend(
     quickEmbed({

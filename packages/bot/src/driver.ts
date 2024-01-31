@@ -8,6 +8,7 @@ import {
 import { Builder } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { stdout as singleLineStdOut } from "single-line-log";
+import { log } from "util/log.js";
 
 const installChrome = () =>
   install({
@@ -26,13 +27,13 @@ const installChrome = () =>
 export const buildDriver = async () => {
   await installChrome();
 
-  const driverOptions = new chrome.Options();
-  driverOptions.addArguments("--disable-gpu", "--disable-software-rasterizer");
+  const args: string[] = [];
+  args.push("--disable-gpu", "--disable-software-rasterizer");
   if (config.development?.noSandbox) {
-    driverOptions.addArguments("--no-sandbox");
+    args.push("--no-sandbox");
   }
   if (!config.development?.headed) {
-    driverOptions.addArguments(
+    args.push(
       "--headless",
       "--start-maximized",
       "--window-size=1920,1080",
@@ -44,14 +45,20 @@ export const buildDriver = async () => {
       "--remote-debugging-port=9222"
     );
   }
-  await getInstalledBrowsers({
+
+  log(`launching Chrome with args: ${args.join(" ")}`);
+
+  const options = await getInstalledBrowsers({
     cacheDir: puppeteerCacheDir,
-  }).then(([b]) => {
-    driverOptions.setChromeBinaryPath(b.executablePath);
-  });
+  }).then(([b]) =>
+    new chrome.Options()
+      .addArguments(...args)
+      .setChromeBinaryPath(b.executablePath)
+  );
+
   const driver = await new Builder()
     .forBrowser("chrome")
-    .setChromeOptions(driverOptions)
+    .setChromeOptions(options)
     .build();
 
   driver.manage().setTimeouts({ implicit: seleniumImplicitWait });

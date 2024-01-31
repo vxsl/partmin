@@ -17,13 +17,15 @@ import {
 
 const platform: PlatformKey = "fb";
 
+const getListingURL = (id: string) => `https://fb.com/marketplace/item/${id}`;
+
 export const visitMarketplaceListing = async (
   driver: WebDriver,
   l: Listing
 ) => {
   await clearBrowsingData(driver);
 
-  let url = `https://facebook.com/marketplace/item/${l.id}`;
+  let url = getListingURL(l.id);
   debugLog(`visiting listing: ${url}`);
 
   await driver.get(url);
@@ -363,7 +365,7 @@ export const getListings = async (
           title,
           price,
         },
-        url: `https://facebook.com/marketplace/item/${id}`,
+        url: getListingURL(id),
         imgURLs: [thumb].filter(notUndefined),
         videoURLs: [],
 

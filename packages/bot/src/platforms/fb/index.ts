@@ -5,7 +5,7 @@ import {
 } from "platforms/fb/ingest.js";
 import { decodeMapDevelopersURL } from "util/geo.js";
 import { notUndefined, randomWait } from "util/misc.js";
-import { debugLog } from "util/log.js";
+import { debugLog, verboseLog } from "util/log.js";
 import { Listing } from "listing.js";
 import { Platform } from "types/platform.js";
 import { withDOMChangesBlocked } from "util/selenium.js";
@@ -22,17 +22,27 @@ const fb: Platform = {
     let listingCount = 0;
     for (let i = 0; i < radii.length; i++) {
       const r = radii[i];
-      debugLog(`visiting fb marketplace for radius ${i} (${r.toString()})`);
+      const rLabel = `radius ${i + 1}/${radii.length}`;
+      debugLog(
+        `visiting fb marketplace [${rLabel}]: ${r.toString({
+          truncate: true,
+        })}`
+      );
       await visitMarketplace(driver, r);
       await withDOMChangesBlocked(driver, async () => {
-        await getListings(driver).then((arr) =>
-          listings.push(...(arr?.filter(notUndefined) ?? []))
-        );
+        await getListings(driver).then((arr) => {
+          verboseLog(
+            `found the following listings in ${rLabel}: ${arr
+              ?.map((l) => l.id)
+              .join(", ")}`
+          );
+          listings.push(...(arr?.filter(notUndefined) ?? []));
+        });
       });
       debugLog(
         `found ${
           listings.length - listingCount
-        } listings in radius ${i} (${r.toString()})`
+        } listings in ${rLabel} (${r.toString({ truncate: true })})`
       );
       listingCount = listings.length;
       await randomWait({ short: true, suppressProgressLog: true });

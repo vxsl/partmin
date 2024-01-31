@@ -28,8 +28,13 @@ export class Coordinates {
     }
   }
 
-  static toString(c: Coordinates, options?: { raw?: boolean }) {
-    return options?.raw ? `${c.lat},${c.lon}` : `(${c.lat}, ${c.lon})`;
+  static toString(
+    c: Coordinates,
+    options?: { raw?: boolean; truncate?: boolean }
+  ) {
+    const lat = options?.truncate ? c.lat.toFixed(3) : c.lat;
+    const lon = options?.truncate ? c.lon.toFixed(3) : c.lon;
+    return options?.raw ? `${lat},${lon}` : `(${lat}, ${lon})`;
   }
 }
 export class Radius {
@@ -67,8 +72,11 @@ export class Radius {
   get lon() {
     return this.coords.lon;
   }
-  toString() {
-    return `${Coordinates.toString(this.coords, { raw: true })},${this.diam}`;
+  toString(options?: { truncate?: boolean }) {
+    return `${Coordinates.toString(this.coords, {
+      raw: true,
+      truncate: options?.truncate,
+    })},${options?.truncate ? this.diam.toFixed(3) : this.diam}`;
   }
 }
 

@@ -42,7 +42,7 @@ export const validateConfig = async () => {
             }`
         )
         .join("\n")}\n\n${discordFormat(
-        "This means that some listings that match your criteria may be ignored. Consider removing these parameters from your config.",
+        "This means that partmin may ignore some desirable listings. Consider removing these parameters from your config.",
         { bold: true }
       )}`
     );
