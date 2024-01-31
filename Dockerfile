@@ -1,5 +1,8 @@
 FROM node:20 AS build
 
+RUN corepack enable
+RUN corepack prepare yarn@3.x --activate
+
 RUN apt-get update 
 RUN apt-get install -yq libgbm1 \
 gconf-service libasound2 libatk1.0-0 libc6 libcairo2 \
@@ -19,8 +22,12 @@ WORKDIR /usr/src/app
 RUN mkdir -p packages/bot 
 RUN mkdir -p packages/presence-auditor 
 
-COPY package.json .
-COPY yarn.lock .
+COPY .yarn ./.yarn
+COPY .yarnrc.yml package.json yarn.lock* ./
+RUN yarn install
+
+ENV NODE_ENV production
+
 COPY packages/bot/package.json ./packages/bot/
 COPY packages/presence-auditor/package.json ./packages/presence-auditor/
 

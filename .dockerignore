@@ -7,3 +7,10 @@ scratchpad
 **/.env
 **/.tmp
 run-docker.sh
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

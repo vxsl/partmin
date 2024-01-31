@@ -78,5 +78,6 @@
     "env": {
       "es6": true
     }
-  }
+  },
+  "packageManager": "yarn@3.7.0"
 }
