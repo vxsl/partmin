@@ -4,6 +4,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "check": "yarn typecheck && yarn lint",
     "kill-dev": "yarn typecheck && yarn lint && yarn kill",
     "kill": "tsx kill.ts",
     "start": "bash daemon.sh",

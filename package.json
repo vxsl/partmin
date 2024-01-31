@@ -3,8 +3,9 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "bot": "yarn workspace presence-auditor start & yarn workspace bot start & ",
-    "bot-dev": "yarn workspace presence-auditor start & yarn workspace bot dev & "
+    "bot": "yarn workspace presence-auditor start & yarn workspace bot start",
+    "bot-check": "yarn workspace bot check && yarn workspace presence-auditor check",
+    "bot-dev": "yarn bot-check && yarn bot"
   },
   "workspaces": [
     "packages/*"

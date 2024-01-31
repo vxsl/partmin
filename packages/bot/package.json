@@ -5,8 +5,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "yarn typecheck && yarn lint && yarn start",
+    "dev": "yarn check && yarn start",
     "start": "tsx src/index.ts",
+    "check": "yarn typecheck && yarn lint",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
