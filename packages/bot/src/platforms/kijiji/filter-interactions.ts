@@ -61,40 +61,31 @@ const filterInteractions: FilterInteractionsMap = {
     await waitUntilUrlChanges(d);
   },
 
-  // bedrooms: {
-  //   min: async (d) => {
-  //     const filterID = "numberbedrooms";
-  //     const filterXpath = getFilterXpath(filterID);
-  //     await ensureFilterIsOpen(filterID, d);
-  //     const v = config.search.params.bedrooms.min;
-  //     if (v === undefined) {
-  //       return;
-  //     }
-  //     if (v === 0) {
-  //       await clickByXPath(d, `//label[contains(text(), 'Studio')]`, {
-  //         parentXpath: `${filterXpath}/..`,
-  //       });
-  //       return;
-  //     }
-  //     for (const p of [
-  //       `//label[number(translate(substring-before(., '+'), ' ', '')) >= ${v}]`,
-  //       `//label[number(translate(., ' ', '')) >= ${v}]`,
-  //     ]) {
-  //       await clickAllByXPath(d, p, {
-  //         parentXpath: `${filterXpath}/..`,
-  //         afterClick: async () => {
-  //           debugLog("Waiting for URL change");
-  //           await waitUntilUrlChanges(d);
-  //           debugLog("sleeping");
-  //           await d.sleep(1000);
-  //           debugLog("ensuring filter is open");
-  //           await ensureFilterIsOpen(filterID, d);
-  //         },
-  //       });
-  //     }
-  //   },
-  // },
-
+  minBedrooms: async (d) => {
+    const filterID = "numberbedrooms";
+    const filterXpath = getFilterXpath(filterID);
+    await ensureFilterIsOpen(filterID, d);
+    const v = config.search.params.minBedrooms;
+    if (v === undefined || v === 0) {
+      return;
+    }
+    for (const p of [
+      `//label[number(translate(substring-before(., '+'), ' ', '')) >= ${v}]`,
+      `//label[number(translate(., ' ', '')) >= ${v}]`,
+    ]) {
+      await clickAllByXPath(d, p, {
+        parentXpath: `${filterXpath}/..`,
+        afterClick: async () => {
+          debugLog("Waiting for URL change");
+          await waitUntilUrlChanges(d);
+          debugLog("sleeping");
+          await d.sleep(1000);
+          debugLog("ensuring filter is open");
+          await ensureFilterIsOpen(filterID, d);
+        },
+      });
+    }
+  },
   // outdoorSpace: async (d) => {
   //   const filterID = "personaloutdoorspace";
   //   const filterXpath = getFilterXpath(filterID);

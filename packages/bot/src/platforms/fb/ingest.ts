@@ -148,7 +148,7 @@ export const visitMarketplace = async (
     }),
     minPrice: config.search.params.price.min,
     maxPrice: config.search.params.price.max,
-    // minBedrooms: config.search.bedrooms.min,
+    minBedrooms: config.search.params.minBedrooms,
 
     // minAreaSize: config.search.minArea
     //   ? Math.floor(config.search.minArea * 0.09290304 * 100) / 100

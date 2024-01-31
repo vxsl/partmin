@@ -54,6 +54,7 @@ const SearchParams = RuntypeRecord({
       sublets: Optional(Boolean),
     })
   ),
+  minBedrooms: Optional(RuntypeNumber),
   price: RuntypeRecord({
     min: RuntypeNumber,
     max: RuntypeNumber,
