@@ -9,16 +9,23 @@ if (!token) {
   throw new Error("No DISCORD_BOT_TOKEN environment variable provided");
 }
 
+const log = (s: string) => console.log(`[presence-auditor] ${s}`);
 (() => {
+  log("Bot is no longer running - clearing presence.");
   const c = new Discord.Client({ intents: 0 });
-  console.log("Logging in...");
+  log("Logging in...");
   c.login(token);
   c.on("ready", (c) => {
-    console.log("Logged in. Setting presence to invisible");
-    c.user.setPresence({ status: "invisible" });
-    console.log("Done. Logging out...");
+    const p: Discord.PresenceData = {
+      status: "invisible",
+      activities: null,
+      afk: true,
+    };
+    log(`Logged in. Setting presence to ${JSON.stringify(p)}`);
+    c.user.setPresence(p);
+    log("Done. Logging out...");
     c.destroy().then(() => {
-      console.log("Done. Exiting");
+      log("Exiting");
       process.exit();
     });
   });
