@@ -1,15 +1,10 @@
 import Discord from "discord.js";
 import { ChannelKey, getChannel } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
-import { PlatformKey } from "types/platform.js";
+import { platforms } from "types/platform.js";
 import { mdQuote, trimAddress } from "util/data.js";
 import { formatCommuteSummaryMD } from "util/geo.js";
 import { notUndefined } from "util/misc.js";
-
-const platformIcons: Record<PlatformKey, string> = {
-  kijiji: "https://www.kijiji.ca/favicon.ico",
-  fb: "https://www.facebook.com/favicon.ico",
-};
 
 const listingEmbed = (l: Listing) => {
   let descriptionHeader = [
@@ -60,7 +55,7 @@ const listingEmbed = (l: Listing) => {
     .setImage(l.imgURLs[0] ?? null)
     .setFooter({
       text: l.platform,
-      iconURL: platformIcons[l.platform],
+      iconURL: platforms[l.platform].icon,
     })
     .setTimestamp(new Date())
     .setFields(

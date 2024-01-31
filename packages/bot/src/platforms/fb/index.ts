@@ -12,7 +12,8 @@ import { withDOMChangesBlocked } from "util/selenium.js";
 import config from "config.js";
 
 const fb: Platform = {
-  key: "fb",
+  name: "Facebook Marketplace",
+  icon: "https://www.facebook.com/favicon.ico",
   main: async (driver) => {
     const listings: Listing[] = [];
     const radii = decodeMapDevelopersURL(

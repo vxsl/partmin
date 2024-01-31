@@ -1,17 +1,15 @@
 import config from "config.js";
 import he from "he";
+import { Listing } from "listing.js";
 import { baseURL } from "platforms/kijiji/constants.js";
-import { setFilters } from "platforms/kijiji/util.js";
-import { kijijiGet } from "platforms/kijiji/util.js";
+import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
-import { Listing } from "listing.js";
-import { PlatformKey } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
-import { notUndefined, waitSeconds } from "util/misc.js";
 import { debugLog, log } from "util/log.js";
-import { manualClear, clickByXPath, type, withElement } from "util/selenium.js";
+import { notUndefined, waitSeconds } from "util/misc.js";
+import { clickByXPath, manualClear, type, withElement } from "util/selenium.js";
 
 const parser = new Parser({
   customFields: {
@@ -120,7 +118,7 @@ export const getListings = (rssUrl: string): Promise<Listing[]> =>
         return acc;
       }
       const result: Listing = {
-        platform: "kijiji" as PlatformKey,
+        platform: "kijiji",
         id,
         details: {
           title: item.title ? he.decode(item.title) : id,
