@@ -11,7 +11,7 @@ import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
 import { notUndefined, waitSeconds } from "util/misc.js";
 import { debugLog, log } from "util/log.js";
-import { manualClear, clickByXPath, type } from "util/selenium.js";
+import { manualClear, clickByXPath, type, withElement } from "util/selenium.js";
 
 const parser = new Parser({
   customFields: {
@@ -81,13 +81,15 @@ export const getKijijiRSS = async (driver: WebDriver) => {
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
 
   await waitSeconds(2); // TODO don't arbitrary wait. Figure out the multiple renders of this element
-  const el = await driver.findElement(
-    By.xpath(`//div[@aria-modal='true']//input`)
-  );
-  await manualClear(el);
-  await type(
-    el,
-    `${config.search.location.city}, ${config.search.location.region}`
+  await withElement(
+    () => driver.findElement(By.xpath(`//div[@aria-modal='true']//input`)),
+    async (el) => {
+      await manualClear(el);
+      await type(
+        el,
+        `${config.search.location.city}, ${config.search.location.region}`
+      );
+    }
   );
   await waitSeconds(2); // TODO don't arbitrary wait.
   await clickByXPath(
