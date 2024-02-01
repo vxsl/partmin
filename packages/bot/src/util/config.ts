@@ -24,6 +24,9 @@ export const validateConfig = async () => {
     }
   });
 
+  if (config.botBehaviour.suppressUnreliableParamsWarning) {
+    return;
+  }
   const unreliableParams = Object.entries(
     config.search.params.unreliableParams ?? {}
   ).filter(([k, v]) => !!v && k in config.search.params.unreliableParams);

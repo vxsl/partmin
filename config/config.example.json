@@ -6,8 +6,11 @@
   "development": {
     "headed": false,
     "testing": false,
-    "skipGreeting": false,
     "noSandbox": false
+  },
+  "botBehaviour": {
+    "suppressGreeting": false,
+    "suppressUnreliableParamsWarning": false
   },
   "options": {
     "computeDistanceTo": [

@@ -30,7 +30,7 @@ if (!discordChannelIDs.logs) {
 }
 
 discordClient.on("ready", () => {
-  if (!config.development?.skipGreeting) {
+  if (!config.botBehaviour?.suppressGreeting) {
     discordSend(greetings[Math.floor(Math.random() * greetings.length)]);
   }
 });

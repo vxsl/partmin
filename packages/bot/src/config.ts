@@ -73,14 +73,19 @@ const Logging = RuntypeRecord<Record<LogLevel, RuntypeBase>>({
   verbose: Optional(Boolean),
 });
 
+const BotBehaviour = RuntypeRecord({
+  suppressGreeting: Optional(Boolean),
+  suppressUnreliableParamsWarning: Optional(Boolean),
+});
+
 const Development = RuntypeRecord({
   headed: Optional(Boolean),
   testing: Optional(Boolean),
-  skipGreeting: Optional(Boolean),
   noSandbox: Optional(Boolean),
 });
 
 const Config = RuntypeRecord({
+  botBehaviour: Optional(BotBehaviour),
   development: Optional(Development),
   logging: Optional(Logging),
   options: Optional(Options),
