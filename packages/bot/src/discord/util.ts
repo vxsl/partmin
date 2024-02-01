@@ -1,6 +1,7 @@
 import { DiscordAPIError, EmbedBuilder, TextChannel } from "discord.js";
 import { discordClient } from "discord/client.js";
 import { discordChannelIDs } from "discord/index.js";
+import { shuttingDown } from "index.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString } from "util/misc.js";
 
@@ -96,6 +97,9 @@ export const discordSend = (
   } & FormatOptions
 ) => {
   return _discordSend(msg, options).catch(async (e) => {
+    if (shuttingDown) {
+      return;
+    }
     if (
       e instanceof DiscordAPIError &&
       e.code === 50035 &&

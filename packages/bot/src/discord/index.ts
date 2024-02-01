@@ -1,8 +1,10 @@
 import config from "config.js";
+import { statusPathForAuditor } from "constants.js";
 import { greetings } from "discord/chat.js";
 import { discordClient } from "discord/client.js";
 import { ChannelKey, discordSend } from "discord/util.js";
 import dotenv from "dotenv-mono";
+import { writeFileSync } from "fs";
 
 dotenv.load();
 
@@ -29,13 +31,17 @@ if (!discordChannelIDs.logs) {
   throw new Error("No DISCORD_CHANNEL_ID_LOGS environment variable provided");
 }
 
-discordClient.on("ready", () => {
-  if (!config.botBehaviour?.suppressGreeting) {
-    discordSend(greetings[Math.floor(Math.random() * greetings.length)]);
-  }
-});
+export const startDiscordBot = async () =>
+  await new Promise<void>((resolve, reject) => {
+    discordClient.on("ready", () => {
+      if (!config.botBehaviour?.suppressGreeting) {
+        discordSend(greetings[Math.floor(Math.random() * greetings.length)]);
+      }
+      resolve();
+    });
+    discordClient.login(token);
+  });
 
-export const startDiscordBot = async () => {
-  await discordClient.login(token);
-  return discordClient;
-};
+type DiscordBotLoggedInStatus = "logged-in" | "logged-out";
+export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
+  writeFileSync(statusPathForAuditor, status);

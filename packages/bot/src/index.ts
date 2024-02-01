@@ -1,11 +1,11 @@
-import { puppeteerCacheDir, dataDir } from "constants.js";
+import { dataDir, puppeteerCacheDir } from "constants.js";
 import {
   discordClient,
   setDiscordPresence,
   shutdownDiscordBot,
 } from "discord/client.js";
 import { sendEmbedWithButtons } from "discord/embed.js";
-import { startDiscordBot } from "discord/index.js";
+import { startDiscordBot, writeStatusForAuditor } from "discord/index.js";
 import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
@@ -17,15 +17,18 @@ import {
   withUnseenListings,
 } from "process/index.js";
 import { WebDriver } from "selenium-webdriver";
+import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
-import { stdout as singleLineStdOut } from "single-line-log";
 
 process.title = "partmin-bot";
 
 dotenv.load();
+
+let driver: WebDriver | undefined;
+export let shuttingDown = false;
 
 const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
   await detectConfigChange(async (isChanged) => {
@@ -107,8 +110,6 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
   }
 };
 
-let driver: WebDriver | undefined;
-
 (async () => {
   try {
     [dataDir, puppeteerCacheDir].forEach(
@@ -117,11 +118,13 @@ let driver: WebDriver | undefined;
 
     logNoDiscord("Initializing discord bot...");
     await startDiscordBot();
-    await setDiscordPresence("launching");
+    writeStatusForAuditor("logged-in");
+    logNoDiscord("Bot initialized.");
+    setDiscordPresence("launching");
     await validateConfig();
     driver = await buildDriver();
 
-    await setDiscordPresence("online");
+    setDiscordPresence("online");
     await runLoop(driver, [platforms.fb, platforms.kijiji]);
   } catch (e) {
     if (shuttingDown) {
@@ -139,8 +142,6 @@ let driver: WebDriver | undefined;
     shutdown();
   }
 })();
-
-let shuttingDown = false;
 
 const shutdownWebdriver = async () => {
   log("Closing the browser...");

@@ -1,4 +1,5 @@
 import * as Discord from "discord.js";
+import { writeStatusForAuditor } from "discord/index.js";
 import { log, logNoDiscord } from "util/log.js";
 
 export const discordClient = new Discord.Client({ intents: 512 });
@@ -52,9 +53,12 @@ export const setDiscordPresence = async (
 };
 
 export const shutdownDiscordBot = () => {
-  console.log("Setting bot presence to offline");
-  return setDiscordPresence("offline").then(() => {
-    console.log("Destroying discord client");
-    return discordClient?.destroy();
-  });
+  logNoDiscord("Setting bot presence to offline");
+  return setDiscordPresence("offline", { skipDiscordLog: true }).then(
+    async () => {
+      logNoDiscord("Destroying discord client");
+      await discordClient?.destroy();
+      writeStatusForAuditor("logged-out");
+    }
+  );
 };
