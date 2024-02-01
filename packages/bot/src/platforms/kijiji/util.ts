@@ -1,6 +1,7 @@
 import filterInteractions, {
-  FilterInteraction,
+  FilterDef,
   FilterInteractionsMap,
+  doFilter,
 } from "platforms/kijiji/filter-interactions.js";
 import { By, WebDriver, until } from "selenium-webdriver";
 import { debugLog } from "util/log.js";
@@ -49,13 +50,13 @@ export const ensureFilterIsOpen = async (id: string, driver: WebDriver) => {
 
 export const setFilters = async (driver: WebDriver) => {
   const interactWithFilters = async (obj: {
-    [k: string]: FilterInteraction | Object;
+    [k: string]: FilterDef<any> | Object;
   }) => {
     for (const [k, v] of Object.entries(obj)) {
-      if (typeof v === "function") {
+      if (v instanceof FilterDef) {
         debugLog(`Applying Kijiji filter ${k}`);
         await waitSeconds(1);
-        await v(driver);
+        await doFilter(driver, v);
       } else if (isPlainObject(v)) {
         await interactWithFilters(v as FilterInteractionsMap);
       }
