@@ -185,7 +185,7 @@ const shutdown = async () => {
     }
     shuttingDown = true;
     log("Shutting down...");
-    await setDiscordPresence("shuttingDown");
+    await setDiscordPresence("shuttingDown", { skipDiscordLog: true });
     await shutdownWebdriver();
     log("Closed the browser.");
     await shutdownDiscordBot();

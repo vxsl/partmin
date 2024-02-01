@@ -1,4 +1,5 @@
 import * as Discord from "discord.js";
+import { log, logNoDiscord } from "util/log.js";
 
 export const discordClient = new Discord.Client({ intents: 512 });
 
@@ -36,16 +37,18 @@ const defs: Record<Presence, Discord.PresenceData> = {
   },
 };
 
-export const setDiscordPresence = async (p: Presence) => {
-  const { log } = await import("util/log.js");
+export const setDiscordPresence = async (
+  p: Presence,
+  options?: { skipDiscordLog?: boolean }
+) => {
   if (!discordClient.isReady()) {
-    log("Discord client not ready, skipping presence update", {
-      skipDiscord: true,
-    });
+    logNoDiscord("Discord client not ready, skipping presence update");
     return;
   }
   await discordClient.user.setPresence(defs[p]);
-  log(`Discord presence set to ${p}`);
+  return log(`Discord presence set to ${p}`, {
+    skipDiscord: options?.skipDiscordLog,
+  });
 };
 
 export const shutdownDiscordBot = () => {

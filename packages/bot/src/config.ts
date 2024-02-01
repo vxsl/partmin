@@ -8,7 +8,7 @@ import {
   String,
 } from "runtypes";
 import { RuntypeBase } from "runtypes/lib/runtype.js";
-import { LogLevel, log } from "util/log.js";
+import { LogLevel, log, logNoDiscord } from "util/log.js";
 import _config from "../../../config/config.json";
 
 const UnreliableParams = RuntypeRecord({
@@ -151,6 +151,6 @@ try {
 }
 
 throwOnUnknownKey(config);
-log("No unexpected config keys found.");
+logNoDiscord("No unexpected config keys found.");
 
 export default config;
