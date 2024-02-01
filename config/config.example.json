@@ -30,8 +30,8 @@
         "max": 1390
       },
       "pets": {
-        "cats": true,
-        "dogs": false,
+        "cat": true,
+        "dog": false,
         "other": false
       },
       "unreliableParams": {
