@@ -1,5 +1,5 @@
 import config from "config.js";
-import { tmpDir } from "constants.js";
+import { dataDir } from "constants.js";
 import dotenv from "dotenv-mono";
 import {
   Listing,
@@ -16,8 +16,8 @@ import { log, verboseLog } from "util/log.js";
 dotenv.load();
 
 const seenPath = config.development?.testing
-  ? `${tmpDir}/test-seen.json`
-  : `${tmpDir}/seen.json`;
+  ? `${dataDir}/test-seen.json`
+  : `${dataDir}/seen.json`;
 export const loadSeenListings = async () =>
   await readJSON<SeenListingDict>(seenPath).then((arr) => arr ?? {});
 export const saveSeenListings = async (v: SeenListingDict) =>

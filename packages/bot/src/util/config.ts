@@ -1,5 +1,5 @@
 import config, { unreliabilityExplanations } from "config.js";
-import { tmpDir } from "constants.js";
+import { dataDir } from "constants.js";
 import { discordFormat, discordWarning } from "discord/util.js";
 import fs from "fs";
 import { isValidAddress } from "util/geo.js";
@@ -55,7 +55,7 @@ export const validateConfig = async () => {
 export const detectConfigChange = async (
   callback?: (isChanged: boolean) => void
 ) => {
-  const path = `${tmpDir}/config-search-params.json`;
+  const path = `${dataDir}/config-search-params.json`;
   const cached = fs.existsSync(path)
     ? fs.readFileSync(path, "utf-8")
     : undefined;

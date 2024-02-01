@@ -1,4 +1,4 @@
-import { puppeteerCacheDir, tmpDir } from "constants.js";
+import { puppeteerCacheDir, dataDir } from "constants.js";
 import {
   discordClient,
   setDiscordPresence,
@@ -111,7 +111,7 @@ let driver: WebDriver | undefined;
 
 (async () => {
   try {
-    [tmpDir, puppeteerCacheDir].forEach(
+    [dataDir, puppeteerCacheDir].forEach(
       (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
     );
 

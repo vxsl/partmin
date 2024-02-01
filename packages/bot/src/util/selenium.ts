@@ -1,4 +1,4 @@
-import { seleniumImplicitWait, tmpDir } from "constants.js";
+import { seleniumImplicitWait, dataDir } from "constants.js";
 import {
   By,
   Condition,
@@ -124,7 +124,7 @@ export const fillInputByLabel = async (
 
 export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
   writeJSON(
-    `${tmpDir}/cookies.json`,
+    `${dataDir}/cookies.json`,
     await driver
       .manage()
       .getCookies()
@@ -134,7 +134,7 @@ export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
   );
 
 export const loadCookies = async (driver: WebDriver) => {
-  const cookies = await readJSON<Object[]>(`${tmpDir}/cookies.json`);
+  const cookies = await readJSON<Object[]>(`${dataDir}/cookies.json`);
   await driver.manage().deleteAllCookies();
 
   if (cookies?.length) {

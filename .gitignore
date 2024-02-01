@@ -4,7 +4,9 @@ node_modules
 images
 tmp
 todo.md
-.tmp*
+**/.tmp
+**/.cache
+**/.data
 .scratchpad.md
 config.json
 *.log

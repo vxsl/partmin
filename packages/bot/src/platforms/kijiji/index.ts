@@ -1,4 +1,4 @@
-import { tmpDir } from "constants.js";
+import { dataDir } from "constants.js";
 import fs from "fs";
 import {
   rentalCategory,
@@ -13,7 +13,7 @@ import { Platform } from "types/platform.js";
 import { log } from "util/log.js";
 
 let rss: string | undefined;
-const cache = `${tmpDir}/kijiji-rss-url`;
+const cache = `${dataDir}/kijiji-rss-url`;
 
 const kijiji: Platform = {
   name: "Kijiji",

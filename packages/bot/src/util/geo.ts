@@ -1,7 +1,7 @@
 import haversine from "haversine";
 import config from "config.js";
 import { debugLog, log, verboseLog } from "util/log.js";
-import { tmpDir } from "constants.js";
+import { dataDir } from "constants.js";
 import { readJSON, writeJSON } from "util/io.js";
 import axios from "axios";
 import { abbreviateDuration } from "util/data.js";
@@ -130,7 +130,7 @@ export const getGoogleMapsLink = (query: string) =>
 
 export const approxLocationLink = async (coords: Coordinates) => {
   const key = Coordinates.toString(coords, { raw: true });
-  const cacheFile = `${tmpDir}/approximate-addresses.json`;
+  const cacheFile = `${dataDir}/approximate-addresses.json`;
   const cache = await readJSON<{ [k: string]: [string, string] }>(cacheFile);
   const cached = cache?.[key];
   if (cached) {
@@ -165,7 +165,7 @@ export const approxLocationLink = async (coords: Coordinates) => {
 
 export const isValidAddress = async (address: string) => {
   let result;
-  const cacheFile = `${tmpDir}/address-validity.json`;
+  const cacheFile = `${dataDir}/address-validity.json`;
   const cache =
     (await readJSON<{ [k: string]: [string, string] }>(cacheFile)) ?? {};
   if (address in cache) {
@@ -197,7 +197,7 @@ type CommuteMode = (typeof commuteModes)[number];
 export type CommuteSummary = Record<CommuteMode, string>;
 
 export const getCommuteSummary = async (origin: string, dest: string) => {
-  const cacheFile = `${tmpDir}/commute-summaries.json`;
+  const cacheFile = `${dataDir}/commute-summaries.json`;
   let rawData: Partial<Record<CommuteMode, any>> = {};
   const cache =
     (await readJSON<Record<string, Record<string, CommuteSummary>>>(

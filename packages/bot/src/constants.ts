@@ -1,6 +1,6 @@
 import { Config } from "config.js";
 
-export const tmpDir = `${process.cwd()}/.tmp`;
+export const dataDir = `${process.cwd()}/.data`;
 export const chromeVersion = "120.0.6099.109";
 export const puppeteerCacheDir = `${process.cwd()}/.puppeteer`;
 export const seleniumImplicitWait = 10 * 1000;
