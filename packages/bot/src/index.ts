@@ -19,7 +19,7 @@ import {
 import { WebDriver } from "selenium-webdriver";
 import { Platform, platforms } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
-import { debugLog, log, verboseLog } from "util/log.js";
+import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
 import { stdout as singleLineStdOut } from "single-line-log";
 
@@ -115,7 +115,7 @@ let driver: WebDriver | undefined;
       (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
     );
 
-    log("Initializing discord bot...", { skipDiscord: true });
+    logNoDiscord("Initializing discord bot...");
     await startDiscordBot();
     await setDiscordPresence("launching");
     await validateConfig();
@@ -132,8 +132,8 @@ let driver: WebDriver | undefined;
     if (discordClient?.isReady()) {
       await discordError(e);
     } else {
-      await log("Crashed.", { skipDiscord: true });
-      await log(e, { skipDiscord: true });
+      await logNoDiscord("Crashed.");
+      await logNoDiscord(e);
     }
   } finally {
     shutdown();
@@ -189,8 +189,8 @@ const shutdown = async () => {
     await shutdownWebdriver();
     log("Closed the browser.");
     await shutdownDiscordBot();
-    log("Stopped the discord bot.", { skipDiscord: true });
-    log("Shutdown completed successfully.", { skipDiscord: true });
+    logNoDiscord("Stopped the discord bot.");
+    logNoDiscord("Shutdown completed successfully.");
     process.exit(0);
   } catch (e) {
     console.error("Error during shutdown:", e);

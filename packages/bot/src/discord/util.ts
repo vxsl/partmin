@@ -1,7 +1,7 @@
 import { DiscordAPIError, EmbedBuilder, TextChannel } from "discord.js";
 import { discordClient } from "discord/client.js";
 import { discordChannelIDs } from "discord/index.js";
-import { debugLog, log, verboseLog } from "util/log.js";
+import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString } from "util/misc.js";
 
 export type ChannelKey = "main" | "logs";
@@ -38,7 +38,7 @@ const quickEmbed = ({
 
 export const discordError = (e: unknown) => {
   log("Sending Discord error embed:");
-  log(e, { skipDiscord: true });
+  logNoDiscord(e);
   discordSend(
     quickEmbed({
       color: "#ff0000",
@@ -54,8 +54,8 @@ export const discordWarning = (
   e: unknown,
   options?: { monospace?: boolean }
 ) => {
-  log("Sending Discord warning embed:");
-  log(e, { skipDiscord: true });
+  logNoDiscord("Sending Discord warning embed:");
+  log(e);
   discordSend(
     quickEmbed({
       color: "#ebb734",
@@ -101,11 +101,10 @@ export const discordSend = (
       e.code === 50035 &&
       e.message.includes("or fewer")
     ) {
-      log(`Message too long, splitting into parts:`, {
+      logNoDiscord(`Message too long, splitting into parts:`, {
         error: true,
-        skipDiscord: true,
       });
-      log(msg, { error: true, skipDiscord: true });
+      logNoDiscord(msg, { error: true });
       const parts = `${msg}`.match(/.{1,1900}/g) ?? [];
       for (let i = 0; i < parts.length; i++) {
         if (i === parts.length - 1) {
@@ -114,11 +113,10 @@ export const discordSend = (
         await _discordSend(parts[i], options);
       }
     }
-    log(`Error while sending message to Discord:`, {
+    logNoDiscord(`Error while sending message to Discord:`, {
       error: true,
-      skipDiscord: true,
     });
-    log(e, { error: true, skipDiscord: true });
+    logNoDiscord(e, { error: true });
   });
 };
 
