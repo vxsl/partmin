@@ -64,3 +64,15 @@ export const abbreviateDuration = (input: string) =>
     .replace(/min(s)?/gi, "m")
     .replace(/second(s)?/gi, "s")
     .replace(/sec(s)?/gi, "s");
+
+export const conditionalSpreads = <T>(
+  arrs: [boolean | null | undefined | string | number, Array<T>][]
+) => {
+  const result: T[] = [];
+  for (const [condition, arr] of arrs) {
+    if (!!condition) {
+      result.push(...arr);
+    }
+  }
+  return result;
+};

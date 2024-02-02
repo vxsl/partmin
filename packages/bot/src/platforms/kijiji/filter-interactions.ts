@@ -31,7 +31,7 @@ export class FilterDef<V> {
 }
 
 type RecursiveMap<O> = {
-  [K in keyof O]?: O[K] extends object
+  [K in keyof O]?: NonNullable<O[K]> extends object
     ? O[K] extends any[]
       ? FilterDef<O[K]>
       : RecursiveMap<O[K]> | FilterDef<O[K]>
@@ -53,7 +53,7 @@ const filterInteractions: FilterInteractionsMap = {
   exclude: {
     basements: FilterDef.fromObject({
       id: "unittype",
-      getConfigValue: (c) => c.search.params.exclude.basements,
+      getConfigValue: (c) => c.search.params.exclude?.basements,
       noopCondition: (v) => !v,
       func: (d, _, xpath) =>
         clickAllByXPath(d, `//label[not(text()='Basement')]`, {

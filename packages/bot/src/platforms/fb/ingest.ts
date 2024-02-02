@@ -161,7 +161,7 @@ export const visitMarketplaceListing = async (
 
     try {
       const areaStr = info.unit_area_info;
-      if (areaStr) {
+      if (areaStr && unreliableParams?.minAreaSqFt) {
         const _n: string | undefined = areaStr.match(/(\d+)/)?.[1];
         const n = _n === undefined ? undefined : parseInt(_n);
         const sqFt =
@@ -173,7 +173,7 @@ export const visitMarketplaceListing = async (
             ? acresToSqft(n)
             : sqMetersToSqft(n);
         if (sqFt) {
-          if (sqFt < unreliableParams?.minAreaSqFt) {
+          if (sqFt < unreliableParams.minAreaSqFt) {
             invalidateListing(
               l,
               "unreliableParamsMismatch",

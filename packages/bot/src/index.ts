@@ -111,6 +111,40 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
   }
 };
 
+const shutdown = async () => {
+  let err;
+  try {
+    if (shuttingDown) {
+      log("Called shutdown() but already shutting down.");
+      return;
+    }
+    shuttingDown = true;
+    log("Shutting down...");
+    await setDiscordPresence("shuttingDown", { skipDiscordLog: true });
+    await shutdownWebdriver();
+    log("Closed the browser.");
+    await shutdownDiscordBot();
+    logNoDiscord("Stopped the discord bot.");
+    logNoDiscord("Shutdown completed successfully.");
+  } catch (e) {
+    log("Error during shutdown:", { error: true });
+    log(e, { error: true });
+    err = e;
+  } finally {
+    const procs = await psList();
+    const auditor = procs.find((proc) => proc.name === "partmin-presenc"); // TODO try cmd?
+    if (auditor) {
+      debugLog("Sending SIGINT to partmin-presence-auditor.");
+      process.kill(auditor.pid, "SIGINT");
+    } else {
+      log(
+        "Tried to send SIGINT to partmin-presence-auditor but it's not running."
+      );
+    }
+    process.exit(err ? 1 : 0);
+  }
+};
+
 (async () => {
   try {
     [dataDir, puppeteerCacheDir].forEach(
@@ -158,11 +192,11 @@ const shutdownWebdriver = async () => {
     })
     .then(async (handles) => {
       for (const handle of handles || []) {
-        await driver.switchTo().window(handle);
+        await driver?.switchTo().window(handle);
         log("Closing window:");
         log(handle);
-        log(`(url ${await driver.getCurrentUrl()})`);
-        await driver.close();
+        log(`(url ${await driver?.getCurrentUrl()})`);
+        await driver?.close();
         log("Closed window");
       }
     })
@@ -171,7 +205,7 @@ const shutdownWebdriver = async () => {
     })
     .then(async () => {
       log("Closing the browser...");
-      await driver.quit();
+      await driver?.quit();
       log("Closed the browser.");
     })
     .catch((e) => {
@@ -179,30 +213,5 @@ const shutdownWebdriver = async () => {
     });
 };
 
-const shutdown = async () => {
-  let err;
-  try {
-    if (shuttingDown) {
-      log("Called shutdown() but already shutting down.");
-      return;
-    }
-    shuttingDown = true;
-    log("Shutting down...");
-    await setDiscordPresence("shuttingDown", { skipDiscordLog: true });
-    await shutdownWebdriver();
-    log("Closed the browser.");
-    await shutdownDiscordBot();
-    logNoDiscord("Stopped the discord bot.");
-    logNoDiscord("Shutdown completed successfully.");
-  } catch (e) {
-    console.error("Error during shutdown:", e);
-    err = e;
-  } finally {
-    const procs = await psList();
-    const auditor = procs.find((proc) => proc.name === "partmin-presenc");
-    process.kill(auditor.pid, "SIGINT");
-    process.exit(err ? 1 : 0);
-  }
-};
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);

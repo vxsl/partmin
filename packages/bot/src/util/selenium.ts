@@ -185,7 +185,7 @@ export const withElementsByXpath = async <T>(
   xpath: string,
   fn: (el: WebElement) => Promise<T | undefined>
 ): Promise<T[]> => {
-  const results = [];
+  const results: T[] = [];
   const len = await driver
     .findElements(By.xpath(xpath))
     .then((els) => els.length);

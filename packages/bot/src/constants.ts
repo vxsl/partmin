@@ -1,4 +1,4 @@
-import { Config } from "config.js";
+import { Config, PetType } from "config.js";
 
 export const dataDir = `${process.cwd()}/.data`;
 export const statusPathForAuditor = `${dataDir}/discord-bot-status-for-auditor`;
@@ -6,8 +6,12 @@ export const chromeVersion = "120.0.6099.109";
 export const puppeteerCacheDir = `${process.cwd()}/.puppeteer`;
 export const seleniumImplicitWait = 10 * 1000;
 
-export const searchParamsBlacklist: Partial<
-  Record<keyof Config["search"]["params"]["exclude"], (string | RegExp)[]>
+export const searchParamsBlacklist: Omit<
+  Record<
+    keyof NonNullable<Config["search"]["params"]["exclude"]>,
+    (string | RegExp)[]
+  >,
+  "basements"
 > = {
   swaps: ["swap", "echange", "échange"],
   sublets: [
@@ -35,10 +39,12 @@ export const searchParamsBlacklist: Partial<
   ],
 };
 
-export const petsBlacklist: Partial<
-  Record<string, (string | RegExp)[]> &
-    Record<keyof Config["search"]["params"]["pets"], (string | RegExp)[]>
-> = {
+export const petsBlacklist: Omit<
+  Record<PetType, (string | RegExp)[]>,
+  "other"
+> & {
+  general: (string | RegExp)[];
+} = {
   cat: [
     "pas de chats",
     "no cats",

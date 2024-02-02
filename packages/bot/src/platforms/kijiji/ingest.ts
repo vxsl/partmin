@@ -118,12 +118,13 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
       (a: any) => a.machineKey === "areainfeet"
     );
     const n = parseInt(attr.machineValue);
+    const min = config.search.params.unreliableParams?.minAreaSqFt;
     if (!isNaN(n) && attr.machineValue !== 0) {
-      if (n < config.search.params.unreliableParams.minAreaSqFt) {
+      if (min !== undefined && n < min) {
         invalidateListing(
           l,
           "unreliableParamsMismatch",
-          `Area too small (${n} sq ft less than specified value of ${config.search.params.unreliableParams.minAreaSqFt})`
+          `Area too small (${n} sq ft less than specified value of ${min})`
         );
       } else {
         addBulletPoints(l, {

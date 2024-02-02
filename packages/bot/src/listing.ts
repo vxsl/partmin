@@ -1,6 +1,7 @@
 import config from "config.js";
 import { petsBlacklist, searchParamsBlacklist } from "constants.js";
 import { PlatformKey } from "types/platform.js";
+import { conditionalSpreads } from "util/data.js";
 import {
   CommuteSummary,
   Coordinates,
@@ -118,18 +119,20 @@ export const checkForBlacklist = (l: Listing) => {
     BlacklistEntry[]
   >((bl, [k, v]) => {
     if (!v) return bl;
-    return [...bl, ...petsBlacklist[k]];
+    return [...bl, ...(petsBlacklist[k] ?? [])];
   }, []);
 
-  const result = [];
+  const result: string[] = [];
   for (const b of [
     ...petsEntries,
-    ...(petsEntries.length > 0 && petsBlacklist.general),
-    ...(config.search.params.exclude?.swaps && searchParamsBlacklist.swaps),
-    ...(config.search.params.exclude?.sublets && searchParamsBlacklist.sublets),
-    ...(config.search.params.exclude?.shared && searchParamsBlacklist.shared),
-    ...config.search.blacklist?.map((b) => b.toLowerCase()),
-    ...config.search.blacklistRegex.map((b) => new RegExp(b, "i")),
+    ...conditionalSpreads([
+      [petsEntries.length > 0, petsBlacklist.general],
+      [config.search.params.exclude?.swaps, searchParamsBlacklist.swaps],
+      [config.search.params.exclude?.sublets, searchParamsBlacklist.sublets],
+      [config.search.params.exclude?.shared, searchParamsBlacklist.shared],
+    ]),
+    ...(config.search.blacklist?.map((b) => b.toLowerCase()) ?? []),
+    ...(config.search.blacklistRegex?.map((b) => new RegExp(b, "i")) ?? []),
   ]) {
     if (blacklistMatch(b, desc)) result.push(report(b, "description"));
     if (blacklistMatch(b, title)) result.push(report(b, "title"));
