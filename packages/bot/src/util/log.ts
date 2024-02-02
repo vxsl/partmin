@@ -31,6 +31,7 @@ export const log = (_v: any, options?: LogOptions) => {
         channel: "logs",
         monospace: true,
         skipLog: true,
+        silent: true,
       });
     } catch (e) {
       if (e instanceof ReferenceError) {

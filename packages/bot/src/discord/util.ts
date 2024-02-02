@@ -1,4 +1,9 @@
-import { DiscordAPIError, EmbedBuilder, TextChannel } from "discord.js";
+import {
+  DiscordAPIError,
+  EmbedBuilder,
+  MessageFlags,
+  TextChannel,
+} from "discord.js";
 import { discordClient } from "discord/client.js";
 import { discordChannelIDs } from "discord/index.js";
 import { shuttingDown } from "index.js";
@@ -94,6 +99,7 @@ export const discordSend = (
   options?: {
     channel?: ChannelKey;
     skipLog?: true;
+    silent?: true;
   } & FormatOptions
 ) => {
   return _discordSend(msg, options).catch(async (e) => {
@@ -129,13 +135,18 @@ const _discordSend = async (
   options?: {
     channel?: ChannelKey;
     skipLog?: true;
+    silent?: true;
   } & FormatOptions
 ) => {
   const channel = options?.channel ?? "main";
   const c = await getChannel(channel);
 
+  const flags = options?.silent
+    ? MessageFlags.SuppressNotifications
+    : undefined;
+
   if (_msg instanceof EmbedBuilder) {
-    return c.send({ embeds: [_msg] });
+    return c.send({ embeds: [_msg], flags });
   }
 
   const isErr = _msg instanceof Error;
