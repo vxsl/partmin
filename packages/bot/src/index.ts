@@ -22,6 +22,7 @@ import { Platform, platforms } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
+import psList from "ps-list";
 
 process.title = "partmin-bot";
 
@@ -179,6 +180,7 @@ const shutdownWebdriver = async () => {
 };
 
 const shutdown = async () => {
+  let err;
   try {
     if (shuttingDown) {
       log("Called shutdown() but already shutting down.");
@@ -192,10 +194,14 @@ const shutdown = async () => {
     await shutdownDiscordBot();
     logNoDiscord("Stopped the discord bot.");
     logNoDiscord("Shutdown completed successfully.");
-    process.exit(0);
   } catch (e) {
     console.error("Error during shutdown:", e);
-    process.exit(1);
+    err = e;
+  } finally {
+    const procs = await psList();
+    const auditor = procs.find((proc) => proc.name === "partmin-presenc");
+    process.kill(auditor.pid, "SIGINT");
+    process.exit(err ? 1 : 0);
   }
 };
 process.on("SIGINT", shutdown);
