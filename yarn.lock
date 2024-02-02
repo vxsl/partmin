@@ -797,6 +797,7 @@ __metadata:
     discord.js: ^14.14.1
     haversine: ^1.1.1
     he: ^1.2.0
+    ps-list: ^8.1.1
     rss-parser: ^3.12.0
     runtypes: ^6.7.0
     selenium-webdriver: ^4.8.1
@@ -2649,6 +2650,13 @@ __metadata:
   version: 1.1.0
   resolution: "proxy-from-env@npm:1.1.0"
   checksum: ed7fcc2ba0a33404958e34d95d18638249a68c430e30fcb6c478497d72739ba64ce9810a24f53a7d921d0c065e5b78e3822759800698167256b04659366ca4d4
+  languageName: node
+  linkType: hard
+
+"ps-list@npm:^8.1.1":
+  version: 8.1.1
+  resolution: "ps-list@npm:8.1.1"
+  checksum: 102396b4db030936d7ea7c811b6b1d0322142a271b374444d9b8600268b1b1a67249d2cadd5605f491129a2b44cd4f83e21d1dfbf72ac5e85104eaf07f77c0ba
   languageName: node
   linkType: hard
 
