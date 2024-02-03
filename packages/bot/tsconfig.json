@@ -4,7 +4,8 @@
     "target": "es2020",
     "module": "nodenext",
     "resolveJsonModule": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "strict": false
   },
   "include": [
     "src",

@@ -31,7 +31,9 @@ on_proc_dead() {
         status=0
     fi
     kill $poll_sleep_pid
+    plog "Killing process group..."
     pkill -P $$
+    plog "Exiting"
     exit $status
 }
 

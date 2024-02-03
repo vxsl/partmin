@@ -1,19 +1,19 @@
-import {
-  DiscordAPIError,
-  EmbedBuilder,
-  MessageFlags,
-  TextChannel,
-} from "discord.js";
+import config from "config.js";
+import { DiscordAPIError, EmbedBuilder, TextChannel } from "discord.js";
+import { discordCache } from "discord/cache.js";
 import { discordClient } from "discord/client.js";
-import { discordChannelIDs } from "discord/index.js";
+import { ChannelKey, channelDefs } from "discord/constants.js";
+import { discordIsReady } from "discord/index.js";
 import { shuttingDown } from "index.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString } from "util/misc.js";
 
-export type ChannelKey = "main" | "logs";
+export const getChannelDef = (c: ChannelKey) => channelDefs[c];
 
 export const getChannel = async (c: ChannelKey) => {
-  const id = discordChannelIDs[c];
+  const guildInfo = await discordCache.guildInfo.requireValue();
+  const id = guildInfo.channelIDs[c];
+
   const result = (await (discordClient.channels.cache.get(id) ??
     discordClient.channels.fetch(id))) as TextChannel;
   if (!result) {
@@ -43,8 +43,12 @@ const quickEmbed = ({
     );
 
 export const discordError = (e: unknown) => {
-  log("Sending Discord error embed:");
+  logNoDiscord("Sending Discord error embed:");
   logNoDiscord(e);
+  if (!discordIsReady()) {
+    logNoDiscord("Discord client not ready, skipping error embed.");
+    return;
+  }
   discordSend(
     quickEmbed({
       color: "#ff0000",
@@ -101,8 +105,8 @@ export const discordSend = (
     skipLog?: true;
     silent?: true;
   } & FormatOptions
-) => {
-  return _discordSend(msg, options).catch(async (e) => {
+) =>
+  _discordSend(msg, options).catch(async (e) => {
     if (shuttingDown) {
       return;
     }
@@ -128,7 +132,6 @@ export const discordSend = (
     });
     logNoDiscord(e, { error: true });
   });
-};
 
 const _discordSend = async (
   _msg: any,
@@ -138,12 +141,14 @@ const _discordSend = async (
     silent?: true;
   } & FormatOptions
 ) => {
-  const channel = options?.channel ?? "main";
-  const c = await getChannel(channel);
+  if (!discordIsReady()) {
+    return;
+  }
+  const k: ChannelKey =
+    options?.channel ?? config.development?.testing ? "test-main" : "main";
+  const c = await getChannel(k);
 
-  const flags = options?.silent
-    ? MessageFlags.SuppressNotifications
-    : undefined;
+  const flags = getChannelDef(k).msgFlags;
 
   if (_msg instanceof EmbedBuilder) {
     return c.send({ embeds: [_msg], flags });
@@ -169,17 +174,7 @@ const _discordSend = async (
     v = discordFormat(msg, options);
   }
 
-  if (!c.client.isReady()) {
-    throw new Error(
-      `Client \"${channel}\" (ID ${discordChannelIDs[channel]}) not ready`
-    );
-  }
-  if (!c) {
-    throw new Error(
-      `Channel \"${channel}\" (ID ${discordChannelIDs[channel]}) not found`
-    );
-  }
-  return c.send(v).then((result) => {
+  return c.send({ content: v, flags }).then((result) => {
     if (!options?.skipLog) {
       verboseLog(`Sent message to Discord ${c}:`, { skipDiscord: true });
       verboseLog(v, { skipDiscord: true });

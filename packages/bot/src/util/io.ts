@@ -1,10 +1,13 @@
 import axios from "axios";
 import { createWriteStream, promises as fs } from "fs";
 
+// TODO use runtypes or something here:
+export const parseJSON = <T>(s: string): T => JSON.parse(s);
+
 export const readJSON = async <T>(path: string): Promise<T | undefined> => {
   try {
     const f = await fs.readFile(path, "utf-8");
-    return JSON.parse(f);
+    return parseJSON(f);
   } catch {
     return undefined;
   }
