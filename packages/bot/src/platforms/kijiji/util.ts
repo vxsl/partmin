@@ -21,7 +21,9 @@ export const kijijiGet = async (url: string, driver: WebDriver) => {
       await driver
         .wait(until.elementLocated(By.xpath(xpath)), 1000)
         .then((el) => el.click())
-        .then(() => debugLog("Dismissed kijiji cookie banner"));
+        .then(() => {
+          debugLog("Dismissed kijiji cookie banner");
+        });
     } catch {}
   });
 };
