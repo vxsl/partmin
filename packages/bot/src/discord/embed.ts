@@ -7,6 +7,9 @@ import { mdQuote, trimAddress } from "util/data.js";
 import { formatCommuteSummaryMD } from "util/geo.js";
 import { notUndefined } from "util/misc.js";
 
+const uninteractedColor = "#7289da";
+const interactedColor = "#424549";
+
 const locationLink = (l: Listing) => {
   const text = l.computed?.locationLinkText;
   const url = l.computed?.locationLinkURL;
@@ -37,6 +40,7 @@ const listingEmbed = (l: Listing) => {
   const dests = Object.keys(l.computed?.commuteDestinations ?? {});
 
   return new Discord.EmbedBuilder()
+    .setColor(uninteractedColor)
     .setTitle(l.details.title ?? null)
     .setDescription(
       [
@@ -180,12 +184,15 @@ export const sendEmbedWithButtons = async (l: Listing, _k?: ChannelKey) => {
     .on("collect", async (interaction) => {
       switch (interaction.customId) {
         case "nextImg":
+          embed.setColor(interactedColor);
           await navigateImg();
           break;
         case "prevImg":
+          embed.setColor(interactedColor);
           await navigateImg(true);
           break;
         case "desc":
+          embed.setColor(interactedColor);
           if (l.details.longDescription === undefined) {
             break;
           }
