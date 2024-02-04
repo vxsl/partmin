@@ -2,11 +2,13 @@ import config, { PetType } from "config.js";
 import { discordSend } from "discord/util.js";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
+import { processCache } from "process/cache.js";
+import { getListingKey } from "process/index.js";
 import { By, WebDriver, WebElement } from "selenium-webdriver";
 import { PlatformKey } from "types/platform.js";
 import { acresToSqft, findNestedProperty, sqMetersToSqft } from "util/data.js";
 import { Coordinates, Radius, getGoogleMapsLink } from "util/geo.js";
-import { debugLog, log } from "util/log.js";
+import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined } from "util/misc.js";
 import {
   clearBrowsingData,
@@ -328,11 +330,19 @@ export const visitMarketplace = async (
 export const getListings = async (
   driver: WebDriver
 ): Promise<Listing[] | undefined> => {
+  verboseLog("Waiting for search page to be ready");
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
+  verboseLog("Search page ready");
+
+  // This violates the intended separation of concerns between ingest and process stages,
+  // but it's necessary to avoid unnecessary long-running thumbnail retrievals.
+  // TODO consider how to refactor the stages to fix this issue.
+  const seenKeys = new Set(processCache.listings.value?.map(getListingKey));
+
   return await withElementsByXpath(
     driver,
     fbListingXpath,
-    async (e: WebElement): Promise<Listing | undefined> => {
+    async (e, i): Promise<Listing | undefined> => {
       const href = await e.getAttribute("href");
       const id = href.match(/\d+/)?.[0];
 
@@ -340,11 +350,6 @@ export const getListings = async (
         log(`Unable to parse listing ID from ${href}`);
         return undefined;
       }
-
-      const thumb = await withElement(
-        () => e.findElement(By.css("img")),
-        (img) => img.getAttribute("src")
-      );
 
       const SEP = " - ";
       const text = await e
@@ -359,7 +364,7 @@ export const getListings = async (
           : undefined;
       const title = tokens.slice(1, tokens.length - 1).join(SEP);
 
-      return {
+      const res: Listing = {
         platform,
         id,
         details: {
@@ -367,7 +372,7 @@ export const getListings = async (
           price,
         },
         url: getListingURL(id),
-        imgURLs: [thumb].filter(notUndefined),
+        imgURLs: [],
         videoURLs: [],
 
         // sometimes facebook will show a private room for rent
@@ -382,6 +387,21 @@ export const getListings = async (
             },
           }),
       };
+
+      // This violates the intended separation of concerns between ingest and process stages,
+      // but it's necessary to avoid unnecessary long-running thumbnail retrievals.
+      // TODO consider how to refactor the stages to fix this issue.
+      if (!seenKeys.has(getListingKey(res))) {
+        debugLog(
+          `Retrieving thumbnail for ${platform} listing ${i + 1}: ${id}`
+        );
+        await withElement(
+          () => e.findElement(By.css("img")),
+          (img) => img.getAttribute("src").then((src) => res.imgURLs.push(src))
+        );
+      }
+
+      return res;
     }
   );
 };

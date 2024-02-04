@@ -183,7 +183,7 @@ export const elementShouldExist = async (
 export const withElementsByXpath = async <T>(
   driver: WebDriver,
   xpath: string,
-  fn: (el: WebElement) => Promise<T | undefined>
+  fn: (el: WebElement, i: number) => Promise<T | undefined>
 ): Promise<T[]> => {
   const results: T[] = [];
   const len = await driver
@@ -194,7 +194,7 @@ export const withElementsByXpath = async <T>(
     // verboseLog(`withElementsByXpath (${i + 1}/${len}): ${xpath}`);
     const r = await withElement(
       () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`)),
-      fn
+      (el) => fn(el, i)
     );
     if (r !== undefined) {
       results.push(r);
