@@ -29,7 +29,9 @@ export const validateConfig = async () => {
   }
   const unreliableParams = Object.entries(
     config.search.params.unreliableParams ?? {}
-  ).filter(([k, v]) => !!v);
+  ).filter(([k, v]) => !!v) as
+    | [keyof typeof unreliabilityExplanations, boolean][]
+    | never;
   if (unreliableParams.length) {
     discordWarning(
       `Warning: you have specified ${

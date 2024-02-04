@@ -8,7 +8,7 @@ dotenv.load();
 export class CacheDef<T> {
   envVar?: string;
   private path: string;
-  private loaded: T;
+  private loaded: T | undefined;
   private label: string;
   protected readTransform: (read: string) => NonNullable<T>;
   protected writeTransform: (v: T) => string;
@@ -49,7 +49,7 @@ export class CacheDef<T> {
     }
     return result;
   }
-  writeValue(v: T, options?) {
+  writeValue(v: T, options?: { skipLog?: boolean }) {
     this.loaded = v;
     const s = this.writeTransform(v);
     if (!options?.skipLog) {

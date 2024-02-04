@@ -72,7 +72,7 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
     const attrs = data.viewItemPage.viewItemData.adAttributes.attributes.filter(
       (a: any) => ["yard", "balcony"].includes(a.machineKey)
     );
-    if (!attrs.some((a) => a.machineValue === "1")) {
+    if (!attrs.some((a: any) => a.machineValue === "1")) {
       invalidateListing(
         l,
         "unreliableParamsMismatch",
@@ -82,8 +82,8 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
       addBulletPoints(
         l,
         attrs
-          .filter((a) => a.machineValue !== "0")
-          .map((a) => ({
+          .filter((a: any) => a.machineValue !== "0")
+          .map((a: any) => ({
             key: a.localeSpecificValues.en.label,
             value: a.localeSpecificValues.en.value,
           }))

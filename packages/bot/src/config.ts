@@ -99,19 +99,31 @@ const Config = RuntypeRecord({
 
 export type Config = Static<typeof Config>;
 
+const getUnderlyingField = (
+  fields: { [key: string]: RuntypeBase },
+  k: keyof typeof fields
+) =>
+  "underlying" in fields[k]
+    ? // At the time of writing there doesn't seem to be a clean way to get
+      // the underlying type of a Runtype, agnostic of whether it's optional:
+      // @ts-ignore
+      fields[k].underlying
+    : fields[k];
+
 export const throwOnUnknownKey = (obj: any, path: string[] = []) => {
   let fields = Config.fields;
-  for (const p of path) {
-    const target = "underlying" in fields[p] ? fields[p].underlying : fields[p];
-    fields = target.fields;
+  for (const k of path) {
+    if (!(k in fields)) {
+      throw new Error(`Unexpected config option ${path.join(".")}`);
+    }
+    fields = getUnderlyingField(fields, k).fields;
   }
   const expectedKeys = Object.keys(fields);
   Object.keys(obj).forEach((k) => {
-    if (!expectedKeys.includes(k)) {
+    if (!expectedKeys.includes(k) || !(k in fields)) {
       throw new Error(`Unexpected config option ${path.concat(k).join(".")}`);
     }
-    const target = "underlying" in fields[k] ? fields[k].underlying : fields[k];
-    if (target.tag === "record") {
+    if (getUnderlyingField(fields, k).tag === "record") {
       throwOnUnknownKey(obj[k], path.concat(k));
     }
   });
@@ -122,7 +134,7 @@ process.argv.slice(2).forEach((arg) => {
   if (_key && value) {
     const key = _key.split("--")[1];
     const path = key.split(".");
-    let obj = _config;
+    let obj: any = _config;
     for (let i = 0; i < path.length - 1; i++) {
       obj = obj[path[i]];
     }

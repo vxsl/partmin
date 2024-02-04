@@ -111,7 +111,7 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
   }
 };
 
-export const fatalError = async (e: Error) => {
+export const fatalError = async (e: unknown) => {
   if (discordIsReady()) {
     await discordError(e);
   } else {

@@ -124,9 +124,10 @@ const getChannelsToBeCreated = async ({
   };
   const alreadyExist: Partial<Record<ChannelKey, GuildChannel>> = {};
   const toCreate: Partial<Record<ChannelKey, ChannelDef>> = {};
-  for (const [key, def] of Object.entries(
+  for (const [_key, def] of Object.entries(
     config.development?.testing ? channelDefs : prodChannelDefs
   )) {
+    const key = _key as ChannelKey;
     for (const c of actualChannels) {
       if (c.type !== def.type) continue;
       const isCategory = c.type === ChannelType.GuildCategory;
@@ -134,7 +135,7 @@ const getChannelsToBeCreated = async ({
         def.type === ChannelType.GuildCategory ? "category" : "text channel";
       if (c.id === guildInfo.channelIDs?.[key]) {
         debugLog(`${entity} "${key}" already exists (ID ${c.id}).`);
-        alreadyExist[key] = def;
+        alreadyExist[key] = c;
         recordID(key, c.id);
         break;
       } else if (
@@ -175,9 +176,10 @@ const createChannels = async ({
     };
   };
 
-  for (const [key, def] of Object.entries(toCreate).filter(
+  for (const [_key, def] of Object.entries(toCreate).filter(
     ([, { type }]) => type === ChannelType.GuildCategory
   )) {
+    const key = _key as ChannelKey;
     log(`Creating category "${def.defaultName}"...`);
     await guild.channels
       .create({ name: def.defaultName, type: def.type })

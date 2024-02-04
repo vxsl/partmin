@@ -117,7 +117,8 @@ export const checkForBlacklist = (l: Listing) => {
 
   const petsEntries = Object.entries(config.search.params.pets ?? {}).reduce<
     BlacklistEntry[]
-  >((bl, [k, v]) => {
+  >((bl, [_k, v]) => {
+    const k = _k as keyof typeof petsBlacklist;
     if (!v) return bl;
     return [...bl, ...(petsBlacklist[k] ?? [])];
   }, []);
