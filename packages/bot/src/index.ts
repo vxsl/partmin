@@ -1,11 +1,11 @@
 import { dataDir, puppeteerCacheDir } from "constants.js";
-import {
-  discordClient,
-  setDiscordPresence,
-  shutdownDiscordBot,
-} from "discord/client.js";
+import { setDiscordPresence, shutdownDiscordBot } from "discord/client.js";
 import { sendEmbedWithButtons } from "discord/embed.js";
-import { startDiscordBot, writeStatusForAuditor } from "discord/index.js";
+import {
+  discordIsReady,
+  initDiscord,
+  writeStatusForAuditor,
+} from "discord/index.js";
 import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
@@ -16,13 +16,13 @@ import {
   processListings,
   withUnseenListings,
 } from "process/index.js";
+import psList from "ps-list";
 import { WebDriver } from "selenium-webdriver";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, waitSeconds } from "util/misc.js";
-import psList from "ps-list";
 
 process.title = "partmin-bot";
 
@@ -111,14 +111,25 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
   }
 };
 
-const shutdown = async () => {
+export const fatalError = async (e: Error) => {
+  if (discordIsReady()) {
+    await discordError(e);
+  } else {
+    log(e, { error: true });
+  }
+  await shutdown();
+  process.exit(1);
+};
+
+export const shutdown = async () => {
   let err;
   try {
-    if (shuttingDown) {
+    if (!shuttingDown) {
+      shuttingDown = true;
+    } else {
       log("Called shutdown() but already shutting down.");
       return;
     }
-    shuttingDown = true;
     log("Shutting down...");
     await setDiscordPresence("shuttingDown", { skipDiscordLog: true });
     await shutdownWebdriver();
@@ -151,10 +162,9 @@ const shutdown = async () => {
       (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
     );
 
-    logNoDiscord("Initializing discord bot...");
-    await startDiscordBot();
+    await initDiscord();
     writeStatusForAuditor("logged-in");
-    logNoDiscord("Bot initialized.");
+    log("Bot initialized.");
     setDiscordPresence("launching");
     await validateConfig();
     driver = await buildDriver();
@@ -167,12 +177,7 @@ const shutdown = async () => {
       log(e);
       return;
     }
-    if (discordClient?.isReady()) {
-      await discordError(e);
-    } else {
-      await logNoDiscord("Crashed.");
-      await logNoDiscord(e);
-    }
+    await fatalError(e);
   } finally {
     shutdown();
   }

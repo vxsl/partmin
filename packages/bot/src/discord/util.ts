@@ -45,6 +45,10 @@ const quickEmbed = ({
 export const discordError = (e: unknown) => {
   logNoDiscord("Sending Discord error embed:");
   logNoDiscord(e);
+  if (!discordIsReady()) {
+    logNoDiscord("Discord client not ready, skipping error embed.");
+    return;
+  }
   discordSend(
     quickEmbed({
       color: "#ff0000",
@@ -133,8 +137,9 @@ const _discordSend = async (
     isEmbed?: true;
   } & FormatOptions
 ) => {
-  const channel = options?.channel ?? "main";
-  const c = await getChannel(channel);
+  if (!discordIsReady()) {
+    return;
+  }
 
   const flags = options?.silent
     ? MessageFlags.SuppressNotifications
@@ -164,17 +169,7 @@ const _discordSend = async (
     v = discordFormat(msg, options);
   }
 
-  if (!c.client.isReady()) {
-    throw new Error(
-      `Client \"${channel}\" (ID ${discordChannelIDs[channel]}) not ready`
-    );
-  }
-  if (!c) {
-    throw new Error(
-      `Channel \"${channel}\" (ID ${discordChannelIDs[channel]}) not found`
-    );
-  }
-  return c.send(v).then((result) => {
+  return c.send({ content: v, flags }).then((result) => {
     if (!options?.skipLog) {
       verboseLog(`Sent message to Discord ${c}:`, { skipDiscord: true });
       verboseLog(v, { skipDiscord: true });
