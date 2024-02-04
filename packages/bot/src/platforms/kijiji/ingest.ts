@@ -48,7 +48,13 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
     const vids = data.viewItemPage.viewItemData.media
       .filter((p: any) => p?.type === "video")
       .map((p: any) => p?.href)
-      .filter(notUndefined);
+      .filter(notUndefined)
+      .map((s: string) =>
+        `${s}`.match(/^[a-zA-Z0-9_-]{11,13}$/)
+          ? `https://youtu.be/${s}`
+          : `${s}`
+      );
+
     if (vids.length) {
       l.videoURLs = vids;
     }
