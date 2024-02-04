@@ -97,7 +97,16 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
                   valid.length
                 }): ${l.url}`
               );
-              await sendEmbedWithButtons(l);
+              try {
+                await sendEmbedWithButtons(l);
+              } catch (e) {
+                discordWarning(
+                  `Error while sending Discord embed for listing ${i + 1}/${
+                    valid.length
+                  }: ${l.url}`,
+                  e
+                );
+              }
               await waitSeconds(0.5);
             }
           });
