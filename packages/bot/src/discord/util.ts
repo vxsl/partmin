@@ -1,19 +1,17 @@
-import {
-  DiscordAPIError,
-  EmbedBuilder,
-  MessageFlags,
-  TextChannel,
-} from "discord.js";
+import config from "config.js";
+import { DiscordAPIError, EmbedBuilder, TextChannel } from "discord.js";
+import { discordCache } from "discord/cache.js";
 import { discordClient } from "discord/client.js";
-import { discordChannelIDs } from "discord/index.js";
+import { ChannelKey, channelDefs } from "discord/constants.js";
+import { discordIsReady } from "discord/index.js";
 import { shuttingDown } from "index.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString } from "util/misc.js";
 
-export type ChannelKey = "main" | "logs";
-
 export const getChannel = async (c: ChannelKey) => {
-  const id = discordChannelIDs[c];
+  const guildInfo = await discordCache.guildInfo.requireValue();
+  const id = guildInfo.channelIDs[c];
+
   const result = (await (discordClient.channels.cache.get(id) ??
     discordClient.channels.fetch(id))) as TextChannel;
   if (!result) {
@@ -140,10 +138,12 @@ const _discordSend = async (
   if (!discordIsReady()) {
     return;
   }
+  const k: ChannelKey =
+    options?.channel ??
+    (config.development?.testing ? "test-listings" : "listings");
+  const c = await getChannel(k);
 
-  const flags = options?.silent
-    ? MessageFlags.SuppressNotifications
-    : undefined;
+  const flags = channelDefs[k].msgFlags;
 
   if (options?.isEmbed) {
     return c.send(_msg);
