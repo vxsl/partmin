@@ -1,5 +1,6 @@
 import Discord from "discord.js";
-import { ChannelKey, getChannel } from "discord/util.js";
+import { ChannelKey } from "discord/constants.js";
+import { discordSend } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
 import { mdQuote, trimAddress } from "util/data.js";
@@ -114,12 +115,7 @@ const getButtons = (l: Listing) => {
   return { prevImgButton, imgButton, nextImgButton, descButton };
 };
 
-export const sendEmbedWithButtons = async (
-  l: Listing,
-  c: ChannelKey = "main"
-) => {
-  const channel = await getChannel(c);
-
+export const sendEmbedWithButtons = async (l: Listing, _k?: ChannelKey) => {
   const embed = listingEmbed(l);
 
   const buttons = getButtons(l);
@@ -133,9 +129,12 @@ export const sendEmbedWithButtons = async (
         }),
       ];
 
-  const msg = await channel.send({ embeds: [embed], components });
+  const msg = await discordSend(
+    { embeds: [embed], components },
+    { isEmbed: true }
+  );
 
-  if (!components) {
+  if (!components || !msg) {
     return;
   }
 

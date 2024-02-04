@@ -94,14 +94,8 @@ export const discordFormat = (s: string, options?: FormatOptions) => {
   return v;
 };
 
-export const discordSend = (
-  msg: any,
-  options?: {
-    channel?: ChannelKey;
-    skipLog?: true;
-    silent?: true;
-  } & FormatOptions
-) => {
+export const discordSend = (...args: Parameters<typeof _discordSend>) => {
+  const [msg, options] = args;
   return _discordSend(msg, options).catch(async (e) => {
     if (shuttingDown) {
       return;
@@ -136,6 +130,7 @@ const _discordSend = async (
     channel?: ChannelKey;
     skipLog?: true;
     silent?: true;
+    isEmbed?: true;
   } & FormatOptions
 ) => {
   const channel = options?.channel ?? "main";
@@ -145,8 +140,8 @@ const _discordSend = async (
     ? MessageFlags.SuppressNotifications
     : undefined;
 
-  if (_msg instanceof EmbedBuilder) {
-    return c.send({ embeds: [_msg], flags });
+  if (options?.isEmbed) {
+    return c.send(_msg);
   }
 
   const isErr = _msg instanceof Error;
