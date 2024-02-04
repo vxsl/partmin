@@ -1,5 +1,10 @@
 import config from "config.js";
-import { DiscordAPIError, EmbedBuilder, TextChannel } from "discord.js";
+import {
+  BaseMessageOptions,
+  DiscordAPIError,
+  EmbedBuilder,
+  TextChannel,
+} from "discord.js";
 import { discordCache } from "discord/cache.js";
 import { discordClient } from "discord/client.js";
 import { ChannelKey, channelDefs } from "discord/constants.js";
@@ -126,15 +131,14 @@ export const discordSend = (...args: Parameters<typeof _discordSend>) => {
   });
 };
 
-const _discordSend = async (
-  _msg: any,
-  options?: {
-    channel?: ChannelKey;
-    skipLog?: true;
-    silent?: true;
-    isEmbed?: true;
-  } & FormatOptions
-) => {
+type DiscordSendOptions = {
+  channel?: ChannelKey;
+  skipLog?: true;
+  silent?: true;
+  components?: BaseMessageOptions["components"];
+} & FormatOptions;
+
+const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
   if (!discordIsReady()) {
     return;
   }
@@ -145,8 +149,8 @@ const _discordSend = async (
 
   const flags = channelDefs[k].msgFlags;
 
-  if (options?.isEmbed) {
-    return c.send(_msg);
+  if (_msg instanceof EmbedBuilder) {
+    return c.send({ embeds: [_msg], components: options?.components });
   }
 
   const isErr = _msg instanceof Error;

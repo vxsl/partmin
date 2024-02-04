@@ -129,10 +129,7 @@ export const sendEmbedWithButtons = async (l: Listing, _k?: ChannelKey) => {
         }),
       ];
 
-  const msg = await discordSend(
-    { embeds: [embed], components },
-    { isEmbed: true }
-  );
+  const msg = await discordSend(embed, { components });
 
   if (!components || !msg) {
     return;
