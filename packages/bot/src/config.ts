@@ -151,6 +151,5 @@ try {
 }
 
 throwOnUnknownKey(config);
-logNoDiscord("No unexpected config keys found.");
 
 export default config;

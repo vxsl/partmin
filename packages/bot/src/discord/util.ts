@@ -43,7 +43,7 @@ const quickEmbed = ({
     );
 
 export const discordError = (e: unknown) => {
-  log("Sending Discord error embed:");
+  logNoDiscord("Sending Discord error embed:");
   logNoDiscord(e);
   discordSend(
     quickEmbed({

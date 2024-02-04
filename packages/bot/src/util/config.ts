@@ -7,7 +7,7 @@ import { debugLog, log } from "util/log.js";
 
 export const validateConfig = async () => {
   debugLog("Validating config:");
-  debugLog(config);
+  debugLog(JSON.stringify(config));
   for (const address of config.options?.computeDistanceTo ?? []) {
     if (!(await isValidAddress(address))) {
       throw new Error(
