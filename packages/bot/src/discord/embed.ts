@@ -21,14 +21,14 @@ const listingEmbed = (l: Listing) => {
     .filter(notUndefined)
     .join(" / ");
 
-  const dests = Object.keys(l.computed?.distanceTo ?? {});
+  const dests = Object.keys(l.computed?.commuteDestinations ?? {});
   if (dests.length) {
     descriptionHeader = [
       descriptionHeader,
       dests
         .map((d) => {
           const o = getCommuteOrigin(l);
-          const summ = l.computed?.distanceTo?.[d];
+          const summ = l.computed?.commuteDestinations?.[d];
           return !summ || !o
             ? ""
             : [
@@ -157,7 +157,7 @@ export const sendEmbedWithButtons = async (l: Listing, _k?: ChannelKey) => {
           interaction.customId === "nextImg" ||
           interaction.customId === "prevImg" ||
           interaction.customId === "desc" ||
-          interaction.customId === "distanceTo"
+          interaction.customId === "commuteDestinations"
         );
       },
       time: 24 * 3600000,

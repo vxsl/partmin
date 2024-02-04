@@ -33,7 +33,7 @@ export type Listing = {
   computed?: {
     locationLinkMD?: string;
     bulletPoints?: BulletPoint[];
-    distanceTo?: Record<string, CommuteSummary>;
+    commuteDestinations?: Record<string, CommuteSummary>;
   };
   imgURLs: string[];
   videoURLs: string[];
@@ -86,14 +86,14 @@ export const getCommuteOrigin = (l: Listing) =>
 
 export const addCommuteSummary = async (l: Listing) => {
   const origin = getCommuteOrigin(l);
-  if (origin && config.options?.computeDistanceTo?.length) {
-    for (const dest of config.options?.computeDistanceTo) {
+  if (origin && config.options?.commuteDestinations?.length) {
+    for (const dest of config.options?.commuteDestinations) {
       await getCommuteSummary(origin, dest).then((summ) => {
         if (summ) {
           l.computed = {
             ...(l.computed ?? {}),
-            distanceTo: {
-              ...(l.computed?.distanceTo ?? {}),
+            commuteDestinations: {
+              ...(l.computed?.commuteDestinations ?? {}),
               [dest]: summ,
             },
           };

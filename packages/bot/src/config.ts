@@ -34,7 +34,7 @@ export const unreliabilityExplanations: Record<
 };
 
 const Options = RuntypeRecord({
-  computeDistanceTo: Optional(Array(String)),
+  commuteDestinations: Optional(Array(String)),
 });
 const PetParams = RuntypeRecord({
   cat: Optional(Boolean),
