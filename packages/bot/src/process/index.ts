@@ -1,76 +1,54 @@
 import config from "config.js";
-import { dataDir } from "constants.js";
 import dotenv from "dotenv-mono";
 import {
   Listing,
-  SeenListingDict,
   addCommuteSummary,
-  addLocationLink,
+  ensureLocationLink,
   checkForBlacklist,
   isValid,
 } from "listing.js";
+import { processCache } from "process/cache.js";
 import { isWithinRadii } from "util/geo.js";
-import { readJSON, writeJSON } from "util/io.js";
 import { log, verboseLog } from "util/log.js";
 
 dotenv.load();
 
-const seenPath = config.development?.testing
-  ? `${dataDir}/test-seen.json`
-  : `${dataDir}/seen.json`;
-export const loadSeenListings = async () =>
-  await readJSON<SeenListingDict>(seenPath).then((arr) => arr ?? {});
-export const saveSeenListings = async (v: SeenListingDict) =>
-  await writeJSON(seenPath, v);
 export const getSeenKey = (platform: string, id: string) => `${platform}-${id}`;
-const getSeenListingKey = (l: Listing) => getSeenKey(l.platform, l.id);
+export const getListingKey = (l: Listing) => getSeenKey(l.platform, l.id);
 
 export const withUnseenListings = async <T>(
-  listings: Listing[],
+  newListings: Listing[],
   fn: (listings: Listing[]) => Promise<T>
 ) => {
-  const seenListings = await loadSeenListings();
-  const unseenListings: Listing[] = [];
-  for (const l of listings) {
-    const k = getSeenListingKey(l);
-    if (seenListings[k]) {
-      continue;
-    }
-    seenListings[k] = 1;
-    unseenListings.push(l);
-  }
-
-  const result = await fn(unseenListings);
-
-  await saveSeenListings(seenListings);
+  const seen = processCache.listings.value ?? [];
+  const seenKeys = new Set(seen.map(getListingKey));
+  const unseen = newListings.filter((l) => !seenKeys.has(getListingKey(l)));
+  const result = await fn(unseen);
+  processCache.listings.writeValue([...seen, ...unseen]);
   log(
-    `${unseenListings.length} unseen listing${
-      unseenListings.length !== 1 ? "s" : ""
-    } out of ${listings.length}${config.logging?.verbose ? ":" : "."}`
+    `${unseen.length} unseen listing${unseen.length !== 1 ? "s" : ""} out of ${
+      newListings.length
+    }${config.logging?.verbose ? ":" : "."}`
   );
-  verboseLog(unseenListings.map((l) => l.url).join(", "));
-
+  verboseLog(unseen.map((l) => l.url).join(", "));
   return result;
 };
 
 export const processListings = async (unseenListings: Listing[]) => {
-  const [allResults, validResults, invalidResults] =
-    await unseenListings.reduce<Promise<[Listing[], Listing[], Listing[]]>>(
-      async (promises, l) => {
-        const [all, valid, invalid] = await promises;
-        checkForBlacklist(l);
-        if (isValid(l)) {
-          valid.push(l);
-          await addLocationLink(l);
-          await addCommuteSummary(l);
-        } else {
-          invalid.push(l);
-        }
-        all.push(l);
-        return [all, valid, invalid];
-      },
-      Promise.resolve([[], [], []])
-    );
+  const [validResults, invalidResults] = await unseenListings.reduce<
+    Promise<[Listing[], Listing[]]>
+  >(async (promises, l) => {
+    const [valid, invalid] = await promises;
+    checkForBlacklist(l);
+    if (isValid(l)) {
+      valid.push(l);
+      await ensureLocationLink(l);
+      await addCommuteSummary(l);
+    } else {
+      invalid.push(l);
+    }
+    return [valid, invalid];
+  }, Promise.resolve([[], []]));
 
   log(
     `${validResults.length} new valid result${
@@ -112,7 +90,7 @@ export const excludeListingsOutsideSearchArea = (listings: Listing[]) =>
     const v = isWithinRadii(l.details.coords);
     if (!v) {
       log(
-        `Listing ${getSeenListingKey(l)} is outside of the search area${
+        `Listing ${getListingKey(l)} is outside of the search area${
           config.logging?.verbose ? "." : ""
         }`
       );

@@ -31,7 +31,9 @@ export type Listing = {
     coords?: Coordinates;
   };
   computed?: {
-    locationLinkMD?: string;
+    locationLinkText?: string;
+    locationLinkURL?: string;
+    locationLinkIsApproximate?: boolean;
     bulletPoints?: BulletPoint[];
     commuteDestinations?: Record<string, CommuteSummary>;
   };
@@ -62,18 +64,30 @@ export const addBulletPoints = (
   l: Listing,
   _points: BulletPoint | BulletPoint[]
 ) => {
-  const points = Array.isArray(_points) ? _points : [_points];
   l.computed = {
     ...(l.computed ?? {}),
-    bulletPoints: [...(l.computed?.bulletPoints ?? []), ...points],
+    bulletPoints: [
+      ...(l.computed?.bulletPoints ?? []),
+      ...(Array.isArray(_points) ? _points : [_points]).filter((p) => {
+        const v = typeof p === "string" ? p : p.value;
+        return v !== null && v !== undefined && v !== "";
+      }),
+    ],
   };
 };
 
-export const addLocationLink = async (l: Listing) => {
-  if (!l.computed?.locationLinkMD && l.details.coords) {
+export const ensureLocationLink = async (l: Listing) => {
+  if (
+    !l.computed?.locationLinkText &&
+    !l.computed?.locationLinkURL &&
+    l.details.coords
+  ) {
+    const link = await approxLocationLink(l.details.coords);
     l.computed = {
       ...(l.computed ?? {}),
-      locationLinkMD: await approxLocationLink(l.details.coords),
+      locationLinkIsApproximate: true,
+      locationLinkText: link.text,
+      locationLinkURL: link.url,
     };
   }
 };

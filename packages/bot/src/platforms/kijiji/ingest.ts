@@ -63,9 +63,8 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
       l.details.longAddress = loc;
       l.computed = {
         ...(l.computed ?? {}),
-        locationLinkMD: `[**${l.details.shortAddress}**](${getGoogleMapsLink(
-          loc
-        )})`,
+        locationLinkText: l.details.shortAddress,
+        locationLinkURL: getGoogleMapsLink(loc),
       };
     }
   } catch {

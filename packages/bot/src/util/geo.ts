@@ -140,10 +140,10 @@ export const approxLocationLink = async (coords: Coordinates) => {
   const cache = await readJSON<{ [k: string]: [string, string] }>(cacheFile);
   const cached = cache?.[key];
   if (cached) {
-    const display = cached[0];
+    const text = cached[0];
     const query = encodeURIComponent(cached[1]);
-    const link = `${gMaps}/search/?api=1&query=${query}`;
-    return `[*${display} **(approx.)***](${link})`;
+    const url = `${gMaps}/search/?api=1&query=${query}`;
+    return { text, url };
   }
 
   const { data } = await axios.get(
@@ -166,7 +166,7 @@ export const approxLocationLink = async (coords: Coordinates) => {
   });
 
   const query = data.results[0].formatted_address;
-  return `[*${displayAddr} **(approx.)***](${getGoogleMapsLink(query)})`;
+  return { text: displayAddr, url: getGoogleMapsLink(query) };
 };
 
 export const isValidAddress = async (address: string) => {

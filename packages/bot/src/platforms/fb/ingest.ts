@@ -200,9 +200,10 @@ export const visitMarketplaceListing = async (
           ?.display_label ?? "";
       l.computed = {
         ...(l.computed ?? {}),
-        locationLinkMD: `[**${loc}**](${getGoogleMapsLink(
+        locationLinkText: loc,
+        locationLinkURL: getGoogleMapsLink(
           full.length > loc.length ? full : loc
-        )})`,
+        ),
       };
     }
   } catch (e) {

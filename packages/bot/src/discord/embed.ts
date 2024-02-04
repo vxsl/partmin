@@ -7,6 +7,21 @@ import { mdQuote, trimAddress } from "util/data.js";
 import { formatCommuteSummaryMD } from "util/geo.js";
 import { notUndefined } from "util/misc.js";
 
+const locationLink = (l: Listing) => {
+  const text = l.computed?.locationLinkText;
+  const url = l.computed?.locationLinkURL;
+  return text && url
+    ? `[${discordFormat(
+        `${text}${
+          l.computed?.locationLinkIsApproximate
+            ? discordFormat(" (approx.)", { bold: true })
+            : ""
+        }`,
+        { italic: true }
+      )}](${url})`
+    : undefined;
+};
+
 const listingEmbed = (l: Listing) => {
   let descriptionHeader = [
     `${
@@ -14,61 +29,59 @@ const listingEmbed = (l: Listing) => {
         ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
         : undefined
     }`,
-    l.computed?.locationLinkMD ??
-      l.details.shortAddress ??
-      l.details.coords?.toString(),
+    locationLink(l) ?? l.details.shortAddress ?? l.details.coords?.toString(),
   ]
     .filter(notUndefined)
     .join(" / ");
 
   const dests = Object.keys(l.computed?.commuteDestinations ?? {});
-  if (dests.length) {
-    descriptionHeader = [
-      descriptionHeader,
-      dests
-        .map((d) => {
-          const o = getCommuteOrigin(l);
-          const summ = l.computed?.commuteDestinations?.[d];
-          return !summ || !o
-            ? ""
-            : [
-                dests.length > 1
-                  ? discordFormat(`${trimAddress(d)}`, { italic: true })
-                  : undefined,
-                formatCommuteSummaryMD(summ, o, d),
-              ]
-                .filter(notUndefined)
-                .join("\n");
-        })
-        .join("\n\n"),
-    ].join("\n");
-  }
 
   return new Discord.EmbedBuilder()
     .setTitle(l.details.title ?? null)
     .setDescription(
       [
         descriptionHeader,
+        dests
+          .map((d) => {
+            const o = getCommuteOrigin(l);
+            const summ = l.computed?.commuteDestinations?.[d];
+            return !summ || !o
+              ? ""
+              : [
+                  dests.length > 1
+                    ? discordFormat(`${trimAddress(d)}:`, { italic: true })
+                    : undefined,
+                  formatCommuteSummaryMD(summ, o, d),
+                ]
+                  .filter(notUndefined)
+                  .join("\n");
+          })
+          .join("\n"),
         l.computed?.bulletPoints
-          ?.map(
-            (p) =>
-              `- ${
-                typeof p === "string"
-                  ? p
-                  : p.value.toLowerCase() === "yes"
+          ?.map((p) => {
+            const prefix = `- `;
+            if (typeof p === "string") {
+              return prefix + p;
+            }
+            const v = `${p.value}`.toLowerCase();
+            return (
+              prefix +
+              `${
+                v === "yes"
                   ? `✅ ${p.key}`
-                  : p.value.toLowerCase() === "no"
+                  : v === "no"
                   ? `❌ ${p.key}`
                   : `${p.key}: ${p.value}`
               }`
-          )
+            );
+          })
           .join("\n") ?? "",
       ]
         .filter(Boolean)
-        .join("\n")
+        .join("\n\n")
     )
     .setURL(l.url)
-    .setImage(l.imgURLs[0] ?? null)
+    .setImage(l.imgURLs.find((url) => url.startsWith("http")) ?? null)
     .setFooter({
       text: l.platform,
       iconURL: platforms[l.platform].icon,
