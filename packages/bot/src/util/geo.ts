@@ -121,7 +121,11 @@ export const isWithinRadii = (coords: Coordinates) => {
     `${Coordinates.toString(coords)} is ${
       success
         ? `within ${success.toString()}`
-        : `not within any of the ${radii.length} radii`
+        : `not within ${
+            radii.length > 1
+              ? `any of the ${radii.length} radii`
+              : "the configured radius"
+          }`
     }`
   );
   return success !== undefined;

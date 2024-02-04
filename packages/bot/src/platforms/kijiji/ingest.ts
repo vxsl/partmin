@@ -24,6 +24,9 @@ const parser = new Parser({
 
 export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
   await kijijiGet(l.url, driver);
+
+  debugLog("Retrieving listing data");
+
   const data: any = await driver.executeScript("return window.__data;");
   if (!data || typeof data !== "object") {
     // TODO do something else.

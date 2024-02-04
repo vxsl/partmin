@@ -29,6 +29,7 @@ const fb: Platform = {
         })}`
       );
       await visitMarketplace(driver, r);
+      debugLog("Initializing listings...");
       await withDOMChangesBlocked(driver, async () => {
         await getListings(driver).then((arr) => {
           verboseLog(

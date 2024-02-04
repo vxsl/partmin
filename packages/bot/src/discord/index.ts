@@ -142,7 +142,12 @@ const getChannelsToBeCreated = async ({
         (!isCategory &&
           ((def.topic && c.topic === def.topic) || c.name === def.defaultName))
       ) {
-        debugLog(`Assuming that ${entity} with name "${c.name}" is "${key}."`);
+        debugLog(
+          `Assuming that the ${entity} found on this server with name "${c.name}" is partmin's "${key}" ${entity}.`
+        );
+        if (def.topic && c.name !== def.defaultName) {
+          log(`(the topic is equal: "${def.topic}")`);
+        }
         alreadyExist[key] = c;
         recordID(key, c.id);
         break;

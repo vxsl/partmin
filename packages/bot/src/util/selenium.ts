@@ -9,7 +9,7 @@ import {
   until,
 } from "selenium-webdriver";
 import { readJSON, writeJSON } from "util/io.js";
-import { debugLog } from "util/log.js";
+import { debugLog, verboseLog } from "util/log.js";
 import { tryNTimes } from "util/misc.js";
 
 export const clearBrowsingData = async (driver: WebDriver) => {
@@ -189,6 +189,7 @@ export const withElementsByXpath = async <T>(
   const len = await driver
     .findElements(By.xpath(xpath))
     .then((els) => els.length);
+  verboseLog(`withElementsByXpath: ${len} elements found`);
   for (let i = 0; i < len; i++) {
     // verboseLog(`withElementsByXpath (${i + 1}/${len}): ${xpath}`);
     const r = await withElement(
@@ -237,10 +238,18 @@ export const withoutImplicitWait = async <T>(
   driver: WebDriver,
   fn: () => Promise<T>
 ) => {
+  verboseLog("Disabling implicit wait");
   await driver.manage().setTimeouts({ implicit: 0 });
+  verboseLog("Executing function without implicit wait");
+  let res;
   try {
-    return await fn();
+    res = await fn();
+    verboseLog("Function executed without implicit wait");
   } finally {
+    verboseLog("Re-enabling implicit wait");
     await driver.manage().setTimeouts({ implicit: seleniumImplicitWait });
+    verboseLog("Implicit wait re-enabled");
   }
+  verboseLog("Returning result");
+  return res;
 };
