@@ -25,7 +25,6 @@ import { discordSend } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { writeFileSync } from "fs";
 import { stdout as singleLineStdOut } from "single-line-log";
-import { debuglog } from "util";
 import { debugLog, log } from "util/log.js";
 import { waitSeconds } from "util/misc.js";
 import { RecursivePartial } from "util/type.js";
@@ -315,7 +314,7 @@ export const initDiscord = async () => {
   return await new Promise(async (resolve, reject) => {
     discordClient.once("ready", async () => {
       if (discordCache.guildInfo.value) {
-        debuglog("Cached server information found.");
+        debugLog("Cached server information found.");
         // TODO use runtypes to throw (or warn?) if guildInfo is malformed.
       }
       await setupGuild(guildID, {}).then((newGuildInfo) => {
