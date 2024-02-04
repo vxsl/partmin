@@ -22,7 +22,7 @@ import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
-import { randomWait, waitSeconds } from "util/misc.js";
+import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
 
 process.title = "partmin-bot";
 
@@ -32,14 +32,19 @@ let driver: WebDriver | undefined;
 export let shuttingDown = false;
 
 const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
-  await detectConfigChange(async (isChanged) => {
-    for (const { prepare, name: platform } of platforms) {
-      try {
-        await (prepare?.(driver, isChanged) ?? Promise.resolve());
-      } catch (e) {
-        throw new Error(
-          `Error while running preparation callback for ${platform}: ${e}`
-        );
+  await detectConfigChange(async () => {
+    for (const { onSearchParamsChanged, name: platform } of platforms) {
+      if (onSearchParamsChanged) {
+        const n = 3;
+        log(`Running preparation for ${platform}.`);
+        await tryNTimes(
+          n,
+          () => onSearchParamsChanged(driver) ?? Promise.resolve()
+        ).catch((e) => {
+          throw new Error(
+            `Unable to run essential preparation for ${platform} (tried ${n} times): ${e}`
+          );
+        });
       }
     }
   });

@@ -45,7 +45,9 @@ const fb: Platform = {
         } listings in ${rLabel} (${r.toString({ truncate: true })})`
       );
       listingCount = listings.length;
-      await randomWait({ short: true, suppressProgressLog: true });
+      if (i < radii.length - 1) {
+        await randomWait({ short: true, suppressProgressLog: true });
+      }
     }
     return listings;
   },

@@ -54,25 +54,23 @@ export const validateConfig = async () => {
   }
 };
 
-export const detectConfigChange = async (
-  callback?: (isChanged: boolean) => void
-) => {
+export const detectConfigChange = async (callback?: () => void) => {
   const path = `${dataDir}/config-search-params.json`;
   const cached = fs.existsSync(path)
     ? fs.readFileSync(path, "utf-8")
     : undefined;
   const cur = JSON.stringify(config.search.params, null, 2);
   let v = cached !== cur;
-  log(
-    v
-      ? !cached
+  if (v) {
+    log(
+      !cached
         ? "No cached search found."
         : "Change in search parameters detected."
-      : "No change in search parameters since last run."
-  );
-  await (callback ? callback(v) : Promise.resolve());
-  if (v) {
+    );
+    await (callback ? callback() : Promise.resolve());
     fs.writeFileSync(path, cur);
+  } else {
+    log("No change in search parameters since last run.");
   }
   return v;
 };

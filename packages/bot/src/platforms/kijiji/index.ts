@@ -1,5 +1,4 @@
-import { dataDir } from "constants.js";
-import fs from "fs";
+import { kijijiCache } from "platforms/kijiji/cache.js";
 import {
   rentalCategory,
   rentalCategoryRSS,
@@ -12,34 +11,18 @@ import {
 import { Platform } from "types/platform.js";
 import { log } from "util/log.js";
 
-let rss: string | undefined;
-const cache = `${dataDir}/kijiji-rss-url`;
-
 const kijiji: Platform = {
   name: "Kijiji",
   icon: "https://www.kijiji.ca/favicon.ico",
-  prepare: async (driver, configChanged) => {
-    let cached;
-    if (fs.existsSync(cache)) {
-      cached = fs.readFileSync(cache, "utf-8");
-    }
-    if (!configChanged && cached) {
-      log("Using cached Kijiji RSS feed");
-      rss = cached;
-      return;
-    }
-
+  onSearchParamsChanged: async (driver) => {
     log("Building new Kijiji RSS feed");
-    rss = await getKijijiRSS(driver);
-    log(`Kijiji RSS feed: ${rss}`);
-    log(`(search URL: ${rss.replace(rentalCategoryRSS, rentalCategory)})`);
-    await fs.promises.writeFile(cache, rss);
+    await getKijijiRSS(driver).then((rss) => {
+      log(`Kijiji RSS feed: ${rss}`);
+      log(`(search URL: ${rss.replace(rentalCategoryRSS, rentalCategory)})`);
+      kijijiCache.rss.writeValue(rss);
+    });
   },
-  main: async () => {
-    if (!rss) throw new Error("No RSS feed found");
-    log(`Kijiji RSS feed URL: ${rss}`);
-    return await getListings(rss);
-  },
+  main: getListings,
   perListing: visitKijijiListing,
 };
 

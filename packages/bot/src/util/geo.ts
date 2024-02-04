@@ -102,9 +102,11 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
 export const isWithinRadii = (coords: Coordinates) => {
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
   verboseLog(
-    `checking if ${Coordinates.toString(coords)} is within any of ${
-      radii.length
-    } radii:`
+    `checking if ${Coordinates.toString(coords)} is within ${
+      radii.length > 1
+        ? `any of ${radii.length} radii`
+        : "the configured radius"
+    }:`
   );
   verboseLog(radii.map((r) => r.toString()).join("\n"));
   const success = radii.find(

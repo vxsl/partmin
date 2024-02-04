@@ -14,6 +14,32 @@ export const isPlainObject = (value: unknown): value is Record<string, any> => {
   return proto === null || proto === Object.prototype;
 };
 
+export const tryNTimes = async <T>(
+  n: number,
+  fn: () => Promise<T>
+): Promise<T> => {
+  let attempts = 0;
+  while (++attempts <= n) {
+    if (attempts > 1)
+      debugLog(`Attempting action again (${attempts - 1} of ${n - 1})`);
+    await waitSeconds(2);
+
+    try {
+      const res = await fn();
+      if (attempts > 1) {
+        debugLog(
+          `Function completed successfully on try ${attempts - 1}/${n - 1}.`
+        );
+      }
+      return res;
+    } catch (e) {
+      debugLog(`Function errored on try ${attempts - 1}/${n - 1}:`);
+      debugLog(e);
+    }
+  }
+  throw new Error(`Failed to execute function after ${n} attempt.`);
+};
+
 export const waitSeconds = async (s: number) =>
   await new Promise((resolve) => setTimeout(resolve, s * 1000));
 

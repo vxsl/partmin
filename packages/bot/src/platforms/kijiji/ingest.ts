@@ -1,6 +1,7 @@
 import config from "config.js";
 import he from "he";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
+import { kijijiCache } from "platforms/kijiji/cache.js";
 import { baseURL } from "platforms/kijiji/constants.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
@@ -196,8 +197,10 @@ export const getKijijiRSS = async (driver: WebDriver) => {
     .then((el) => el.getAttribute("href"));
 };
 
-export const getListings = (rssUrl: string): Promise<Listing[]> =>
-  parser.parseURL(rssUrl).then((output) =>
+export const getListings = async (): Promise<Listing[]> => {
+  const rss = await kijijiCache.rss.requireValue();
+  log(`Parsing Kijiji RSS feed: ${rss}`);
+  return parser.parseURL(rss).then((output) =>
     output.items.reduce((acc, item) => {
       const url = item.link;
       const id = url?.split("/").pop();
@@ -225,3 +228,4 @@ export const getListings = (rssUrl: string): Promise<Listing[]> =>
       return acc;
     }, [] as Listing[])
   );
+};

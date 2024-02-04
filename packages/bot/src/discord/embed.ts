@@ -1,6 +1,6 @@
 import Discord from "discord.js";
 import { ChannelKey } from "discord/constants.js";
-import { discordSend } from "discord/util.js";
+import { discordFormat, discordSend } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
 import { mdQuote, trimAddress } from "util/data.js";
@@ -32,13 +32,15 @@ const listingEmbed = (l: Listing) => {
           return !summ || !o
             ? ""
             : [
-                dests.length > 1 ? trimAddress(d) : undefined,
+                dests.length > 1
+                  ? discordFormat(`${trimAddress(d)}`, { italic: true })
+                  : undefined,
                 formatCommuteSummaryMD(summ, o, d),
               ]
                 .filter(notUndefined)
                 .join("\n");
         })
-        .join("\n"),
+        .join("\n\n"),
     ].join("\n");
   }
 

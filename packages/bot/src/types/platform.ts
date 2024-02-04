@@ -6,7 +6,7 @@ import fb from "platforms/fb/index.js";
 export type PlatformKey = "kijiji" | "fb";
 export type Platform = {
   main: (d: WebDriver) => Promise<Listing[] | undefined>;
-  prepare?: (d: WebDriver, configChanged?: boolean) => Promise<void>;
+  onSearchParamsChanged?: (d: WebDriver) => Promise<void>;
   perListing?: (d: WebDriver, i: Listing) => Promise<void>;
   icon: string;
   name: string;

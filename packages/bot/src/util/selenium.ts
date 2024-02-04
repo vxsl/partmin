@@ -1,4 +1,4 @@
-import { seleniumImplicitWait, dataDir } from "constants.js";
+import { dataDir, seleniumImplicitWait } from "constants.js";
 import {
   By,
   Condition,
@@ -10,7 +10,7 @@ import {
 } from "selenium-webdriver";
 import { readJSON, writeJSON } from "util/io.js";
 import { debugLog } from "util/log.js";
-import { waitSeconds } from "util/misc.js";
+import { tryNTimes } from "util/misc.js";
 
 export const clearBrowsingData = async (driver: WebDriver) => {
   if (!(await driver.getCurrentUrl()).startsWith("data")) {
@@ -202,34 +202,11 @@ export const withElementsByXpath = async <T>(
   return results;
 };
 
-export const withElement = async <F extends (el: WebElement) => any>(
+export const withElement = <F extends (el: WebElement) => any>(
   getEl: () => WebElement | WebElementPromise,
   fn: F
-): Promise<ReturnType<F>> => {
-  let attempts = 0;
-  const maxAttempts = 3;
-  while (++attempts <= maxAttempts) {
-    if (attempts > 1) {
-      debugLog(
-        `Attempting action again (${attempts - 1} of ${maxAttempts - 1})`
-      );
-      await waitSeconds(2);
-    }
-    try {
-      const el = await getEl();
-      const res = await fn(el);
-      if (attempts > 1) {
-        debugLog("Action completed successfully.");
-      }
-      return res;
-    } catch (e) {
-      debugLog(e);
-    }
-  }
-  throw new Error(
-    `Failed to execute action after ${maxAttempts} attempts at finding element`
-  );
-};
+): Promise<ReturnType<F>> => tryNTimes(3, async () => fn(await getEl()));
+
 export const withDOMChangesBlocked = async (
   driver: WebDriver,
   fn: Function

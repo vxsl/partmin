@@ -55,7 +55,7 @@ export const setDiscordPresence = async (
   }
   await (discordClient as Client<true>).user.setPresence(defs[p]);
   return log(
-    `Discord presence set to ${defs[p].activities?.[0].state || `{${p}}`}"`,
+    `Discord presence set to "${defs[p].activities?.[0].state || `{${p}}`}"`,
     {
       skipDiscord: options?.skipDiscordLog,
     }
