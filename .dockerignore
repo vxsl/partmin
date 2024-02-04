@@ -8,6 +8,7 @@ scratchpad
 **/.tmp
 **/.cache
 **/.data
+**/.test-data
 run-docker.sh
 .yarn/*
 !.yarn/cache

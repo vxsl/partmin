@@ -8,7 +8,6 @@ import {
   String,
 } from "runtypes";
 import { RuntypeBase } from "runtypes/lib/runtype.js";
-import { LogLevel, logNoDiscord } from "util/log.js";
 import _config from "../../../config/config.json";
 
 const UnreliableParams = RuntypeRecord({
@@ -68,6 +67,7 @@ const Location = RuntypeRecord({
   mapDevelopersURL: String,
 });
 
+export type LogLevel = "debug" | "verbose";
 const Logging = RuntypeRecord<Record<LogLevel, RuntypeBase>>({
   debug: Optional(Boolean),
   verbose: Optional(Boolean),
@@ -147,7 +147,7 @@ process.argv.slice(2).forEach((arg) => {
     } else {
       v = value;
     }
-    logNoDiscord(
+    console.log(
       `Overriding config value ${key}: ${v} (original value ${obj[lastKey]})`
     );
     obj[lastKey] = v;
@@ -158,7 +158,7 @@ let config: Config;
 try {
   config = Config.check(_config);
 } catch (e) {
-  logNoDiscord("Config.json is invalid:", { error: true });
+  console.log("Config.json is invalid:", { error: true });
   throw e;
 }
 

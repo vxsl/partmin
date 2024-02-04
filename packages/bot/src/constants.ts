@@ -1,6 +1,8 @@
-import { Config, PetType } from "config.js";
+import config, { Config, PetType } from "config.js";
 
-export const dataDir = `${process.cwd()}/.data`;
+export const dataDir = `${process.cwd()}/.${
+  config.development?.testing ? "test-" : ""
+}data`;
 export const statusPathForAuditor = `${dataDir}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";
 export const puppeteerCacheDir = `${process.cwd()}/.puppeteer`;

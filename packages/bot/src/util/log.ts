@@ -1,10 +1,9 @@
-import config from "config.js";
+import config, { LogLevel } from "config.js";
 import { discordSend } from "discord/util.js";
 import { errToString, isPlainObject } from "util/misc.js";
 
 const time = () => new Date().toLocaleTimeString("it-IT");
 
-export type LogLevel = "debug" | "verbose";
 interface LogOptions {
   error?: boolean;
   level?: LogLevel;
