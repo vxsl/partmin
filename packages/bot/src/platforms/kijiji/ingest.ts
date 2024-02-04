@@ -76,13 +76,7 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
     const attrs = data.viewItemPage.viewItemData.adAttributes.attributes.filter(
       (a: any) => ["yard", "balcony"].includes(a.machineKey)
     );
-    if (!attrs.some((a: any) => a.machineValue === "1")) {
-      invalidateListing(
-        l,
-        "unreliableParamsMismatch",
-        "Doesn't explicity offer a yard or balcony"
-      );
-    } else {
+    if (attrs.some((a: any) => a.machineValue === "1")) {
       addBulletPoints(
         l,
         attrs
@@ -91,6 +85,12 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
             key: a.localeSpecificValues.en.label,
             value: a.localeSpecificValues.en.value,
           }))
+      );
+    } else if (config.search.params.unreliableParams?.outdoorSpace) {
+      invalidateListing(
+        l,
+        "unreliableParamsMismatch",
+        "Doesn't explicity offer a yard or balcony"
       );
     }
   } catch {
@@ -101,17 +101,17 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
     const attr = data.viewItemPage.viewItemData.adAttributes.attributes.find(
       (a: any) => a.machineKey === "numberparkingspots"
     );
-    if (attr.machineValue === "0") {
+    if (attr.machineValue !== "0") {
+      addBulletPoints(l, {
+        key: attr.localeSpecificValues.en.label,
+        value: attr.localeSpecificValues.en.value,
+      });
+    } else if (config.search.params.unreliableParams?.parking) {
       invalidateListing(
         l,
         "unreliableParamsMismatch",
         "Doesn't explicity offer parking"
       );
-    } else {
-      addBulletPoints(l, {
-        key: attr.localeSpecificValues.en.label,
-        value: attr.localeSpecificValues.en.value,
-      });
     }
   } catch {
     // TODO
@@ -145,13 +145,13 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
     const attr = data.viewItemPage.viewItemData.adAttributes.attributes.find(
       (a: any) => a.machineKey === "petsallowed"
     );
-    if (attr.machineValue === "0") {
-      invalidateListing(l, "paramsMismatch", "Explicitly disallows pets");
-    } else {
+    if (attr.machineValue !== "0") {
       addBulletPoints(l, {
         key: attr.localeSpecificValues.en.label,
         value: attr.localeSpecificValues.en.value,
       });
+    } else if (config.search.params.unreliableParams?.petsStrict) {
+      invalidateListing(l, "paramsMismatch", "Explicitly disallows pets");
     }
   } catch {
     // TODO
