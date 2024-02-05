@@ -9,6 +9,9 @@ import { notUndefined } from "util/misc.js";
 const gMaps = "https://www.google.com/maps";
 const gMapsAPIs = "https://maps.googleapis.com/maps/api";
 
+const gMapsAPIKey = async () =>
+  `key=${await cache.googleMapsAPIKey.requireValue()}`;
+
 export class Coordinates {
   lat: number;
   lon: number;
@@ -134,7 +137,7 @@ export const getGoogleMapsLink = (query: string) =>
   `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
 export const approxLocationLink = async (coords: Coordinates) => {
-  const addresses = await cache.approximateAddresses.requireValue();
+  const addresses = cache.approximateAddresses.value ?? {};
   const cacheKey = Coordinates.toString(coords, { raw: true });
   const cached = addresses?.[cacheKey];
   if (cached) {
@@ -145,9 +148,9 @@ export const approxLocationLink = async (coords: Coordinates) => {
   }
 
   const { data } = await axios.get(
-    `${gMapsAPIs}/geocode/json?latlng=\
-      ${coords.lat},${coords.lon}\
-      &key=${await cache.googleMapsAPIKey.requireValue()}`
+    `${gMapsAPIs}/geocode/json?latlng=${coords.lat},${
+      coords.lon
+    }&${await gMapsAPIKey()}`
   );
   const comps = data.results[0].address_components;
   const displayAddr =
@@ -169,7 +172,7 @@ export const approxLocationLink = async (coords: Coordinates) => {
 
 export const isValidAddress = async (address: string) => {
   let result;
-  const validities = await cache.addressValidity.requireValue();
+  const validities = cache.addressValidity.value ?? {};
   if (address in validities) {
     debugLog(`Address found in cache: ${address}`);
     result = validities[address];
@@ -178,9 +181,9 @@ export const isValidAddress = async (address: string) => {
       const { data } = await axios.get(
         `${gMapsAPIs}/geocode/json?address=${encodeURIComponent(
           address
-        )}&key=${await cache.googleMapsAPIKey.requireValue()}`
+        )}&${await gMapsAPIKey()}`
       );
-      result = !!data.results[0].geometry.location;
+      result = !!data.results[0]?.geometry?.location;
       cache.addressValidity.writeValue({ ...validities, [address]: result });
     } catch (e) {
       debugLog(`Error validating address: ${address}`);
@@ -199,7 +202,7 @@ type CommuteMode = (typeof commuteModes)[number];
 export type CommuteSummary = Record<CommuteMode, string>;
 
 export const getCommuteSummary = async (origin: string, dest: string) => {
-  const summaries = await cache.commuteSummaries.requireValue();
+  const summaries = cache.commuteSummaries.value ?? {};
   const cached = summaries[origin]?.[dest];
   let rawData: Partial<Record<CommuteMode, any>> = {};
   if (cached !== undefined) {
@@ -211,7 +214,7 @@ export const getCommuteSummary = async (origin: string, dest: string) => {
         commuteModes.map(async (mode) =>
           axios
             .get(
-              `${gMapsAPIs}/distancematrix/json?units=metric&origins=${origin}&destinations=${dest}&key=${await cache.googleMapsAPIKey.requireValue()}&mode=${mode}`
+              `${gMapsAPIs}/distancematrix/json?units=metric&origins=${origin}&destinations=${dest}&${await gMapsAPIKey()}&mode=${mode}`
             )
             .then(({ data }) => {
               rawData[mode] = data.rows;
