@@ -29,24 +29,21 @@ export const tryNTimes = async <T>(
 ): Promise<T> => {
   let attempts = 0;
   while (++attempts <= n) {
-    if (attempts > 1)
-      debugLog(`Attempting action again (${attempts - 1} of ${n - 1})`);
+    if (attempts > 1) debugLog(`Attempting action again (${attempts} of ${n})`);
     await waitSeconds(2);
 
     try {
       const res = await fn();
       if (attempts > 1) {
-        debugLog(
-          `Function completed successfully on try ${attempts - 1}/${n - 1}.`
-        );
+        debugLog(`Function completed successfully on try ${attempts}/${n}.`);
       }
       return res;
     } catch (e) {
-      debugLog(`Function errored on try ${attempts - 1}/${n - 1}:`);
+      debugLog(`Function errored on try ${attempts}/${n}:`);
       debugLog(e);
     }
   }
-  throw new Error(`Failed to execute function after ${n} attempt.`);
+  throw new Error(`Failed to execute function after ${n} attempts.`);
 };
 
 export const waitSeconds = async (s: number) =>

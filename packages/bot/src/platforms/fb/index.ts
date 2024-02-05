@@ -5,7 +5,7 @@ import {
 } from "platforms/fb/ingest.js";
 import { decodeMapDevelopersURL } from "util/geo.js";
 import { notUndefined, randomWait } from "util/misc.js";
-import { debugLog, verboseLog } from "util/log.js";
+import { debugLog, log, verboseLog } from "util/log.js";
 import { Listing } from "listing.js";
 import { Platform } from "types/platform.js";
 import { withDOMChangesBlocked } from "util/selenium.js";
@@ -23,7 +23,7 @@ const fb: Platform = {
     for (let i = 0; i < radii.length; i++) {
       const r = radii[i];
       const rLabel = `radius ${i + 1}/${radii.length}`;
-      debugLog(
+      log(
         `visiting fb marketplace [${rLabel}]: ${r.toString({
           truncate: true,
         })}`
@@ -40,7 +40,7 @@ const fb: Platform = {
           listings.push(...(arr?.filter(notUndefined) ?? []));
         });
       });
-      debugLog(
+      log(
         `found ${
           listings.length - listingCount
         } listings in ${rLabel} (${r.toString({ truncate: true })})`
