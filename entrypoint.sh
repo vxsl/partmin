@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ln -sf /etc/localtime-real /etc/localtime
+
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$script_dir" || (echo "Failed to change directory to $script_dir" && exit 1)
 
