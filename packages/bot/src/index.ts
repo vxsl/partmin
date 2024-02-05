@@ -61,15 +61,20 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
       );
       let allListings: Listing[] | undefined;
       try {
-        allListings = await main(driver);
-        if (!allListings?.length) {
-          log(`Somehow there are no listings upon visiting ${platform}.`);
-          continue;
-        }
+        tryNTimes(2, async () => {
+          allListings = await main(driver);
+        });
       } catch (e) {
         if (!shuttingDown) {
           discordWarning(`Error while visiting ${platform}:`, e);
         }
+        continue;
+      }
+      if (!allListings?.length) {
+        discordWarning(
+          "Unexpected result",
+          `I didn't find any listings on ${platform}. This may mean that ${platform} has changed and I need to be updated. 😞`
+        );
         continue;
       }
 
