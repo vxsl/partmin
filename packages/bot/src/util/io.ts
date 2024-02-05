@@ -3,16 +3,6 @@ import { createWriteStream, promises as fs } from "fs";
 
 // TODO use runtypes or something here:
 export const parseJSON = <T>(s: string): T => JSON.parse(s);
-
-export const readJSON = async <T>(path: string): Promise<T | undefined> => {
-  try {
-    const f = await fs.readFile(path, "utf-8");
-    return parseJSON<T>(f);
-  } catch {
-    return undefined;
-  }
-};
-
 export const writeJSON = async (path: string, data: Object) =>
   await fs.writeFile(path, JSON.stringify(data, null, 2));
 

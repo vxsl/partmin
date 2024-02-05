@@ -1,10 +1,9 @@
-import haversine from "haversine";
-import config from "config.js";
-import { debugLog, log, verboseLog } from "util/log.js";
-import { dataDir } from "constants.js";
-import { readJSON, writeJSON } from "util/io.js";
 import axios from "axios";
+import cache from "cache.js";
+import config from "config.js";
+import haversine from "haversine";
 import { abbreviateDuration } from "util/data.js";
+import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined } from "util/misc.js";
 
 const gMaps = "https://www.google.com/maps";
@@ -135,10 +134,9 @@ export const getGoogleMapsLink = (query: string) =>
   `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
 export const approxLocationLink = async (coords: Coordinates) => {
-  const key = Coordinates.toString(coords, { raw: true });
-  const cacheFile = `${dataDir}/approximate-addresses.json`;
-  const cache = await readJSON<{ [k: string]: [string, string] }>(cacheFile);
-  const cached = cache?.[key];
+  const addresses = await cache.approximateAddresses.requireValue();
+  const cacheKey = Coordinates.toString(coords, { raw: true });
+  const cached = addresses?.[cacheKey];
   if (cached) {
     const text = cached[0];
     const query = encodeURIComponent(cached[1]);
@@ -149,7 +147,7 @@ export const approxLocationLink = async (coords: Coordinates) => {
   const { data } = await axios.get(
     `${gMapsAPIs}/geocode/json?latlng=\
       ${coords.lat},${coords.lon}\
-      &key=${process.env.GOOGLE_MAPS_API_KEY}`
+      &key=${await cache.googleMapsAPIKey.requireValue()}`
   );
   const comps = data.results[0].address_components;
   const displayAddr =
@@ -160,9 +158,9 @@ export const approxLocationLink = async (coords: Coordinates) => {
     (comps.find((c: any) => c.types.includes("neighborhood"))?.short_name ??
       comps.find((c: any) => c.types.includes("sublocality"))?.short_name);
 
-  await writeJSON(cacheFile, {
-    ...cache,
-    [key]: [displayAddr, data.results[0].formatted_address],
+  cache.approximateAddresses.writeValue({
+    ...addresses,
+    [cacheKey]: [displayAddr, data.results[0].formatted_address],
   });
 
   const query = data.results[0].formatted_address;
@@ -171,21 +169,19 @@ export const approxLocationLink = async (coords: Coordinates) => {
 
 export const isValidAddress = async (address: string) => {
   let result;
-  const cacheFile = `${dataDir}/address-validity.json`;
-  const cache =
-    (await readJSON<{ [k: string]: [string, string] }>(cacheFile)) ?? {};
-  if (address in cache) {
+  const validities = await cache.addressValidity.requireValue();
+  if (address in validities) {
     debugLog(`Address found in cache: ${address}`);
-    result = cache[address];
+    result = validities[address];
   } else {
     try {
       const { data } = await axios.get(
-        `${gMapsAPIs}/geocode/json?address=${encodeURIComponent(address)}&key=${
-          process.env.GOOGLE_MAPS_API_KEY
-        }`
+        `${gMapsAPIs}/geocode/json?address=${encodeURIComponent(
+          address
+        )}&key=${await cache.googleMapsAPIKey.requireValue()}`
       );
       result = !!data.results[0].geometry.location;
-      await writeJSON(cacheFile, { ...cache, [address]: result });
+      cache.addressValidity.writeValue({ ...validities, [address]: result });
     } catch (e) {
       debugLog(`Error validating address: ${address}`);
       debugLog(e);
@@ -203,34 +199,25 @@ type CommuteMode = (typeof commuteModes)[number];
 export type CommuteSummary = Record<CommuteMode, string>;
 
 export const getCommuteSummary = async (origin: string, dest: string) => {
-  const cacheFile = `${dataDir}/commute-summaries.json`;
+  const summaries = await cache.commuteSummaries.requireValue();
+  const cached = summaries[origin]?.[dest];
   let rawData: Partial<Record<CommuteMode, any>> = {};
-  const cache =
-    (await readJSON<Record<string, Record<string, CommuteSummary>>>(
-      cacheFile
-    )) ?? {};
-  const cached = cache[origin]?.[dest];
   if (cached !== undefined) {
     debugLog(`Commute summary found in cache: ${origin} -> ${dest}`);
     rawData = cached;
   } else {
     try {
       await Promise.all(
-        commuteModes.map((mode) =>
+        commuteModes.map(async (mode) =>
           axios
             .get(
-              `${gMapsAPIs}/distancematrix/json?units=metric&origins=${origin}&destinations=${dest}&key=${process.env.GOOGLE_MAPS_API_KEY}&mode=${mode}`
+              `${gMapsAPIs}/distancematrix/json?units=metric&origins=${origin}&destinations=${dest}&key=${await cache.googleMapsAPIKey.requireValue()}&mode=${mode}`
             )
             .then(({ data }) => {
               rawData[mode] = data.rows;
             })
         )
       );
-
-      await writeJSON(cacheFile, {
-        ...cache,
-        [origin]: { ...cache[origin], [dest]: rawData },
-      });
     } catch (e) {
       debugLog(`Error computing commute summary: ${origin} -> ${dest}`);
       debugLog(e);
@@ -251,6 +238,12 @@ export const getCommuteSummary = async (origin: string, dest: string) => {
       ];
     })
   ) as CommuteSummary;
+  if (!cached) {
+    cache.commuteSummaries.writeValue({
+      ...summaries,
+      [origin]: { ...summaries[origin], [dest]: result },
+    });
+  }
 
   debugLog(`Commute summary computed: ${origin} -> ${dest}`);
   debugLog(result);

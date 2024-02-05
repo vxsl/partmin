@@ -1,4 +1,4 @@
-import { dataDir, seleniumImplicitWait } from "constants.js";
+import { seleniumImplicitWait } from "constants.js";
 import {
   By,
   Condition,
@@ -8,7 +8,6 @@ import {
   WebElementPromise,
   until,
 } from "selenium-webdriver";
-import { readJSON, writeJSON } from "util/io.js";
 import { debugLog, verboseLog } from "util/log.js";
 import { tryNTimes } from "util/misc.js";
 
@@ -120,33 +119,6 @@ export const fillInputByLabel = async (
       await type(el, v);
     }
   );
-};
-
-export const saveCookies = async (driver: WebDriver, keys?: string[]) =>
-  writeJSON(
-    `${dataDir}/cookies.json`,
-    await driver
-      .manage()
-      .getCookies()
-      .then((cookies) =>
-        cookies.filter((c) => (keys ? keys.includes(c.name) : true))
-      )
-  );
-
-export const loadCookies = async (driver: WebDriver) => {
-  const cookies = await readJSON<Object[]>(`${dataDir}/cookies.json`);
-  await driver.manage().deleteAllCookies();
-
-  if (cookies?.length) {
-    // @ts-ignore
-    await driver.sendDevToolsCommand("Network.enable");
-    for (const c of cookies) {
-      // @ts-ignore
-      await driver.sendDevToolsCommand("Network.setCookie", c);
-    }
-    // @ts-ignore
-    await driver.sendDevToolsCommand("Network.disable");
-  }
 };
 
 export const elementShouldBeInteractable = async (

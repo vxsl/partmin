@@ -2,15 +2,44 @@ import { dataDir } from "constants.js";
 import { GuildInfo } from "discord/index.js";
 import { Listing } from "listing.js";
 import { CacheDef, StringCacheDef } from "util/cache.js";
+import { CommuteSummary } from "util/geo.js";
 import { parseJSON } from "util/io.js";
 
 const cache = {
   // ---------------------------------------
+  // geo
+  commuteSummaries: new CacheDef<
+    Record<string, Record<string, CommuteSummary>>
+  >({
+    path: `${dataDir}/commute-summaries.json`,
+    readTransform: parseJSON,
+    writeTransform: JSON.stringify,
+    label: "commute summaries",
+  }),
+  addressValidity: new CacheDef<{ [k: string]: boolean }>({
+    path: `${dataDir}/address-validity.json`,
+    readTransform: parseJSON,
+    writeTransform: JSON.stringify,
+    label: "address validity",
+  }),
+  approximateAddresses: new CacheDef<{ [k: string]: [string, string] }>({
+    path: `${dataDir}/approximate-addresses.json`,
+    readTransform: parseJSON,
+    writeTransform: JSON.stringify,
+    label: "address approximations",
+  }),
+  googleMapsAPIKey: new StringCacheDef({
+    path: `${dataDir}/google-maps-api-key`,
+    label: "Google Maps API key",
+    envVar: "GOOGLE_MAPS_API_KEY",
+  }),
+
+  // ---------------------------------------
   // process
   listings: new CacheDef<Listing[]>({
     path: `${dataDir}/listings.json`,
-    readTransform: (v) => JSON.parse(v),
-    writeTransform: (v) => JSON.stringify(v),
+    readTransform: parseJSON,
+    writeTransform: JSON.stringify,
     label: "all listings",
   }),
 
