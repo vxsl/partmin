@@ -19,9 +19,10 @@ export const log = (_v: any, options?: LogOptions) => {
   }
   const t = time();
   const v = isPlainObject(_v) ? JSON.stringify(_v, null, 2) : errToString(_v);
+
   (options?.error || _v instanceof Error ? console.error : console.log)(
     `${t}:`,
-    v
+    (!options?.level ? "" : `[${options.level.toUpperCase()}] `) + v
   );
 
   if (!options?.skipDiscord) {
