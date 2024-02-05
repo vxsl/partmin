@@ -1,10 +1,10 @@
+import cache from "cache.js";
 import Discord, {
   ActionRowBuilder,
   ButtonBuilder,
   ChannelSelectMenuBuilder,
   ComponentType,
   EmbedBuilder,
-  InteractionType,
   MentionableSelectMenuBuilder,
   Message,
   RoleSelectMenuBuilder,
@@ -14,14 +14,14 @@ import Discord, {
 import { ChannelKey } from "discord/constants.js";
 import { discordFormat, discordSend, getChannel } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
-import cache from "cache.js";
 import { platforms } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { formatCommuteSummaryMD } from "util/geo.js";
 import { debugLog, log, verboseLog } from "util/log.js";
-import { notUndefined } from "util/misc.js";
-import { type } from "../util/selenium";
+import { notUndefined, splitString } from "util/misc.js";
 
+const maxEmbedLength = 2048;
+const maxFieldLength = 1024;
 const uninteractedColor = "#7289da";
 const interactedColor = "#424549";
 
@@ -179,6 +179,29 @@ const getButtons = (l: Listing): ListingButtons => {
   return result;
 };
 
+const descriptionFields = (l: Listing) => {
+  const desc = l.details.longDescription;
+  if (desc === undefined) {
+    return undefined;
+  }
+  const v = discordFormat(desc.replace(/\s+$/, ""), { quote: true });
+  const chunks = splitString(v, maxFieldLength - 10);
+  return chunks.map((_s, i) => {
+    let value = "";
+    if (!value.match(/^\s*>\s/)) {
+      value = "> ";
+    }
+    if (i > 0) {
+      value += "...";
+    }
+    value += _s;
+    if (i !== chunks.length - 1) {
+      value += "...";
+    }
+    return { name: " ", value };
+  });
+};
+
 const collect = ({
   msg,
   listing,
@@ -199,7 +222,7 @@ const collect = ({
     descriptionOpened: boolean;
   };
 }) => {
-  let descOpened = state?.descriptionOpened ?? false;
+  let descIsToggled = state?.descriptionOpened ?? false;
   let imgIndex = state?.imgIndex ?? 0;
   const navigateImg = (backwards = false) => {
     const len = listing.imgURLs.length;
@@ -217,38 +240,72 @@ const collect = ({
       time: 24 * 3600000,
     })
     .on("collect", async (interaction) => {
-      switch (interaction.customId) {
-        case nextImageButtonID:
-          embed.setColor(interactedColor);
-          await navigateImg();
-          break;
-        case prevImageButtonID:
-          embed.setColor(interactedColor);
-          await navigateImg(true);
-          break;
-        case descButtonID:
-          embed.setColor(interactedColor);
-          if (listing.details.longDescription === undefined) {
+      try {
+        switch (interaction.customId) {
+          case nextImageButtonID:
+            embed.setColor(interactedColor);
+            await navigateImg();
             break;
-          }
-          descButton?.setDisabled(true);
-          msg.edit({ components });
-          if (!descOpened) {
-            embed.addFields({
-              name: "Description",
-              value: discordFormat(listing.details.longDescription, {
-                quote: true,
-              }),
-            });
-            descButton?.setStyle(Discord.ButtonStyle.Primary);
-          } else {
-            embed.spliceFields(-1, 1);
-            descButton?.setStyle(Discord.ButtonStyle.Secondary);
-          }
-          descOpened = !descOpened;
+          case prevImageButtonID:
+            embed.setColor(interactedColor);
+            await navigateImg(true);
+            break;
+          case descButtonID:
+            embed.setColor(interactedColor);
+            const desc = listing.details.longDescription;
+            if (desc === undefined) {
+              break;
+            }
+            descButton?.setDisabled(true);
+            msg.edit({ components });
+
+            const toToggle = discordFormat(desc, { quote: true });
+            const og = (embed.data.description ?? "")
+              .replace(toToggle, "")
+              .replace(/\n+$/, "");
+            const withToggled = [og, toToggle].join("\n\n");
+
+            if (withToggled.length <= maxEmbedLength) {
+              embed.setDescription(descIsToggled ? og : withToggled);
+            } else {
+              const descFields = descriptionFields(listing) ?? [];
+              const fields = embed.data.fields ?? [];
+              if (descIsToggled) {
+                embed.spliceFields(
+                  Math.max(fields.length - descFields.length, 0),
+                  descFields.length
+                );
+              } else {
+                embed.addFields(descFields);
+              }
+            }
+
+            descIsToggled = !descIsToggled;
+            descButton
+              ?.setStyle(
+                descIsToggled
+                  ? Discord.ButtonStyle.Primary
+                  : Discord.ButtonStyle.Secondary
+              )
+              .setDisabled(false);
+            await msg.edit({ embeds: [embed], components });
+            break;
+        }
+      } catch (e) {
+        log(
+          `Error while handling interaction for message ${msg.id} for listing ${listing.url}:`,
+          { error: true }
+        );
+        log(e);
+        try {
           descButton?.setDisabled(false);
-          await msg.edit({ embeds: [embed], components });
-          break;
+          await msg.edit({ components });
+        } catch (_e) {
+          log(
+            `Error while trying to reset button state for message ${msg.id} for listing ${listing.url}:`,
+            { error: true }
+          );
+        }
       }
     });
 };

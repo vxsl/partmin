@@ -11,7 +11,7 @@ import { ChannelKey, channelDefs } from "discord/constants.js";
 import { discordIsReady } from "discord/index.js";
 import { shuttingDown } from "index.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
-import { errToString } from "util/misc.js";
+import { errToString, splitString } from "util/misc.js";
 
 export const getChannel = async (c: ChannelKey) => {
   const guildInfo = await cache.discordGuildInfo.requireValue();
@@ -120,7 +120,7 @@ export const discordSend = (...args: Parameters<typeof _discordSend>) => {
         error: true,
       });
       logNoDiscord(`"${msg.slice(0, 50)}..."`, { error: true });
-      const parts = `${msg}`.match(/.{1,1900}/g) ?? [];
+      const parts = splitString(`${msg}`, 1900);
       for (let i = 0; i < parts.length; i++) {
         if (i === parts.length - 1) {
           return _discordSend(parts[i], options);

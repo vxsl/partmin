@@ -1,6 +1,15 @@
 import { stdout as singleLineStdOut } from "single-line-log";
 import { debugLog } from "util/log.js";
 
+export const splitString = (s: string, maxLength: number) => {
+  const regex = new RegExp(`[\\s\\S]{1,${maxLength}}`, "g");
+  const matches = s.match(regex);
+  if (!matches) {
+    return [s];
+  }
+  return matches;
+};
+
 export const errToString = (e: unknown) =>
   e instanceof Error ? `${e.stack || `${e.name}: ${e.message}`}` : `${e}`;
 export const notUndefined = <T>(value: T | undefined): value is T =>
