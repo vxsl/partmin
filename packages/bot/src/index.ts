@@ -1,6 +1,6 @@
 import { dataDir, puppeteerCacheDir } from "constants.js";
 import { setDiscordPresence, shutdownDiscordBot } from "discord/client.js";
-import { sendEmbedWithButtons } from "discord/embed.js";
+import { reinitializeCollectors, sendEmbedWithButtons } from "discord/embed.js";
 import {
   discordIsReady,
   initDiscord,
@@ -157,7 +157,9 @@ export const shutdown = async () => {
     err = e;
   } finally {
     const procs = await psList();
-    const auditor = procs.find((proc) => proc.name === "partmin-presenc"); // TODO try cmd?
+    const auditor = procs.find(
+      (proc) => proc.name.startsWith("partmin-presenc") // "partmin-presence-auditor": program names are truncated on Linux and macOS
+    );
     if (auditor) {
       debugLog("Sending SIGINT to partmin-presence-auditor.");
       process.kill(auditor.pid, "SIGINT");
@@ -180,6 +182,7 @@ export const shutdown = async () => {
     writeStatusForAuditor("logged-in");
     log("Bot initialized.");
     setDiscordPresence("launching");
+    await reinitializeCollectors();
     await validateConfig();
     driver = await buildDriver();
 
