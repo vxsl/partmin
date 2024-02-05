@@ -64,15 +64,13 @@ export class CacheDef<T> {
     if (v) {
       return v;
     }
-    const e = new Error(
-      options?.message ??
-        `No value found: ${this.label}. ${this.envVarInstruction}`
-    );
     if (options?.message) {
-      console.log(options.message);
+      console.log(`\n\n${options.message}\n\n`);
       return shutdown().then(() => process.exit());
     } else {
-      return fatalError(e);
+      return fatalError(
+        `\n\nNo value found: ${this.label}. ${this.envVarInstruction}\n\n`
+      );
     }
   }
   get value() {

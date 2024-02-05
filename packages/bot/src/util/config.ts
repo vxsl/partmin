@@ -8,11 +8,13 @@ import { debugLog, log } from "util/log.js";
 export const validateConfig = async () => {
   debugLog("Validating config:");
   debugLog(JSON.stringify(config));
-  for (const address of config.options?.commuteDestinations ?? []) {
-    if (!(await isValidAddress(address))) {
-      throw new Error(
-        `Invalid address provided to config.options.commuteDestinations: ${address}`
-      );
+  if (!config.options?.disableGoogleMapsFeatures) {
+    for (const address of config.options?.commuteDestinations ?? []) {
+      if (!(await isValidAddress(address))) {
+        throw new Error(
+          `Invalid address provided to config.options.commuteDestinations: ${address}`
+        );
+      }
     }
   }
 

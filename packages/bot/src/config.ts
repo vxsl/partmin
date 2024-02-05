@@ -33,6 +33,7 @@ export const unreliabilityExplanations: Record<
 };
 
 const Options = RuntypeRecord({
+  disableGoogleMapsFeatures: Optional(Boolean),
   commuteDestinations: Optional(Array(String)),
 });
 const PetParams = RuntypeRecord({

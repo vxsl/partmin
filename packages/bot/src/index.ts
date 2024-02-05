@@ -1,3 +1,5 @@
+import cache from "cache.js";
+import config from "config.js";
 import { dataDir, puppeteerCacheDir } from "constants.js";
 import { setDiscordPresence, shutdownDiscordBot } from "discord/client.js";
 import { reinitializeCollectors, sendEmbedWithButtons } from "discord/embed.js";
@@ -177,6 +179,12 @@ export const shutdown = async () => {
     [dataDir, puppeteerCacheDir].forEach(
       (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
     );
+
+    if (!config.options?.disableGoogleMapsFeatures) {
+      await cache.googleMapsAPIKey.requireValue({
+        message: `A Google Maps API key with permissions for the Geocoding and Distance Matrix APIs is required for some partmin features. ${cache.discordGuildID.envVarInstruction}\n\nYou may disable these features by setting the 'options.disableGoogleMapsFeatures' config option.`,
+      });
+    }
 
     await initDiscord();
     writeStatusForAuditor("logged-in");

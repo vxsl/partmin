@@ -13,6 +13,7 @@
     "suppressUnreliableParamsWarning": false
   },
   "options": {
+    "disableGoogleMapsFeatures": false,
     "commuteDestinations": [
       "99 Rue Chabanel O, Montréal, QC H2N 1C3",
       "Gare Centrale"

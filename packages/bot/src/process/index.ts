@@ -42,8 +42,10 @@ export const processListings = async (unseenListings: Listing[]) => {
     checkForBlacklist(l);
     if (isValid(l)) {
       valid.push(l);
-      await ensureLocationLink(l);
-      await addCommuteSummary(l);
+      if (!config.options?.disableGoogleMapsFeatures) {
+        await ensureLocationLink(l);
+        await addCommuteSummary(l);
+      }
     } else {
       invalid.push(l);
     }
