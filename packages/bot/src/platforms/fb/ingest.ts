@@ -194,7 +194,7 @@ export const visitMarketplaceListing = async (
   }
 
   try {
-    const loc = info.home_address.street;
+    const loc = info.home_address?.street;
     if (loc) {
       l.details.shortAddress = loc;
       const full =

@@ -69,7 +69,8 @@ export const addBulletPoints = (
     bulletPoints: [
       ...(l.computed?.bulletPoints ?? []),
       ...(Array.isArray(_points) ? _points : [_points]).filter((p) => {
-        const v = typeof p === "string" ? p : p.value;
+        const v =
+          typeof p === "string" ? p : p && "value" in p ? p.value : undefined;
         return v !== null && v !== undefined && v !== "";
       }),
     ],
