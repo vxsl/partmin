@@ -327,7 +327,10 @@ export const reinitializeCollector = (
 };
 
 export const reinitializeCollectors = async () => {
-  const listings = await cache.listings.requireValue();
+  const listings = cache.listings.value;
+  if (!listings?.length) {
+    return;
+  }
   const listingsMap = new Map(listings.map((l) => [l.url, l]));
   const appID = await cache.discordAppID.requireValue();
   await getChannel("listings").then((c) =>
