@@ -23,9 +23,6 @@ export const log = (_v: any, options?: LogOptions) => {
     `${t}:`,
     v
   );
-  if (options?.level === "verbose") {
-    return;
-  }
 
   if (!options?.skipDiscord) {
     try {
@@ -48,4 +45,4 @@ export const log = (_v: any, options?: LogOptions) => {
 export const debugLog = (msg: any, options?: Omit<LogOptions, "level">) =>
   log(msg, { ...options, level: "debug" });
 export const verboseLog = (msg: any, options?: Omit<LogOptions, "level">) =>
-  log(msg, { ...options, level: "debug" });
+  log(msg, { ...options, level: "verbose" });
