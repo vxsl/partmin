@@ -1,4 +1,4 @@
-import { kijijiCache } from "platforms/kijiji/cache.js";
+import cache from "cache.js";
 import {
   rentalCategory,
   rentalCategoryRSS,
@@ -19,7 +19,7 @@ const kijiji: Platform = {
     await getKijijiRSS(driver).then((rss) => {
       log(`Kijiji RSS feed: ${rss}`);
       log(`(search URL: ${rss.replace(rentalCategoryRSS, rentalCategory)})`);
-      kijijiCache.rss.writeValue(rss);
+      cache.kijijiRSS.writeValue(rss);
     });
   },
   main: getListings,

@@ -1,13 +1,13 @@
+import cache from "cache.js";
 import config from "config.js";
 import dotenv from "dotenv-mono";
 import {
   Listing,
   addCommuteSummary,
-  ensureLocationLink,
   checkForBlacklist,
+  ensureLocationLink,
   isValid,
 } from "listing.js";
-import { processCache } from "process/cache.js";
 import { isWithinRadii } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
 
@@ -20,11 +20,11 @@ export const withUnseenListings = async <T>(
   newListings: Listing[],
   fn: (listings: Listing[]) => Promise<T>
 ) => {
-  const seen = processCache.listings.value ?? [];
+  const seen = cache.listings.value ?? [];
   const seenKeys = new Set(seen.map(getListingKey));
   const unseen = newListings.filter((l) => !seenKeys.has(getListingKey(l)));
   const result = await fn(unseen);
-  processCache.listings.writeValue([...seen, ...unseen]);
+  cache.listings.writeValue([...seen, ...unseen]);
   log(
     `${unseen.length} unseen listing${unseen.length !== 1 ? "s" : ""} out of ${
       newListings.length

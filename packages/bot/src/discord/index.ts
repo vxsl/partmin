@@ -1,3 +1,4 @@
+import cache from "cache.js";
 import config from "config.js";
 import { statusPathForAuditor } from "constants.js";
 import {
@@ -11,7 +12,6 @@ import {
   Role,
   TextChannel,
 } from "discord.js";
-import { discordCache } from "discord/cache.js";
 import { greetings } from "discord/chat.js";
 import { discordClient } from "discord/client.js";
 import {
@@ -44,7 +44,7 @@ const authorize = (
   isAuthorized: () => boolean | Promise<boolean>
 ) =>
   new Promise<void>(async (resolve, reject) => {
-    const appID = await discordCache.appID.requireValue();
+    const appID = await cache.discordAppID.requireValue();
     const inviteBase = "https://discord.com/api/oauth2/authorize";
     const inviteURL = `${inviteBase}?client_id=${appID}&permissions=${PermissionsBitField.resolve(
       requiredPermissions
@@ -260,7 +260,7 @@ const setupGuild = async (
   let guild: Guild | undefined;
   let role: Role | undefined;
 
-  const appID = await discordCache.appID.requireValue();
+  const appID = await cache.discordAppID.requireValue();
 
   try {
     guild = await getGuild(id);
@@ -312,18 +312,18 @@ const setupGuild = async (
 };
 
 export const initDiscord = async () => {
-  const guildID = await discordCache.guildID.requireValue({
-    message: `Your Discord server is not set up. To configure it, please retrieve your server's ID:\n - open Discord\n - right-click your server in the sidebar\n - Server Settings\n - Widget \n - SERVER ID\n\n${discordCache.guildID.envVarInstruction}\n\nNote that partmin will create channels in this server, so make sure you have the necessary permissions to do so.`,
+  const guildID = await cache.discordGuildID.requireValue({
+    message: `Your Discord server is not set up. To configure it, please retrieve your server's ID:\n - open Discord\n - right-click your server in the sidebar\n - Server Settings\n - Widget \n - SERVER ID\n\n${cache.discordGuildID.envVarInstruction}\n\nNote that partmin will create channels in this server, so make sure you have the necessary permissions to do so.`,
   });
 
   return await new Promise(async (resolve, reject) => {
     discordClient.once("ready", async () => {
-      if (discordCache.guildInfo.value) {
+      if (cache.discordGuildInfo.value) {
         debugLog("Cached server information found.");
         // TODO use runtypes to throw (or warn?) if guildInfo is malformed.
       }
       await setupGuild(guildID, {}).then((newGuildInfo) => {
-        discordCache.guildInfo.writeValue(newGuildInfo);
+        cache.discordGuildInfo.writeValue(newGuildInfo);
         log("Server configuration complete");
       });
 
@@ -336,8 +336,8 @@ export const initDiscord = async () => {
     discordClient.once("error", reject);
 
     log("Discord client logging in...");
-    const token = await discordCache.botToken.requireValue({
-      message: `Partmin requires a Discord bot token to run. ${discordCache.botToken.envVarInstruction}`,
+    const token = await cache.discordBotToken.requireValue({
+      message: `Partmin requires a Discord bot token to run. ${cache.discordBotToken.envVarInstruction}`,
     });
     await discordClient.login(token);
   });

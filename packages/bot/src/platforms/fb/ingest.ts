@@ -1,10 +1,10 @@
+import cache from "cache.js";
 import config, { PetType } from "config.js";
 import { discordSend } from "discord/util.js";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
-import { processCache } from "process/cache.js";
 import { getListingKey } from "process/index.js";
-import { By, WebDriver, WebElement } from "selenium-webdriver";
+import { By, WebDriver } from "selenium-webdriver";
 import { PlatformKey } from "types/platform.js";
 import { acresToSqft, findNestedProperty, sqMetersToSqft } from "util/data.js";
 import { Coordinates, Radius, getGoogleMapsLink } from "util/geo.js";
@@ -337,7 +337,7 @@ export const getListings = async (
   // This violates the intended separation of concerns between ingest and process stages,
   // but it's necessary to avoid unnecessary long-running thumbnail retrievals.
   // TODO consider how to refactor the stages to fix this issue.
-  const seenKeys = new Set(processCache.listings.value?.map(getListingKey));
+  const seenKeys = new Set(cache.listings.value?.map(getListingKey));
 
   return await withElementsByXpath(
     driver,

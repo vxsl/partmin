@@ -1,3 +1,4 @@
+import cache from "cache.js";
 import config from "config.js";
 import {
   BaseMessageOptions,
@@ -5,7 +6,6 @@ import {
   EmbedBuilder,
   TextChannel,
 } from "discord.js";
-import { discordCache } from "discord/cache.js";
 import { discordClient } from "discord/client.js";
 import { ChannelKey, channelDefs } from "discord/constants.js";
 import { discordIsReady } from "discord/index.js";
@@ -14,7 +14,7 @@ import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString } from "util/misc.js";
 
 export const getChannel = async (c: ChannelKey) => {
-  const guildInfo = await discordCache.guildInfo.requireValue();
+  const guildInfo = await cache.discordGuildInfo.requireValue();
   const id = guildInfo.channelIDs[c];
 
   const result = (await (discordClient.channels.cache.get(id) ??

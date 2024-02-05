@@ -11,11 +11,10 @@ import Discord, {
   StringSelectMenuBuilder,
   UserSelectMenuBuilder,
 } from "discord.js";
-import { discordCache } from "discord/cache.js";
 import { ChannelKey } from "discord/constants.js";
 import { discordFormat, discordSend, getChannel } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
-import { processCache } from "process/cache.js";
+import cache from "cache.js";
 import { platforms } from "types/platform.js";
 import { trimAddress } from "util/data.js";
 import { formatCommuteSummaryMD } from "util/geo.js";
@@ -328,9 +327,9 @@ export const reinitializeCollector = (
 };
 
 export const reinitializeCollectors = async () => {
-  const listings = await processCache.listings.requireValue();
+  const listings = await cache.listings.requireValue();
   const listingsMap = new Map(listings.map((l) => [l.url, l]));
-  const appID = await discordCache.appID.requireValue();
+  const appID = await cache.discordAppID.requireValue();
   await getChannel("listings").then((c) =>
     c.messages.fetch().then((messages) =>
       messages.forEach((m) => {

@@ -1,7 +1,7 @@
+import cache from "cache.js";
 import config from "config.js";
 import he from "he";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
-import { kijijiCache } from "platforms/kijiji/cache.js";
 import { baseURL } from "platforms/kijiji/constants.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
@@ -206,7 +206,7 @@ export const getKijijiRSS = async (driver: WebDriver) => {
 };
 
 export const getListings = async (): Promise<Listing[]> => {
-  const rss = await kijijiCache.rss.requireValue();
+  const rss = await cache.kijijiRSS.requireValue();
   log(`Parsing Kijiji RSS feed: ${rss}`);
   return parser.parseURL(rss).then((output) =>
     output.items.reduce((acc, item) => {
