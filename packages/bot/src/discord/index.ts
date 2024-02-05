@@ -56,8 +56,10 @@ const authorize = (
 
     setTimeout(() => {
       clearInterval(spinnerID);
-      console.log("\nTimed out.");
-      reject();
+      if (!isAuthorized()) {
+        console.log("\nTimed out.");
+        reject();
+      }
     }, timeoutSecs * 1000);
 
     let i = 0;
@@ -269,7 +271,7 @@ const setupGuild = async (
 
   if (guild && role) {
     if (!permsMatch(role)) {
-      authorize(
+      await authorize(
         "Partmin's required permissions have changed. Please reauthorize the bot",
         () => permsMatch(role!, { silent: true })
       );
