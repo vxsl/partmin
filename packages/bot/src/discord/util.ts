@@ -119,7 +119,7 @@ export const discordSend = (...args: Parameters<typeof _discordSend>) => {
       logNoDiscord(`Message too long, splitting into parts:`, {
         error: true,
       });
-      logNoDiscord(msg, { error: true });
+      logNoDiscord(`"${msg.slice(0, 50)}..."`, { error: true });
       const parts = `${msg}`.match(/.{1,1900}/g) ?? [];
       for (let i = 0; i < parts.length; i++) {
         if (i === parts.length - 1) {

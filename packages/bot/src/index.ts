@@ -2,7 +2,10 @@ import cache from "cache.js";
 import config from "config.js";
 import { dataDir, puppeteerCacheDir } from "constants.js";
 import { setDiscordPresence, shutdownDiscordBot } from "discord/client.js";
-import { reinitializeCollectors, sendEmbedWithButtons } from "discord/embed.js";
+import {
+  reinitializeCollectors,
+  sendListing as sendListing,
+} from "discord/embed.js";
 import {
   discordIsReady,
   initDiscord,
@@ -100,7 +103,7 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
                 }): ${l.url}`
               );
               try {
-                await sendEmbedWithButtons(l);
+                await sendListing(l);
               } catch (e) {
                 discordWarning(
                   `Error while sending Discord embed for listing ${i + 1}/${

@@ -40,7 +40,7 @@ const locationLink = (l: Listing) => {
     : undefined;
 };
 
-const listingEmbed = (l: Listing) => {
+const getListingEmbed = (l: Listing) => {
   let descriptionHeader = [
     `${
       l.details.price
@@ -371,11 +371,8 @@ export const reinitializeCollectors = async () => {
   );
 };
 
-export const sendEmbedWithButtons = async (
-  listing: Listing,
-  channel?: ChannelKey
-) => {
-  const embed = listingEmbed(listing);
+export const sendListing = async (listing: Listing, channel?: ChannelKey) => {
+  const embed = getListingEmbed(listing);
 
   const buttons = getButtons(listing);
   const buttonsArr = Object.values(buttons).filter(notUndefined);
