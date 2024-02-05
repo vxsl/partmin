@@ -6,6 +6,7 @@ services:
     env_file: .env
     volumes:
       - ./config:/usr/src/app/config
+      - ./packages/bot/.data:/usr/src/app/packages/bot/.data
       - /dev/shm:/dev/shm
       - /etc/localtime:/etc/localtime:ro
     entrypoint:
