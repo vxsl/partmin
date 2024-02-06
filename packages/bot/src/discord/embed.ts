@@ -16,7 +16,7 @@ import { discordFormat, discordSend, getChannel } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
 import { trimAddress } from "util/data.js";
-import { formatCommuteSummaryMD } from "util/geo.js";
+import { formatCommuteSummaryMD, getGoogleMapsLink } from "util/geo.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined, splitString } from "util/misc.js";
 
@@ -25,21 +25,6 @@ const maxFieldLength = 1024;
 const uninteractedColor = "#7289da";
 const interactedColor = "#424549";
 
-const locationLink = (l: Listing) => {
-  const text = l.computed?.locationLinkText;
-  const url = l.computed?.locationLinkURL;
-  return text && url
-    ? `[${discordFormat(
-        `${text}${
-          l.computed?.locationLinkIsApproximate
-            ? discordFormat(" (approx.)", { bold: true })
-            : ""
-        }`,
-        { italic: true }
-      )}](${url})`
-    : undefined;
-};
-
 const getListingEmbed = (l: Listing) => {
   let descriptionHeader = [
     `${
@@ -47,10 +32,29 @@ const getListingEmbed = (l: Listing) => {
         ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
         : undefined
     }`,
-    locationLink(l) ?? l.details.shortAddress ?? l.details.coords?.toString(),
+    l.computed?.locationLinkText && l.computed?.locationLinkURL
+      ? discordFormat(
+          `${l.computed.locationLinkText}${
+            l.computed?.locationLinkIsApproximate
+              ? discordFormat(" (approx.)", { bold: true })
+              : ""
+          }`,
+          { italic: true, link: l.computed.locationLinkURL }
+        )
+      : l.details.shortAddress
+      ? discordFormat(l.details.shortAddress, {
+          italic: true,
+          link: getGoogleMapsLink(l.details.shortAddress),
+        })
+      : l.details.coords
+      ? discordFormat(l.details.coords.toString(), {
+          italic: true,
+          link: getGoogleMapsLink(l.details.coords.toString()),
+        })
+      : undefined,
   ]
     .filter(notUndefined)
-    .join(" / ");
+    .join(" ┃ ");
 
   const dests = Object.keys(l.computed?.commuteDestinations ?? {});
 
@@ -186,15 +190,15 @@ const descriptionFields = (l: Listing) => {
   }
   const v = discordFormat(desc.replace(/\s+$/, ""), { quote: true });
   const chunks = splitString(v, maxFieldLength - 10);
-  return chunks.map((_s, i) => {
+  return chunks.map((c, i) => {
     let value = "";
-    if (!value.match(/^\s*>\s/)) {
+    if (!c.match(/^\s*>\s/)) {
       value = "> ";
     }
     if (i > 0) {
       value += "...";
     }
-    value += _s;
+    value += c;
     if (i !== chunks.length - 1) {
       value += "...";
     }

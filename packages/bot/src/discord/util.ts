@@ -85,6 +85,7 @@ interface FormatOptions {
   italic?: true;
   code?: boolean;
   quote?: boolean;
+  link?: string;
 }
 
 export const discordFormat = (s: string, options?: FormatOptions) => {
@@ -101,6 +102,9 @@ export const discordFormat = (s: string, options?: FormatOptions) => {
   }
   if (options?.quote) {
     v = `> ${v.replace(/\n/g, "\n> ")}`;
+  }
+  if (options?.link) {
+    v = `[${v}](${options.link})`;
   }
   return v;
 };

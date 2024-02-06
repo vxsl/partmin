@@ -38,6 +38,10 @@ export class Coordinates {
     const lon = options?.truncate ? c.lon.toFixed(3) : c.lon;
     return options?.raw ? `${lat},${lon}` : `(${lat}, ${lon})`;
   }
+
+  toString(options?: Parameters<typeof Coordinates.toString>[1]) {
+    return Coordinates.toString(this, options);
+  }
 }
 export class Radius {
   coords: Coordinates;
@@ -74,11 +78,14 @@ export class Radius {
   get lon() {
     return this.coords.lon;
   }
-  toString(options?: { truncate?: boolean }) {
-    return `${Coordinates.toString(this.coords, {
+  static toString(r: Radius, options?: { truncate?: boolean }) {
+    return `${Coordinates.toString(r.coords, {
       raw: true,
       truncate: options?.truncate,
-    })},${options?.truncate ? this.diam.toFixed(3) : this.diam}`;
+    })},${options?.truncate ? r.diam.toFixed(3) : r.diam}`;
+  }
+  toString(options?: Parameters<typeof Radius.toString>[1]) {
+    return Radius.toString(this, options);
   }
 }
 
