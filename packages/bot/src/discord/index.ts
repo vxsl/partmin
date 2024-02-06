@@ -33,7 +33,23 @@ dotenv.load();
 
 let initComplete = false;
 
-export const discordIsReady = () => initComplete && discordClient.isReady();
+export const discordIsReady = (
+  client: Client = discordClient
+): client is Client<true> => initComplete && client.isReady();
+export const getDiscordClient = (options?: {
+  fatal?: boolean;
+  errorMessage?: string;
+}) => {
+  if (!discordIsReady(discordClient)) {
+    const m = options?.errorMessage || "Discord client not ready";
+    if (options?.fatal) {
+      throw new Error(m);
+    }
+    log(m);
+    return;
+  }
+  return discordClient;
+};
 
 export interface GuildInfo {
   channelIDs: Record<ChannelKey, string>;
