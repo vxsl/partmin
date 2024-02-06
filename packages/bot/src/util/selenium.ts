@@ -155,24 +155,33 @@ export const elementShouldExist = async (
 export const withElementsByXpath = async <T>(
   driver: WebDriver,
   xpath: string,
-  fn: (el: WebElement, i: number) => Promise<T | undefined>
+  fn: (el: WebElement, i: number) => Promise<T>,
+  options?: { noConcurrency?: boolean }
 ): Promise<T[]> => {
+  const promises: Promise<T>[] = [];
   const results: T[] = [];
+
   const len = await driver
     .findElements(By.xpath(xpath))
     .then((els) => els.length);
   verboseLog(`withElementsByXpath: ${len} elements found`);
   for (let i = 0; i < len; i++) {
-    // verboseLog(`withElementsByXpath (${i + 1}/${len}): ${xpath}`);
-    const r = await withElement(
-      () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`)),
-      (el) => fn(el, i)
-    );
-    if (r !== undefined) {
-      results.push(r);
+    const getEl = () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`));
+
+    if (options?.noConcurrency) {
+      const r = await withElement(getEl, (el) => fn(el, i));
+      if (r !== undefined) {
+        results.push(r);
+      }
+    } else {
+      promises.push(
+        new Promise<T>((resolve) => {
+          withElement(getEl, (el) => resolve(fn(el, i)));
+        })
+      );
     }
   }
-  return results;
+  return options?.noConcurrency ? results : Promise.all(promises);
 };
 
 export const withElement = <F extends (el: WebElement) => any>(
