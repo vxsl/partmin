@@ -1,58 +1,23 @@
-import {
-  getListings,
-  visitMarketplace,
-  visitMarketplaceListing,
-} from "platforms/fb/ingest.js";
-import { decodeMapDevelopersURL } from "util/geo.js";
-import { notUndefined, randomWait } from "util/misc.js";
-import { debugLog, log, verboseLog } from "util/log.js";
-import { Listing } from "listing.js";
+import { main, perListing } from "platforms/fb/ingest.js";
 import { Platform } from "types/platform.js";
-import { withDOMChangesBlocked } from "util/selenium.js";
-import config from "config.js";
 
 const fb: Platform = {
   name: "Facebook Marketplace",
   icon: "https://www.facebook.com/favicon.ico",
-  main: async (driver) => {
-    const listings: Listing[] = [];
-    const radii = decodeMapDevelopersURL(
-      config.search.location.mapDevelopersURL
-    );
-    let listingCount = 0;
-    for (let i = 0; i < radii.length; i++) {
-      const r = radii[i];
-      const rLabel = `radius ${i + 1}/${radii.length}`;
-      log(
-        `visiting fb marketplace [${rLabel}]: ${r.toString({
-          truncate: true,
-        })}`
-      );
-      await visitMarketplace(driver, r);
-      debugLog("Initializing listings...");
-      await withDOMChangesBlocked(driver, async () => {
-        await getListings(driver).then((arr) => {
-          verboseLog(
-            `found the following listings in ${rLabel}: ${arr
-              ?.map((l) => l.id)
-              .join(", ")}`
-          );
-          listings.push(...(arr?.filter(notUndefined) ?? []));
-        });
-      });
-      log(
-        `found ${
-          listings.length - listingCount
-        } listings in ${rLabel} (${r.toString({ truncate: true })})`
-      );
-      listingCount = listings.length;
-      if (i < radii.length - 1) {
-        await randomWait({ short: true, suppressProgressLog: true });
-      }
-    }
-    return listings;
+  callbacks: {
+    main,
+    perListing,
   },
-  perListing: visitMarketplaceListing,
+  presenceActivities: {
+    main: {
+      emoji: "📰",
+      message: "browsing facebook marketplace",
+    },
+    perListing: {
+      emoji: "🧐",
+      message: "carefully scrutinizing marketplace listings",
+    },
+  },
 };
 
 export default fb;

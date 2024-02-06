@@ -1,18 +1,24 @@
-import cache from "cache.js";
 import config, { PetType } from "config.js";
+import { startActivity } from "discord/presence.js";
 import { discordSend } from "discord/util.js";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
-import { getListingKey } from "process/index.js";
+import fb from "platforms/fb/index.js";
 import { By, WebDriver } from "selenium-webdriver";
 import { PlatformKey } from "types/platform.js";
 import { acresToSqft, findNestedProperty, sqMetersToSqft } from "util/data.js";
-import { Coordinates, Radius, getGoogleMapsLink } from "util/geo.js";
+import {
+  Coordinates,
+  Radius,
+  decodeMapDevelopersURL,
+  getGoogleMapsLink,
+} from "util/geo.js";
 import { debugLog, log, verboseLog } from "util/log.js";
-import { notUndefined } from "util/misc.js";
+import { notUndefined, randomWait, tryNTimes } from "util/misc.js";
 import {
   clearBrowsingData,
   elementShouldExist,
+  withDOMChangesBlocked,
   withElement,
   withElementsByXpath,
 } from "util/selenium.js";
@@ -20,17 +26,23 @@ import {
 const platform: PlatformKey = "fb";
 
 const getListingURL = (id: string) => `https://fb.com/marketplace/item/${id}`;
+class MarketplaceRadiusError extends Error {
+  constructor(url: string) {
+    super(`Warning: Marketplace refused to load ${url} correctly.`);
+    this.name = "MarketplaceRadiusError";
+  }
+}
 
-export const visitMarketplaceListing = async (
-  driver: WebDriver,
-  l: Listing
-) => {
+const fbGet = async (driver: WebDriver, url: string) => {
   await clearBrowsingData(driver);
+  await driver.get(url);
+};
 
+export const perListing = async (driver: WebDriver, l: Listing) => {
   let url = getListingURL(l.id);
   debugLog(`visiting listing: ${url}`);
 
-  await driver.get(url);
+  await fbGet(driver, url);
 
   const infoStringified = await driver
     .findElements(
@@ -252,13 +264,7 @@ export const visitMarketplaceListing = async (
   }
 };
 
-export const visitMarketplace = async (
-  driver: WebDriver,
-  radius: Radius,
-  tries: number = 0
-) => {
-  await clearBrowsingData(driver);
-
+export const visitMarketplace = async (driver: WebDriver, radius: Radius) => {
   const vals = {
     // location:
     latitude: radius.lat,
@@ -292,7 +298,7 @@ export const visitMarketplace = async (
   }
   debugLog(`url: ${url}`);
 
-  await driver.get(url);
+  await fbGet(driver, url);
 
   await driver.wait(async () => {
     const state = (await driver.executeScript(
@@ -315,34 +321,19 @@ export const visitMarketplace = async (
   const minRadius = radius.diam * 0.9;
   const maxRadius = radius.diam * 1.1;
   if (urlRadius < minRadius || urlRadius > maxRadius) {
-    if (++tries >= 3) {
-      // TODO only send this if the error persists over time
-      discordSend(
-        `Warning: Marketplace is misbehaving by refusing to correctly load ${url}.`,
-        { bold: true }
-      );
-      return;
-    }
-    await visitMarketplace(driver, radius, tries);
+    throw new MarketplaceRadiusError(url);
   }
 };
 
-export const getListings = async (
-  driver: WebDriver
-): Promise<Listing[] | undefined> => {
+export const getListings = async (driver: WebDriver): Promise<Listing[]> => {
   verboseLog("Waiting for search page to be ready");
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
   verboseLog("Search page ready");
 
-  // This violates the intended separation of concerns between ingest and process stages,
-  // but it's necessary to avoid unnecessary long-running thumbnail retrievals.
-  // TODO consider how to refactor the stages to fix this issue.
-  const seenKeys = new Set(cache.listings.value?.map(getListingKey));
-
   return await withElementsByXpath(
     driver,
     fbListingXpath,
-    async (e, i): Promise<Listing | undefined> => {
+    async (e): Promise<Listing | undefined> => {
       const href = await e.getAttribute("href");
       const id = href.match(/\d+/)?.[0];
 
@@ -388,20 +379,69 @@ export const getListings = async (
           }),
       };
 
-      // This violates the intended separation of concerns between ingest and process stages,
-      // but it's necessary to avoid unnecessary long-running thumbnail retrievals.
-      // TODO consider how to refactor the stages to fix this issue.
-      if (!seenKeys.has(getListingKey(res))) {
-        debugLog(
-          `Retrieving thumbnail for ${platform} listing ${i + 1}: ${id}`
-        );
-        await withElement(
-          () => e.findElement(By.css("img")),
-          (img) => img.getAttribute("src").then((src) => res.imgURLs.push(src))
-        );
-      }
+      await withElement(
+        () => e.findElement(By.css("img")),
+        (img) => img.getAttribute("src").then((src) => res.imgURLs.push(src))
+      );
 
       return res;
     }
-  );
+  ).then((arr) => arr.filter(notUndefined));
+};
+
+export const main = async (driver: WebDriver) => {
+  const listings: Listing[] = [];
+  const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
+  let listingCount = 0;
+
+  const activity = startActivity(fb.presenceActivities?.main, radii.length);
+
+  for (let i = 0; i < radii.length; i++) {
+    const r = radii[i];
+    const rLabel = `radius ${i + 1}/${radii.length}`;
+    log(
+      `visiting fb marketplace [${rLabel}]: ${r.toString({
+        truncate: true,
+      })}`
+    );
+
+    activity?.update(i);
+
+    try {
+      await tryNTimes(3, () => visitMarketplace(driver, r));
+    } catch (e) {
+      if (e instanceof MarketplaceRadiusError) {
+        // TODO only send this error to the user if it persists over time
+        discordSend(e.message, { bold: true });
+        log(
+          `Skipping ${rLabel} this time because Facebook refused to load the correct radius.`
+        );
+        continue;
+      } else {
+        throw e;
+      }
+    }
+
+    debugLog("Initializing listings...");
+    await withDOMChangesBlocked(driver, async () => {
+      await getListings(driver).then((arr) => {
+        verboseLog(
+          `found the following listings in ${rLabel}: ${arr
+            ?.map((l) => l.id)
+            .join(", ")}`
+        );
+        listings.push(...arr);
+      });
+    });
+    log(
+      `found ${
+        listings.length - listingCount
+      } listings in ${rLabel} (${r.toString({ truncate: true })})`
+    );
+    listingCount = listings.length;
+    if (i < radii.length - 1) {
+      await randomWait({ short: true, suppressProgressLog: true });
+    }
+  }
+  return listings;
 };

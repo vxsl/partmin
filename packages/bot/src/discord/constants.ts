@@ -1,13 +1,23 @@
 import {
+  ActivityType,
   ChannelType,
   MessageCreateOptions,
   MessageFlags,
   PermissionsBitField,
+  PresenceData,
 } from "discord.js";
+import { PresenceActivityDef } from "discord/presence.js";
+import { readableSeconds } from "util/data.js";
+
+// ------------------------------------------------------------
+// misc. constants
 
 export const requiredPermissions = new PermissionsBitField(
   BigInt(1084815309904)
 );
+
+// ------------------------------------------------------------
+// channels
 
 const prodChannelKeys = ["main-category", "listings", "logs"] as const;
 const testChannelKeys = prodChannelKeys.map((k) => `test-${k}` as const);
@@ -81,4 +91,68 @@ export const testChannelDefs: Record<TestChannelKey, TestChannelDef> = {
 export const channelDefs: Record<ChannelKey, ChannelDef> = {
   ...prodChannelDefs,
   ...testChannelDefs,
+};
+
+// ------------------------------------------------------------
+// presence
+
+const presenceKeys = [
+  "launching",
+  "online",
+  "shuttingDown",
+  "offline",
+] as const;
+type PresenceKey = (typeof presenceKeys)[number];
+export const presences: Record<PresenceKey, PresenceData> = {
+  launching: {
+    status: "online",
+    activities: [
+      {
+        name: "⏳ initializing...",
+        type: ActivityType.Custom,
+      },
+    ],
+  },
+  online: {
+    status: "online",
+    activities: [
+      {
+        name: "👋 online",
+        type: ActivityType.Custom,
+      },
+    ],
+  },
+  shuttingDown: {
+    status: "online",
+    activities: [
+      {
+        name: "⛔ shutting down...",
+        type: ActivityType.Custom,
+      },
+    ],
+  },
+  offline: {
+    status: "invisible",
+  },
+};
+
+const presenceActivityKeys = ["processing", "notifying", "waiting"] as const;
+type PresenceActivityKey = (typeof presenceActivityKeys)[number];
+export const presenceActivities: Record<
+  PresenceActivityKey,
+  PresenceActivityDef
+> = {
+  processing: {
+    emoji: "🔄",
+    message: ({ max }) => `processing/filtering ${max} new listings...`,
+  },
+  notifying: {
+    emoji: "💌",
+    message: ({ max }) => `sending ${max} new listings your way!`,
+  },
+  waiting: {
+    emoji: `⏳`,
+    message: ({ max }) => `pausing for ${readableSeconds(max)}`,
+    customProgress: ({ cur, max }) => `<${readableSeconds(max - cur)} left`,
+  },
 };

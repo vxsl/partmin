@@ -6,6 +6,8 @@ import {
   CategoryChannel,
   Channel,
   ChannelType,
+  Client,
+  GatewayIntentBits,
   Guild,
   GuildChannel,
   PermissionsBitField,
@@ -13,7 +15,6 @@ import {
   TextChannel,
 } from "discord.js";
 import { greetings } from "discord/chat.js";
-import { discordClient } from "discord/client.js";
 import {
   ChannelDef,
   ChannelKey,
@@ -21,15 +22,20 @@ import {
   prodChannelDefs,
   requiredPermissions,
 } from "discord/constants.js";
+import { setPresence } from "discord/presence.js";
 import { discordSend } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { writeFileSync } from "fs";
 import { stdout as singleLineStdOut } from "single-line-log";
-import { debugLog, log } from "util/log.js";
+import { debugLog, log, logNoDiscord } from "util/log.js";
 import { waitSeconds } from "util/misc.js";
 import { RecursivePartial } from "util/type.js";
 
 dotenv.load();
+
+export const discordClient = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+});
 
 let initComplete = false;
 
@@ -336,6 +342,7 @@ export const initDiscord = async () => {
 
   return await new Promise(async (resolve, reject) => {
     discordClient.once("ready", async () => {
+      writeStatusForAuditor("logged-in");
       if (cache.discordGuildInfo.value) {
         debugLog("Cached server information found.");
         // TODO use runtypes to throw (or warn?) if guildInfo is malformed.
@@ -364,3 +371,12 @@ export const initDiscord = async () => {
 type DiscordBotLoggedInStatus = "logged-in" | "logged-out";
 export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
   writeFileSync(statusPathForAuditor, status);
+
+export const shutdownDiscord = () => {
+  logNoDiscord("Setting bot presence to offline");
+  return setPresence("offline", { skipDiscordLog: true }).then(async () => {
+    logNoDiscord("Destroying discord client");
+    await discordClient?.destroy();
+    writeStatusForAuditor("logged-out");
+  });
+};

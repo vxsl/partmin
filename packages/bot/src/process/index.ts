@@ -1,5 +1,7 @@
 import cache from "cache.js";
 import config from "config.js";
+import { presenceActivities } from "discord/constants.js";
+import { startActivity } from "discord/presence.js";
 import dotenv from "dotenv-mono";
 import {
   Listing,
@@ -30,14 +32,21 @@ export const withUnseenListings = async <T>(
       newListings.length
     }${config.logging?.verbose ? ":" : "."}`
   );
-  verboseLog(unseen.map((l) => l.url).join(", "));
+  if (unseen.length) {
+    verboseLog(unseen.map((l) => l.url).join(", "));
+  }
   return result;
 };
 
 export const processListings = async (unseenListings: Listing[]) => {
+  const activity = startActivity(
+    presenceActivities.processing,
+    unseenListings.length
+  );
   const [validResults, invalidResults] = await unseenListings.reduce<
     Promise<[Listing[], Listing[]]>
-  >(async (promises, l) => {
+  >(async (promises, l, i) => {
+    activity?.update(i);
     const [valid, invalid] = await promises;
     checkForBlacklist(l);
     if (isValid(l)) {

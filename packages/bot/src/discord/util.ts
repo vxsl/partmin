@@ -6,7 +6,7 @@ import {
   EmbedBuilder,
   TextChannel,
 } from "discord.js";
-import { discordClient } from "discord/client.js";
+import { discordClient } from "discord/index.js";
 import { ChannelKey, channelDefs } from "discord/constants.js";
 import { discordIsReady } from "discord/index.js";
 import { shuttingDown } from "index.js";

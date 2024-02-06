@@ -1,29 +1,28 @@
-import cache from "cache.js";
 import {
-  rentalCategory,
-  rentalCategoryRSS,
-} from "platforms/kijiji/constants.js";
-import {
-  getKijijiRSS,
-  getListings,
-  visitKijijiListing,
+  main,
+  onSearchParamsChanged,
+  perListing,
 } from "platforms/kijiji/ingest.js";
 import { Platform } from "types/platform.js";
-import { log } from "util/log.js";
 
 const kijiji: Platform = {
   name: "Kijiji",
   icon: "https://www.kijiji.ca/favicon.ico",
-  onSearchParamsChanged: async (driver) => {
-    log("Building new Kijiji RSS feed");
-    await getKijijiRSS(driver).then((rss) => {
-      log(`Kijiji RSS feed: ${rss}`);
-      log(`(search URL: ${rss.replace(rentalCategoryRSS, rentalCategory)})`);
-      cache.kijijiRSS.writeValue(rss);
-    });
+  callbacks: {
+    onSearchParamsChanged,
+    main,
+    perListing,
   },
-  main: getListings,
-  perListing: visitKijijiListing,
+  presenceActivities: {
+    main: {
+      emoji: "🗞️",
+      message: "swiftly glancing at kijiji RSS feed",
+    },
+    perListing: {
+      emoji: "🧐",
+      message: "carefully scrutinizing kijiji listings",
+    },
+  },
 };
 
 export default kijiji;

@@ -1,8 +1,10 @@
 import cache from "cache.js";
 import config from "config.js";
+import { startActivity } from "discord/presence.js";
 import he from "he";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import { baseURL } from "platforms/kijiji/constants.js";
+import kijiji from "platforms/kijiji/index.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
@@ -22,7 +24,7 @@ const parser = new Parser({
   },
 });
 
-export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
+export const perListing = async (driver: WebDriver, l: Listing) => {
   await kijijiGet(l.url, driver);
 
   debugLog("Retrieving listing data");
@@ -169,7 +171,8 @@ export const visitKijijiListing = async (driver: WebDriver, l: Listing) => {
     .getAttribute("innerText");
 };
 
-export const getKijijiRSS = async (driver: WebDriver) => {
+export const onSearchParamsChanged = async (driver: WebDriver) => {
+  log("Building new Kijiji RSS feed");
   await kijijiGet(baseURL, driver);
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
 
@@ -199,15 +202,17 @@ export const getKijijiRSS = async (driver: WebDriver) => {
   await setFilters(driver);
 
   log(`Kijiji results after applying filters: ${await driver.getCurrentUrl()}`);
-
-  return await driver
+  const rss = await driver
     .findElement(By.xpath(`//div[@data-testid="srp-rss-feed-button"]//a`))
     .then((el) => el.getAttribute("href"));
+  log(`Kijiji RSS feed: ${rss}`);
+  cache.kijijiRSS.writeValue(rss);
 };
 
-export const getListings = async (): Promise<Listing[]> => {
+export const main = async (): Promise<Listing[]> => {
   const rss = await cache.kijijiRSS.requireValue();
   log(`Parsing Kijiji RSS feed: ${rss}`);
+  startActivity(kijiji.presenceActivities?.main, -1);
   return parser.parseURL(rss).then((output) =>
     output.items.reduce((acc, item) => {
       const url = item.link;

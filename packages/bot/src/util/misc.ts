@@ -1,5 +1,8 @@
+import { presenceActivities } from "discord/constants.js";
+import { startActivity } from "discord/presence.js";
 import { stdout as singleLineStdOut } from "single-line-log";
-import { debugLog } from "util/log.js";
+import { readableSeconds } from "util/data.js";
+import { debugLog, log } from "util/log.js";
 
 export const splitString = (s: string, maxLength: number) => {
   const regex = new RegExp(`[\\s\\S]{1,${maxLength}}`, "g");
@@ -57,6 +60,7 @@ export const randomWait = async (options?: {
   short?: true;
   suppressLog?: boolean;
   suppressProgressLog?: boolean;
+  setPresence?: boolean;
 }) => {
   const minShort = 2;
   const maxShort = 10;
@@ -71,16 +75,21 @@ export const randomWait = async (options?: {
     ? Math.round(Math.random() * (maxLong - minLong) + minLong)
     : Math.round(Math.random() * (maxLongNight - minLongNight) + minLongNight);
 
-  const mins = Math.round(toWait / 60);
-  !options?.suppressLog &&
-    debugLog(
-      `Waiting ${toWait} seconds${
-        mins < 2 ? "" : ` (${mins} minute${mins !== 1 ? "s" : ""})`
-      }`
-    );
-  for (let i = 0; i < toWait; i++) {
-    !options?.suppressProgressLog &&
-      singleLineStdOut(toWait - i === 1 ? "" : `Waiting ${toWait - i} seconds`);
+  const str = readableSeconds(toWait);
+  if (!options?.suppressLog) {
+    debugLog(`Waiting ${str}`);
+  }
+  let i = 0;
+  let activity = options?.setPresence
+    ? startActivity(presenceActivities.waiting, toWait, { initUpdate: true })
+    : undefined;
+  while (i < toWait) {
+    const readable = readableSeconds(toWait - i);
+    if (!options?.suppressProgressLog) {
+      singleLineStdOut(toWait - i === 1 ? "" : readable);
+    }
+    activity?.update(i, { suppressRateLimitWarning: true });
     await waitSeconds(1);
+    i++;
   }
 };

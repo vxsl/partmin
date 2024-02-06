@@ -74,3 +74,16 @@ export const conditionalSpreads = <T>(
   }
   return result;
 };
+
+export const readableSeconds = (s: number) => {
+  if (s < 60) {
+    return `${s}s`;
+  }
+  const mins = Math.floor(s / 60);
+  const secs = s % 60;
+  let str = `${mins}m`;
+  if (secs > 0) {
+    str += `${secs}s`;
+  }
+  return str;
+};

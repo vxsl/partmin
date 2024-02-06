@@ -1,16 +1,10 @@
 import cache from "cache.js";
 import config from "config.js";
 import { dataDir, puppeteerCacheDir } from "constants.js";
-import { setDiscordPresence, shutdownDiscordBot } from "discord/client.js";
-import {
-  reinitializeCollectors,
-  sendListing as sendListing,
-} from "discord/embed.js";
-import {
-  discordIsReady,
-  initDiscord,
-  writeStatusForAuditor,
-} from "discord/index.js";
+import { presenceActivities } from "discord/constants.js";
+import { reinitializeCollectors, sendListing } from "discord/embed.js";
+import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
+import { setPresence, startActivity } from "discord/presence.js";
 import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
@@ -38,7 +32,10 @@ export let shuttingDown = false;
 
 const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
   await detectConfigChange(async () => {
-    for (const { onSearchParamsChanged, name: platform } of platforms) {
+    for (const {
+      callbacks: { onSearchParamsChanged },
+      name: platform,
+    } of platforms) {
       if (onSearchParamsChanged) {
         const n = 3;
         log(`Running preparation for ${platform}.`);
@@ -55,14 +52,18 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
   });
 
   while (true) {
-    for (const { name: platform, main, perListing } of platforms) {
+    for (const {
+      name: platform,
+      callbacks,
+      presenceActivities: presences,
+    } of platforms) {
       log(
         `\n=======================================================\n${platform}\n`
       );
       let allListings: Listing[] | undefined;
       try {
-        tryNTimes(2, async () => {
-          allListings = await main(driver);
+        await tryNTimes(2, async () => {
+          allListings = await callbacks.main(driver);
         });
       } catch (e) {
         if (!shuttingDown) {
@@ -88,38 +89,50 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
         verboseLog(listings.map((l) => l.url).join(", "));
 
         await withUnseenListings(listings, async (unseenListings) => {
-          if (perListing) {
+          if (callbacks.perListing) {
+            const activity = startActivity(
+              presences?.perListing,
+              unseenListings.length
+            );
             for (let i = 0; i < unseenListings.length; i++) {
+              activity?.update(i + 1);
               const l = unseenListings[i];
               debugLog(
                 `visiting listing (${i + 1}/${unseenListings.length}): ${l.url}`
               );
-              await perListing(driver, l)?.then(() =>
-                randomWait({ short: true, suppressProgressLog: true })
-              );
+              await callbacks
+                .perListing(driver, l)
+                ?.then(() =>
+                  randomWait({ short: true, suppressProgressLog: true })
+                );
             }
           }
-          await processListings(unseenListings).then(async (valid) => {
-            for (let i = 0; i < valid.length; i++) {
-              const l = valid[i];
-              singleLineStdOut(
-                `Sending Discord embed for listing (${i + 1}/${
-                  valid.length
-                }): ${l.url}`
+          const validListings = await processListings(unseenListings);
+
+          const activity = startActivity(
+            presenceActivities.notifying,
+            validListings.length
+          );
+          for (let i = 0; i < validListings.length; i++) {
+            activity?.update(i + 1);
+            const l = validListings[i];
+            singleLineStdOut(
+              `Sending Discord embed for listing (${i + 1}/${
+                validListings.length
+              }): ${l.url}`
+            );
+            try {
+              await sendListing(l);
+            } catch (e) {
+              discordWarning(
+                `Error while sending Discord embed for listing ${i + 1}/${
+                  validListings.length
+                }: ${l.url}`,
+                e
               );
-              try {
-                await sendListing(l);
-              } catch (e) {
-                discordWarning(
-                  `Error while sending Discord embed for listing ${i + 1}/${
-                    valid.length
-                  }: ${l.url}`,
-                  e
-                );
-              }
-              await waitSeconds(0.5);
             }
-          });
+            await waitSeconds(0.5);
+          }
         });
       } catch (e) {
         if (!shuttingDown) {
@@ -131,7 +144,7 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
       }
       log("\n----------------------------------------\n");
     }
-    await randomWait();
+    await randomWait({ setPresence: true });
   }
 };
 
@@ -155,10 +168,10 @@ export const shutdown = async () => {
       return;
     }
     log("Shutting down...");
-    await setDiscordPresence("shuttingDown", { skipDiscordLog: true });
+    await setPresence("shuttingDown", { skipDiscordLog: true });
     await shutdownWebdriver();
     log("Closed the browser.");
-    await shutdownDiscordBot();
+    await shutdownDiscord();
     logNoDiscord("Stopped the discord bot.");
     logNoDiscord("Shutdown completed successfully.");
   } catch (e) {
@@ -195,14 +208,12 @@ export const shutdown = async () => {
     }
 
     await initDiscord();
-    writeStatusForAuditor("logged-in");
-    log("Bot initialized.");
-    setDiscordPresence("launching");
+    setPresence("launching");
     await reinitializeCollectors();
     await validateConfig();
     driver = await buildDriver();
 
-    setDiscordPresence("online");
+    setPresence("online");
     await runLoop(driver, [platforms.fb, platforms.kijiji]);
   } catch (e) {
     if (shuttingDown) {
