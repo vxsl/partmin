@@ -201,7 +201,11 @@ export const shutdown = async () => {
       (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
     );
 
-    if (!config.options?.disableGoogleMapsFeatures) {
+    if (config.options?.disableGoogleMapsFeatures) {
+      log(
+        "Google Maps features are disabled. You can enable them by removing the 'options.disableGoogleMapsFeatures' config option."
+      );
+    } else {
       await cache.googleMapsAPIKey.requireValue({
         message: `A Google Maps API key with permissions for the Geocoding and Distance Matrix APIs is required for some partmin features. ${cache.discordGuildID.envVarInstruction}\n\nYou may disable these features by setting the 'options.disableGoogleMapsFeatures' config option.`,
       });
