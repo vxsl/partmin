@@ -61,7 +61,7 @@ export const buildDriver = async () => {
     .setChromeOptions(options)
     .build();
 
-  driver.manage().setTimeouts({ implicit: seleniumImplicitWait });
+  await driver.manage().setTimeouts({ implicit: seleniumImplicitWait });
 
   return driver;
 };
