@@ -38,10 +38,6 @@ export class Coordinates {
     const lon = options?.truncate ? c.lon.toFixed(3) : c.lon;
     return options?.raw ? `${lat},${lon}` : `(${lat}, ${lon})`;
   }
-
-  toString(options?: Parameters<typeof Coordinates.toString>[1]) {
-    return Coordinates.toString(this, options);
-  }
 }
 export class Radius {
   coords: Coordinates;
@@ -84,9 +80,6 @@ export class Radius {
       truncate: options?.truncate,
     })},${options?.truncate ? r.diam.toFixed(3) : r.diam}`;
   }
-  toString(options?: Parameters<typeof Radius.toString>[1]) {
-    return Radius.toString(this, options);
-  }
 }
 
 export const decodeMapDevelopersURL = (url: string): Radius[] => {
@@ -117,7 +110,7 @@ export const isWithinRadii = (coords: Coordinates) => {
         : "the configured radius"
     }:`
   );
-  verboseLog(radii.map((r) => r.toString()).join("\n"));
+  verboseLog(radii.map((r) => Radius.toString(r)).join("\n"));
   const success = radii.find(
     (radius) =>
       haversine(
@@ -129,7 +122,7 @@ export const isWithinRadii = (coords: Coordinates) => {
   verboseLog(
     `${Coordinates.toString(coords)} is ${
       success
-        ? `within ${success.toString()}`
+        ? `within ${Radius.toString(success)}`
         : `not within ${
             radii.length > 1
               ? `any of the ${radii.length} radii`

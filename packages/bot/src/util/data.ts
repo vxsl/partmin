@@ -5,7 +5,10 @@ export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
 export const sqMetersToSqft = (m2: number) => m2 / sqFtToSqMetersRatio;
 export const acresToSqft = (a: number) => a * 43560;
 
-export const findNestedProperty = (jsonString: string, key: string): any => {
+export const findNestedJSONProperty = (
+  jsonString: string,
+  key: string
+): any => {
   const keyIndex = jsonString.indexOf(`"${key}"`);
 
   if (keyIndex !== -1) {

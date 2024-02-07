@@ -6,7 +6,11 @@ import { fbListingXpath } from "platforms/fb/constants.js";
 import fb from "platforms/fb/index.js";
 import { By, WebDriver } from "selenium-webdriver";
 import { PlatformKey } from "types/platform.js";
-import { acresToSqft, findNestedProperty, sqMetersToSqft } from "util/data.js";
+import {
+  acresToSqft,
+  findNestedJSONProperty,
+  sqMetersToSqft,
+} from "util/data.js";
 import {
   Coordinates,
   Radius,
@@ -28,7 +32,9 @@ const platform: PlatformKey = "fb";
 const getListingURL = (id: string) => `https://fb.com/marketplace/item/${id}`;
 class MarketplaceRadiusError extends Error {
   constructor(url: string) {
-    super(`Warning: Marketplace refused to load ${url} correctly.`);
+    super(
+      `Warning: Marketplace refused to load the following page correctly: <${url}>.\n\nTrying again later.`
+    );
     this.name = "MarketplaceRadiusError";
   }
 }
@@ -51,7 +57,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
     .then((els) => els[0])
     .then((el) => el.getAttribute("innerHTML"));
 
-  const productDetails = findNestedProperty(
+  const productDetails = findNestedJSONProperty(
     infoStringified,
     "marketplace_product_details_page"
   );
@@ -400,7 +406,7 @@ export const main = async (driver: WebDriver) => {
     const r = radii[i];
     const rLabel = `radius ${i + 1}/${radii.length}`;
     log(
-      `visiting fb marketplace [${rLabel}]: ${r.toString({
+      `visiting fb marketplace [${rLabel}]: ${Radius.toString(r, {
         truncate: true,
       })}`
     );
@@ -412,7 +418,7 @@ export const main = async (driver: WebDriver) => {
     } catch (e) {
       if (e instanceof MarketplaceRadiusError) {
         // TODO only send this error to the user if it persists over time
-        discordSend(e.message, { bold: true });
+        discordSend(e.message, { italic: true });
         log(
           `Skipping ${rLabel} this time because Facebook refused to load the correct radius.`
         );
@@ -436,7 +442,7 @@ export const main = async (driver: WebDriver) => {
     log(
       `found ${
         listings.length - listingCount
-      } listings in ${rLabel} (${r.toString({ truncate: true })})`
+      } listings in ${rLabel} (${Radius.toString(r, { truncate: true })})`
     );
     listingCount = listings.length;
     if (i < radii.length - 1) {

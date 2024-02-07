@@ -83,17 +83,20 @@ interface FormatOptions {
   monospace?: true;
   bold?: true;
   italic?: true;
-  code?: boolean;
+  code?: boolean | string;
   quote?: boolean;
   link?: string;
 }
 
 export const discordFormat = (s: string, options?: FormatOptions) => {
-  let v = options?.code
-    ? `\`\`\`${s}\`\`\``
-    : options?.monospace
-    ? `\`${s}\``
-    : s;
+  let v =
+    options?.code === true
+      ? `\`\`\`${s}\`\`\``
+      : options?.code
+      ? `\`\`\`${options.code}\n${s}\`\`\``
+      : options?.monospace
+      ? `\`${s}\``
+      : s;
   if (options?.bold) {
     v = `**${v}**`;
   }
@@ -190,9 +193,11 @@ const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
   });
 };
 
-const clearChannel = async (_c: ChannelKey) => {
+export const clearChannel = async (_c: ChannelKey) => {
   const c = await getChannel(_c);
-  while (await c.messages.fetch().then((m) => m.size > 0)) {
-    await c.messages.fetch().then(c.bulkDelete);
+  let msgs = await c.messages.fetch();
+  while (msgs.size > 0) {
+    await c.bulkDelete(msgs);
+    msgs = await c.messages.fetch();
   }
 };
