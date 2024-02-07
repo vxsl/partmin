@@ -2,8 +2,11 @@ import cache from "cache.js";
 import config from "config.js";
 import { dataDir, puppeteerCacheDir } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
-import { reinitializeCollectors, sendListing } from "discord/embed.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
+import {
+  reinitializeInteractiveListingMessages,
+  sendListing,
+} from "discord/interactive/listing/index.js";
 import { setPresence, startActivity } from "discord/presence.js";
 import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
@@ -213,7 +216,7 @@ export const shutdown = async () => {
 
     await initDiscord();
     setPresence("launching");
-    await reinitializeCollectors();
+    await reinitializeInteractiveListingMessages();
     await validateConfig();
     driver = await buildDriver();
 

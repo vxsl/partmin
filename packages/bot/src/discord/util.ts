@@ -1,49 +1,28 @@
 import cache from "cache.js";
 import config from "config.js";
-import {
-  BaseMessageOptions,
-  DiscordAPIError,
-  EmbedBuilder,
-  TextChannel,
-} from "discord.js";
-import { discordClient } from "discord/index.js";
+import { ChannelType, DiscordAPIError, MessageCreateOptions } from "discord.js";
 import { ChannelKey, channelDefs } from "discord/constants.js";
-import { discordIsReady } from "discord/index.js";
+import { discordClient, discordIsReady } from "discord/index.js";
+import { sendEmbed } from "discord/interactive/index.js";
 import { shuttingDown } from "index.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString, splitString } from "util/misc.js";
 
-export const getChannel = async (c: ChannelKey) => {
+export const getTextChannel = async (c: ChannelKey) => {
   const guildInfo = await cache.discordGuildInfo.requireValue();
   const id = guildInfo.channelIDs[c];
-
-  const result = (await (discordClient.channels.cache.get(id) ??
-    discordClient.channels.fetch(id))) as TextChannel;
+  const result = await (discordClient.channels.cache.get(id) ??
+    discordClient.channels.fetch(id));
+  if (result?.type !== ChannelType.GuildText) {
+    throw new Error(
+      `Channel with ID ${id} is not a text channel, but a ${result?.type}`
+    );
+  }
   if (!result) {
     throw new Error(`Channel with ID ${id} not found`);
   }
   return result;
 };
-
-const quickEmbed = ({
-  title,
-  color,
-  content,
-  monospace,
-}: Partial<{
-  title: Parameters<EmbedBuilder["setTitle"]>[0];
-  color: Parameters<EmbedBuilder["setColor"]>[0];
-  content: any;
-  monospace?: boolean;
-}>) =>
-  new EmbedBuilder()
-    .setColor(color ?? null)
-    .setTitle(title ?? null)
-    .setDescription(
-      discordFormat(errToString(content), {
-        code: monospace || content instanceof Error,
-      })
-    );
 
 export const discordError = (e: unknown) => {
   logNoDiscord("Sending Discord error embed:");
@@ -52,14 +31,15 @@ export const discordError = (e: unknown) => {
     logNoDiscord("Discord client not ready, skipping error embed.");
     return;
   }
-  discordSend(
-    quickEmbed({
-      color: "#ff0000",
-      title: `🚨 Fatal error: partmin has crashed.`,
-      content: e,
-      monospace: true,
-    })
-  );
+  sendEmbed({
+    embeds: [
+      {
+        color: "#ff0000",
+        title: `🚨 Fatal error: partmin has crashed.`,
+        description: discordFormat(errToString(e), { code: true }),
+      },
+    ],
+  });
 };
 
 export const discordWarning = (
@@ -69,14 +49,17 @@ export const discordWarning = (
 ) => {
   logNoDiscord("Sending Discord warning embed:");
   log(e);
-  discordSend(
-    quickEmbed({
-      color: "#ebb734",
-      title: `⚠️ ${title}`,
-      content: e,
-      monospace: options?.monospace,
-    })
-  );
+  sendEmbed({
+    embeds: [
+      {
+        color: "#ebb734",
+        title: `⚠️ ${title}`,
+        description: discordFormat(errToString(e), {
+          code: options?.monospace,
+        }),
+      },
+    ],
+  });
 };
 
 interface FormatOptions {
@@ -112,6 +95,9 @@ export const discordFormat = (s: string, options?: FormatOptions) => {
   return v;
 };
 
+export const manualDiscordSend = (createOptions: MessageCreateOptions) =>
+  discordSend(undefined, { createOptions });
+
 export const discordSend = (...args: Parameters<typeof _discordSend>) => {
   const [msg, options] = args;
   return _discordSend(msg, options).catch(async (e) => {
@@ -142,26 +128,33 @@ export const discordSend = (...args: Parameters<typeof _discordSend>) => {
   });
 };
 
-type DiscordSendOptions = {
+export type DiscordSendOptions = {
   channel?: ChannelKey;
   skipLog?: true;
   silent?: true;
-  components?: BaseMessageOptions["components"];
+  createOptions?: MessageCreateOptions;
 } & FormatOptions;
 
 const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
   if (!discordIsReady()) {
+    verboseLog(
+      `Discord client not ready, skipping message send: "${_msg.slice(
+        0,
+        50
+      )}..."`,
+      { skipDiscord: true }
+    );
     return;
   }
   const k: ChannelKey =
     options?.channel ??
     (config.development?.testing ? "test-listings" : "listings");
-  const c = await getChannel(k);
+  const c = await getTextChannel(k);
 
   const flags = channelDefs[k].msgFlags;
 
-  if (_msg instanceof EmbedBuilder) {
-    return c.send({ embeds: [_msg], components: options?.components });
+  if (options?.createOptions) {
+    return c.send(options.createOptions);
   }
 
   const isErr = _msg instanceof Error;
@@ -193,11 +186,9 @@ const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
   });
 };
 
-export const clearChannel = async (_c: ChannelKey) => {
-  const c = await getChannel(_c);
-  let msgs = await c.messages.fetch();
-  while (msgs.size > 0) {
-    await c.bulkDelete(msgs);
-    msgs = await c.messages.fetch();
+const clearChannel = async (_c: ChannelKey) => {
+  const c = await getTextChannel(_c);
+  while (await c.messages.fetch().then((m) => m.size > 0)) {
+    await c.messages.fetch().then(c.bulkDelete);
   }
 };

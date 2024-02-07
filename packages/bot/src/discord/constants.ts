@@ -15,6 +15,8 @@ import { readableSeconds } from "util/data.js";
 export const requiredPermissions = new PermissionsBitField(
   BigInt(1084815309904)
 );
+export const maxEmbedLength = 2048;
+export const maxFieldLength = 1024;
 
 // ------------------------------------------------------------
 // channels
