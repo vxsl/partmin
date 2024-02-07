@@ -5,6 +5,26 @@ export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
 export const sqMetersToSqft = (m2: number) => m2 / sqFtToSqMetersRatio;
 export const acresToSqft = (a: number) => a * 43560;
 
+export const accessNestedProperty = (obj: any, _path: string | string[]) => {
+  let result = obj;
+  const path = Array.isArray(_path) ? _path : _path.split(".");
+  for (const p of path) {
+    result = result?.[p];
+    if (result === undefined) {
+      return undefined;
+    }
+  }
+  return result;
+};
+
+export const accessParentOfNestedProperty = (
+  obj: any,
+  _path: string | string[]
+) => {
+  const path = Array.isArray(_path) ? _path : _path.split(".");
+  return accessNestedProperty(obj, path.slice(0, -1));
+};
+
 export const findNestedJSONProperty = (
   jsonString: string,
   key: string

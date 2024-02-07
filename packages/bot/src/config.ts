@@ -8,6 +8,8 @@ import {
   String,
 } from "runtypes";
 import { RuntypeBase } from "runtypes/lib/runtype.js";
+import { accessNestedProperty } from "util/data.js";
+import { RecursivePartial } from "util/type.js";
 import _config from "../../../config/config.json";
 
 const UnreliableParams = RuntypeRecord({
@@ -100,6 +102,50 @@ const Config = RuntypeRecord({
 
 export type Config = Static<typeof Config>;
 
+export const defaultConfigValues: RecursivePartial<Config> = {
+  botBehaviour: {
+    suppressGreeting: false,
+    suppressUnreliableParamsWarning: false,
+  },
+  development: {
+    headed: false,
+    testing: false,
+    noSandbox: false,
+  },
+  logging: {
+    debug: false,
+    verbose: false,
+  },
+  options: {
+    disableGoogleMapsFeatures: false,
+    commuteDestinations: [],
+  },
+  search: {
+    params: {
+      pets: {
+        cat: false,
+        dog: false,
+        other: false,
+      },
+      exclude: {
+        basements: false,
+        shared: false,
+        swaps: false,
+        sublets: false,
+      },
+      minBedrooms: 0,
+      unreliableParams: {
+        minAreaSqFt: 0,
+        outdoorSpace: false,
+        parking: false,
+        petsStrict: false,
+      },
+    },
+    blacklist: [],
+    blacklistRegex: [],
+  },
+} as const;
+
 const getUnderlyingField = (
   fields: { [key: string]: RuntypeBase },
   k: keyof typeof fields
@@ -164,5 +210,36 @@ try {
 }
 
 throwOnUnknownKey(config);
+
+export const isDefaultValue = (
+  path: string | ((config: Config) => any),
+  options?: {
+    baseNest?: (config: Config) => any;
+  }
+) => {
+  let actual, expected;
+  try {
+    const nestedConfig = options?.baseNest ? options.baseNest(config) : config;
+    const nestedDefault = options?.baseNest
+      ? options.baseNest(defaultConfigValues as unknown as Config)
+      : (defaultConfigValues as unknown as Config);
+    if (typeof path === "string") {
+      actual = accessNestedProperty(nestedConfig, path);
+      expected = accessNestedProperty(nestedDefault, path);
+    } else {
+      actual = path(nestedConfig);
+      expected = path(nestedDefault);
+    }
+  } catch (e) {
+    console.error("Error while checking default value of config option");
+    console.error({ actual, expected });
+    console.error(e);
+    if (actual === undefined && expected === undefined) {
+      console.error("Assuming they are unequal");
+      return false;
+    }
+  }
+  return actual === expected;
+};
 
 export default config;

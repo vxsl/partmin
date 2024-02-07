@@ -1,4 +1,4 @@
-import config, { unreliabilityExplanations } from "config.js";
+import config, { isDefaultValue, unreliabilityExplanations } from "config.js";
 import { dataDir } from "constants.js";
 import { discordFormat, discordWarning } from "discord/util.js";
 import fs from "fs";
@@ -26,14 +26,16 @@ export const validateConfig = async () => {
     }
   });
 
-  if (config.botBehaviour?.suppressUnreliableParamsWarning) {
+  const unreliable = config.search.params.unreliableParams;
+  if (config.botBehaviour?.suppressUnreliableParamsWarning || !unreliable) {
     return;
   }
-  const unreliableParams = Object.entries(
-    config.search.params.unreliableParams ?? {}
-  ).filter(([k, v]) => !!v) as
-    | [keyof typeof unreliabilityExplanations, boolean][]
-    | never;
+  const unreliableParams = Object.entries(unreliable).filter(
+    ([k, v]) =>
+      !isDefaultValue(
+        (c) => c.search.params.unreliableParams?.[k as keyof typeof unreliable]
+      )
+  ) as [keyof typeof unreliabilityExplanations, boolean][] | never;
   if (unreliableParams.length) {
     discordWarning(
       `Warning: you have specified ${
