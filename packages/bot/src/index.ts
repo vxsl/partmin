@@ -23,7 +23,7 @@ import { WebDriver } from "selenium-webdriver";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
-import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
+import { debugLog, log, logNoDiscord } from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
 
 process.title = "partmin-bot";
@@ -89,7 +89,6 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
           continue;
         }
         debugLog(`Found ${listings.length} listings within the search area.`);
-        verboseLog(listings.map((l) => l.url).join(", "));
 
         await withUnseenListings(listings, async (unseenListings) => {
           if (callbacks.perListing) {
@@ -167,19 +166,19 @@ export const shutdown = async () => {
     if (!shuttingDown) {
       shuttingDown = true;
     } else {
-      log("Called shutdown() but already shutting down.");
+      logNoDiscord("Called shutdown() but already shutting down.");
       return;
     }
-    log("Shutting down...");
+    logNoDiscord("Shutting down...");
     await setPresence("shuttingDown", { skipDiscordLog: true });
     await shutdownWebdriver();
-    log("Closed the browser.");
+    logNoDiscord("Closed the browser.");
     await shutdownDiscord();
     logNoDiscord("Stopped the discord bot.");
     logNoDiscord("Shutdown completed successfully.");
   } catch (e) {
-    log("Error during shutdown:", { error: true });
-    log(e, { error: true });
+    logNoDiscord("Error during shutdown:", { error: true });
+    logNoDiscord(e, { error: true });
     err = e;
   } finally {
     const procs = await psList();
@@ -187,10 +186,10 @@ export const shutdown = async () => {
       (proc) => proc.name.startsWith("partmin-presenc") // "partmin-presence-auditor": program names are truncated on Linux and macOS
     );
     if (auditor) {
-      debugLog("Sending SIGINT to partmin-presence-auditor.");
+      logNoDiscord("Sending SIGINT to partmin-presence-auditor.");
       process.kill(auditor.pid, "SIGINT");
     } else {
-      log(
+      logNoDiscord(
         "Tried to send SIGINT to partmin-presence-auditor but it's not running."
       );
     }
@@ -216,7 +215,7 @@ export const shutdown = async () => {
 
     await initDiscord();
     setPresence("launching");
-    await reinitializeInteractiveListingMessages();
+    reinitializeInteractiveListingMessages();
     await validateConfig();
     driver = await buildDriver();
 
@@ -235,37 +234,37 @@ export const shutdown = async () => {
 })();
 
 const shutdownWebdriver = async () => {
-  log("Closing the browser...");
+  logNoDiscord("Closing the browser...");
   if (!driver) {
-    log("The browser is already closed.");
+    logNoDiscord("The browser is already closed.");
     return;
   }
   await driver
     .getAllWindowHandles()
     .catch((e) => {
-      log("Error getting window handles:");
-      log(e);
+      logNoDiscord("Error getting window handles:");
+      logNoDiscord(e);
     })
     .then(async (handles) => {
       for (const handle of handles || []) {
         await driver?.switchTo().window(handle);
-        log("Closing window:");
-        log(handle);
-        log(`(url ${await driver?.getCurrentUrl()})`);
+        logNoDiscord("Closing window:");
+        logNoDiscord(handle);
+        logNoDiscord(`(url ${await driver?.getCurrentUrl()})`);
         await driver?.close();
-        log("Closed window");
+        logNoDiscord("Closed window");
       }
     })
     .catch((e) => {
-      log("Error closing windows:", e);
+      logNoDiscord("Error closing windows:", e);
     })
     .then(async () => {
-      log("Closing the browser...");
+      logNoDiscord("Closing the browser...");
       await driver?.quit();
-      log("Closed the browser.");
+      logNoDiscord("Closed the browser.");
     })
     .catch((e) => {
-      log("Error calling driver.quit():", e);
+      logNoDiscord("Error calling driver.quit():", e);
     });
 };
 

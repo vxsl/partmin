@@ -17,6 +17,7 @@ export const requiredPermissions = new PermissionsBitField(
 );
 export const maxEmbedLength = 2048;
 export const maxFieldLength = 1024;
+export const maxMessagesToFetchAtOnce = 100;
 
 // ------------------------------------------------------------
 // channels

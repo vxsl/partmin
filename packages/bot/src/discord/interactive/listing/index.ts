@@ -1,6 +1,10 @@
 import cache from "cache.js";
 import Discord from "discord.js";
-import { maxEmbedLength, maxFieldLength } from "discord/constants.js";
+import {
+  maxEmbedLength,
+  maxFieldLength,
+  maxMessagesToFetchAtOnce,
+} from "discord/constants.js";
 import {
   SendEmbedOptions,
   buttonGroup,
@@ -10,7 +14,7 @@ import {
 import listingEmbed, { colors } from "discord/interactive/listing/embed.js";
 import { discordFormat, getTextChannel } from "discord/util.js";
 import { Listing } from "listing.js";
-import { debugLog, log, verboseLog } from "util/log.js";
+import { debugLog, log } from "util/log.js";
 import { splitString } from "util/misc.js";
 
 const getListingButtonGroups = (l: Listing) => ({
@@ -160,43 +164,56 @@ export const reinitializeInteractiveListingMessages = async () => {
   }
   const listingsMap = new Map(listings.map((l) => [l.url, l]));
   const appID = await cache.discordAppID.requireValue();
-  await getTextChannel("listings").then((c) =>
-    c.messages.fetch().then((messages) =>
-      messages.forEach((message) => {
-        const url = message.embeds?.[0]?.url;
-        if (!url) {
-          verboseLog(
-            `Not setting up collector for message ${message.id} because it doesn't have an embed with a url.`
-          );
-          return;
-        }
-        if (message.author.id !== appID) {
-          verboseLog(
-            `Not setting up collector for message ${message.id} because it's not from the bot (author: ${message.author.id})`
-          );
-          return;
-        }
-        const l = listingsMap.get(url);
-        if (!l) {
-          debugLog(
-            `Not setting up collector for message ${message.id} because the url ${url} doesn't match any cached listings.`
-          );
-          return;
-        }
-        debugLog(`Setting up collector for message ${message.id}...`);
-        try {
-          initializeInteractiveMessage({
-            message,
-            buttonGroups: getListingButtonGroups(l),
-          });
-        } catch (e) {
-          log(
-            `Error while setting up collector for message ${message.id} for listing ${l.url}:`,
-            { error: true }
-          );
-          log(e);
-        }
-      })
-    )
-  );
+  const channel = await getTextChannel("listings");
+
+  let successCount = 0;
+
+  const fetchAndProcessMessages = async (beforeId?: string) => {
+    const messages = await channel.messages.fetch({
+      limit: maxMessagesToFetchAtOnce,
+      before: beforeId,
+    });
+    const firstMessageTime = messages.last()?.createdTimestamp;
+    debugLog(
+      `Setting up collector for ${messages.size} messages prior to ${
+        !firstMessageTime ? "<invalid date>" : new Date(firstMessageTime)
+      }`
+    );
+
+    messages.forEach((message) => {
+      if (message.author.id !== appID) return;
+
+      const url = message.embeds?.[0]?.url;
+      if (!url) return;
+
+      const l = listingsMap.get(url);
+      if (!l) {
+        debugLog(
+          `Failed to reinitialize message ${message.id}: no cached listing`
+        );
+        return;
+      }
+      try {
+        initializeInteractiveMessage({
+          message,
+          buttonGroups: getListingButtonGroups(l),
+        });
+        successCount++;
+      } catch (e) {
+        log(
+          `Error while setting up collector for message ${message.id} for listing ${l.url}:`,
+          { error: true }
+        );
+        log(e);
+      }
+    });
+
+    if (messages.size === maxMessagesToFetchAtOnce) {
+      const lastMessageId = messages.lastKey();
+      await fetchAndProcessMessages(lastMessageId);
+    } else {
+      log(`Done reinitializing ${successCount} interactive listing messages`);
+    }
+  };
+  return fetchAndProcessMessages();
 };

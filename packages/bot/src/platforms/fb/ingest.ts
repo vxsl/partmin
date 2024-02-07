@@ -428,7 +428,7 @@ export const main = async (driver: WebDriver) => {
       }
     }
 
-    debugLog("Initializing listings...");
+    debugLog("Parsing listings...");
     await withDOMChangesBlocked(driver, async () => {
       await getListings(driver).then((arr) => {
         verboseLog(
