@@ -38,6 +38,10 @@
           "**/*.tsx"
         ],
         "rules": {
+          "object-shorthand": [
+            "error",
+            "always"
+          ],
           "unused-imports/no-unused-imports": "error",
           "require-await": "warn",
           "no-multiple-empty-lines": [
