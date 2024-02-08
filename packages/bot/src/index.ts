@@ -149,14 +149,34 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
   }
 };
 
-export const fatalError = async (e: unknown) => {
-  if (discordIsReady()) {
-    await discordError(e);
-  } else {
-    log(e, { error: true });
+const shutdownWebdriver = async () => {
+  logNoDiscord("Closing the browser...");
+  if (!driver) {
+    logNoDiscord("The browser is already closed.");
+    return;
   }
-  await shutdown();
-  process.exit(1);
+  await driver
+    .getAllWindowHandles()
+    .catch()
+    .then(async (handles) => {
+      for (const handle of handles || []) {
+        await driver?.switchTo().window(handle);
+        logNoDiscord("Closing window:");
+        logNoDiscord(handle);
+        logNoDiscord(`(url ${await driver?.getCurrentUrl()})`);
+        await driver?.close();
+        logNoDiscord("Closed window");
+      }
+    })
+    .catch((e) => {
+      logNoDiscord("Error closing windows:", e);
+    })
+    .then(async () => {
+      logNoDiscord("Closing the browser...");
+      await driver?.quit();
+      logNoDiscord("Closed the browser.");
+    })
+    .catch();
 };
 
 export const shutdown = async () => {
@@ -196,6 +216,16 @@ export const shutdown = async () => {
   }
 };
 
+export const fatalError = async (e: unknown) => {
+  if (discordIsReady()) {
+    await discordError(e);
+  } else {
+    log(e, { error: true });
+  }
+  await shutdown();
+  process.exit(1);
+};
+
 (async () => {
   try {
     [dataDir, puppeteerCacheDir].forEach(
@@ -231,36 +261,6 @@ export const shutdown = async () => {
     shutdown();
   }
 })();
-
-const shutdownWebdriver = async () => {
-  logNoDiscord("Closing the browser...");
-  if (!driver) {
-    logNoDiscord("The browser is already closed.");
-    return;
-  }
-  await driver
-    .getAllWindowHandles()
-    .catch()
-    .then(async (handles) => {
-      for (const handle of handles || []) {
-        await driver?.switchTo().window(handle);
-        logNoDiscord("Closing window:");
-        logNoDiscord(handle);
-        logNoDiscord(`(url ${await driver?.getCurrentUrl()})`);
-        await driver?.close();
-        logNoDiscord("Closed window");
-      }
-    })
-    .catch((e) => {
-      logNoDiscord("Error closing windows:", e);
-    })
-    .then(async () => {
-      logNoDiscord("Closing the browser...");
-      await driver?.quit();
-      logNoDiscord("Closed the browser.");
-    })
-    .catch();
-};
 
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);

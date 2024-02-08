@@ -31,6 +31,9 @@ export const isPlainObject = (value: unknown): value is Record<string, any> => {
   return proto === null || proto === Object.prototype;
 };
 
+export const waitSeconds = async (s: number) =>
+  await new Promise((resolve) => setTimeout(resolve, s * 1000));
+
 export const tryNTimes = async <T>(
   n: number,
   fn: () => Promise<T>
@@ -57,9 +60,6 @@ export const tryNTimes = async <T>(
   log(err);
   throw err;
 };
-
-export const waitSeconds = async (s: number) =>
-  await new Promise((resolve) => setTimeout(resolve, s * 1000));
 
 export const randomWait = async (options?: {
   short?: true;

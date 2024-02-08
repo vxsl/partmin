@@ -3,6 +3,25 @@ import { presences } from "discord/constants.js";
 import { getDiscordClient } from "discord/index.js";
 import { log } from "util/log.js";
 
+type ActivityProgress = {
+  percentage: number;
+  cur: number;
+  max: number;
+};
+export type PresenceActivityDef = {
+  emoji?: string;
+  message: ((p: ActivityProgress) => string) | string;
+  customProgress?: (p: ActivityProgress) => string;
+  skipLongRunningWarning?: boolean;
+};
+type PresenceActivityConstructorArgs = [
+  def: PresenceActivityDef,
+  max: ActivityProgress["max"],
+  options?: {
+    initUpdate?: boolean;
+  }
+];
+
 export const setPresence = async (
   p?: string,
   options?: { skipDiscordLog?: boolean }
@@ -31,13 +50,6 @@ export const setPresence = async (
   );
 };
 
-export type PresenceActivityDef = {
-  emoji?: string;
-  message: ((p: ActivityProgress) => string) | string;
-  customProgress?: (p: ActivityProgress) => string;
-  skipLongRunningWarning?: boolean;
-};
-
 const longRunningWarningEmojis = [`🐢`, `🐌`, `🐢️`, `💤`];
 const longRunningWarnings = [
   `I'm going slowly so nobody thinks I'm a bot`,
@@ -46,32 +58,9 @@ const longRunningWarnings = [
   `I'm moving carefully to avoid being flagged`,
 ];
 
-export const startActivity = (
-  def: PresenceActivityConstructorArgs[0] | undefined,
-  max: PresenceActivityConstructorArgs[1] | undefined,
-  options?: PresenceActivityConstructorArgs[2]
-) =>
-  typeof def !== "undefined" && typeof max !== "undefined"
-    ? new PresenceActivity(def, max, options)
-    : undefined;
-
 const timeBetweenWarnings = 2 * 60 * 1000;
 const warningTimeout = 30 * 1000;
 const presenceRateLimit = 15 * 1000;
-
-type ActivityProgress = {
-  percentage: number;
-  cur: number;
-  max: number;
-};
-
-type PresenceActivityConstructorArgs = [
-  def: PresenceActivityDef,
-  max: ActivityProgress["max"],
-  options?: {
-    initUpdate?: boolean;
-  }
-];
 
 export class PresenceActivity {
   def: PresenceActivityDef;
@@ -182,3 +171,12 @@ export class PresenceActivity {
     this.lastSetAt = now;
   }
 }
+
+export const startActivity = (
+  def: PresenceActivityConstructorArgs[0] | undefined,
+  max: PresenceActivityConstructorArgs[1] | undefined,
+  options?: PresenceActivityConstructorArgs[2]
+) =>
+  typeof def !== "undefined" && typeof max !== "undefined"
+    ? new PresenceActivity(def, max, options)
+    : undefined;

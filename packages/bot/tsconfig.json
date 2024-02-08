@@ -6,7 +6,8 @@
     "resolveJsonModule": true,
     "strictNullChecks": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": false
   },
   "include": [
     "src",

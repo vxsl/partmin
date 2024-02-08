@@ -1,12 +1,54 @@
 import cache from "cache.js";
 import config from "config.js";
+import { statusPathForAuditor } from "constants.js";
 import { ChannelType, DiscordAPIError, MessageCreateOptions } from "discord.js";
 import { ChannelKey, channelDefs } from "discord/constants.js";
 import { discordClient, discordIsReady } from "discord/index.js";
 import { sendInteractive } from "discord/interactive/index.js";
+import { writeFileSync } from "fs";
 import { shuttingDown } from "index.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString, splitString } from "util/misc.js";
+
+type DiscordBotLoggedInStatus = "logged-in" | "logged-out";
+export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
+  writeFileSync(statusPathForAuditor, status);
+
+interface FormatOptions {
+  monospace?: true;
+  bold?: true;
+  italic?: true;
+  code?: boolean | string;
+  quote?: boolean;
+  link?: string;
+  underline?: boolean;
+}
+export const discordFormat = (s: string, options?: FormatOptions) => {
+  let v =
+    options?.code === true
+      ? `\`\`\`${s}\`\`\``
+      : options?.code
+      ? `\`\`\`${options.code}\n${s}\`\`\``
+      : options?.monospace
+      ? `\`${s}\``
+      : s;
+  if (options?.bold) {
+    v = `**${v}**`;
+  }
+  if (options?.italic) {
+    v = `*${v}*`;
+  }
+  if (options?.underline) {
+    v = `__${v}__`;
+  }
+  if (options?.quote) {
+    v = `> ${v.replace(/\n/g, "\n> ")}`;
+  }
+  if (options?.link) {
+    v = `[${v}](${options.link})`;
+  }
+  return v;
+};
 
 export const getTextChannel = async (c: ChannelKey) => {
   const guildInfo = await cache.discordGuildInfo.requireValue();
@@ -59,78 +101,6 @@ export const discordWarning = (
         }),
       },
     ],
-  });
-};
-
-interface FormatOptions {
-  monospace?: true;
-  bold?: true;
-  italic?: true;
-  code?: boolean | string;
-  quote?: boolean;
-  link?: string;
-  underline?: boolean;
-}
-
-export const discordFormat = (s: string, options?: FormatOptions) => {
-  let v =
-    options?.code === true
-      ? `\`\`\`${s}\`\`\``
-      : options?.code
-      ? `\`\`\`${options.code}\n${s}\`\`\``
-      : options?.monospace
-      ? `\`${s}\``
-      : s;
-  if (options?.bold) {
-    v = `**${v}**`;
-  }
-  if (options?.italic) {
-    v = `*${v}*`;
-  }
-  if (options?.underline) {
-    v = `__${v}__`;
-  }
-  if (options?.quote) {
-    v = `> ${v.replace(/\n/g, "\n> ")}`;
-  }
-  if (options?.link) {
-    v = `[${v}](${options.link})`;
-  }
-  return v;
-};
-
-export const manualDiscordSend = (
-  createOptions: MessageCreateOptions,
-  options?: DiscordSendOptions
-) => discordSend(undefined, { ...options, createOptions });
-
-export const discordSend = (...args: Parameters<typeof _discordSend>) => {
-  const [msg, options] = args;
-  return _discordSend(msg, options).catch(async (e) => {
-    if (shuttingDown) {
-      return;
-    }
-    if (
-      e instanceof DiscordAPIError &&
-      e.code === 50035 &&
-      e.message.includes("or fewer")
-    ) {
-      logNoDiscord(`Message too long, splitting into parts:`, {
-        error: true,
-      });
-      logNoDiscord(`"${msg.slice(0, 50)}..."`, { error: true });
-      const parts = splitString(`${msg}`, 1900);
-      for (let i = 0; i < parts.length; i++) {
-        if (i === parts.length - 1) {
-          return _discordSend(parts[i], options);
-        }
-        await _discordSend(parts[i], options);
-      }
-    }
-    logNoDiscord(`Error while sending message to Discord:`, {
-      error: true,
-    });
-    logNoDiscord(e, { error: true });
   });
 };
 
@@ -191,6 +161,41 @@ const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
     return result;
   });
 };
+
+export const discordSend = (...args: Parameters<typeof _discordSend>) => {
+  const [msg, options] = args;
+  return _discordSend(msg, options).catch(async (e) => {
+    if (shuttingDown) {
+      return;
+    }
+    if (
+      e instanceof DiscordAPIError &&
+      e.code === 50035 &&
+      e.message.includes("or fewer")
+    ) {
+      logNoDiscord(`Message too long, splitting into parts:`, {
+        error: true,
+      });
+      logNoDiscord(`"${msg.slice(0, 50)}..."`, { error: true });
+      const parts = splitString(`${msg}`, 1900);
+      for (let i = 0; i < parts.length; i++) {
+        if (i === parts.length - 1) {
+          return _discordSend(parts[i], options);
+        }
+        await _discordSend(parts[i], options);
+      }
+    }
+    logNoDiscord(`Error while sending message to Discord:`, {
+      error: true,
+    });
+    logNoDiscord(e, { error: true });
+  });
+};
+
+export const manualDiscordSend = (
+  createOptions: MessageCreateOptions,
+  options?: DiscordSendOptions
+) => discordSend(undefined, { ...options, createOptions });
 
 export const clearChannel = async (_c: ChannelKey) => {
   const c = await getTextChannel(_c);

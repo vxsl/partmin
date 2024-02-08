@@ -52,6 +52,74 @@ export const type = async (
 export const manualClear = async (el: WebElementPromise | WebElement) =>
   await el.sendKeys(Key.chord(Key.CONTROL, "a", Key.DELETE));
 
+export const elementShouldBeInteractable = async (
+  driver: WebDriver,
+  el: WebElement,
+  log:
+    | {
+        xpath: string;
+        name?: undefined;
+      }
+    | {
+        xpath?: undefined;
+        name: string;
+      }
+) => {
+  const str = log.xpath ?? log.name;
+  debugLog(`Waiting for ${str} to be visible`);
+  await driver.wait(until.elementIsVisible(el), 10 * 1000);
+  debugLog(`Waiting for ${str} to be enabled`);
+  await driver.wait(until.elementIsEnabled(el), 10 * 1000);
+};
+
+export const elementShouldExist = async (
+  method: "xpath" | "css",
+  selector: string,
+  driver: WebDriver
+) =>
+  await (method === "xpath"
+    ? driver.wait(until.elementLocated(By.xpath(selector)), 10 * 1000)
+    : method === "css"
+    ? driver.wait(until.elementLocated(By.css(selector)), 10 * 1000)
+    : Promise.resolve());
+
+export const withElement = <F extends (el: WebElement) => any>(
+  getEl: () => WebElement | WebElementPromise,
+  fn: F
+): Promise<ReturnType<F>> => tryNTimes(3, async () => fn(await getEl()));
+
+export const withElementsByXpath = async <T>(
+  driver: WebDriver,
+  xpath: string,
+  fn: (el: WebElement, i: number) => Promise<T>,
+  options?: { noConcurrency?: boolean }
+): Promise<T[]> => {
+  const promises: Promise<T>[] = [];
+  const results: T[] = [];
+
+  const len = await driver
+    .findElements(By.xpath(xpath))
+    .then((els) => els.length);
+  verboseLog(`withElementsByXpath: ${len} elements found`);
+  for (let i = 0; i < len; i++) {
+    const getEl = () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`));
+
+    if (options?.noConcurrency) {
+      const r = await withElement(getEl, (el) => fn(el, i));
+      if (r !== undefined) {
+        results.push(r);
+      }
+    } else {
+      promises.push(
+        new Promise<T>((resolve) => {
+          withElement(getEl, (el) => resolve(fn(el, i)));
+        })
+      );
+    }
+  }
+  return options?.noConcurrency ? results : Promise.all(promises);
+};
+
 export const clickByXPath = async (
   driver: WebDriver,
   selector: string,
@@ -120,74 +188,6 @@ export const fillInputByLabel = async (
     }
   );
 };
-
-export const elementShouldBeInteractable = async (
-  driver: WebDriver,
-  el: WebElement,
-  log:
-    | {
-        xpath: string;
-        name?: undefined;
-      }
-    | {
-        xpath?: undefined;
-        name: string;
-      }
-) => {
-  const str = log.xpath ?? log.name;
-  debugLog(`Waiting for ${str} to be visible`);
-  await driver.wait(until.elementIsVisible(el), 10 * 1000);
-  debugLog(`Waiting for ${str} to be enabled`);
-  await driver.wait(until.elementIsEnabled(el), 10 * 1000);
-};
-
-export const elementShouldExist = async (
-  method: "xpath" | "css",
-  selector: string,
-  driver: WebDriver
-) =>
-  await (method === "xpath"
-    ? driver.wait(until.elementLocated(By.xpath(selector)), 10 * 1000)
-    : method === "css"
-    ? driver.wait(until.elementLocated(By.css(selector)), 10 * 1000)
-    : Promise.resolve());
-
-export const withElementsByXpath = async <T>(
-  driver: WebDriver,
-  xpath: string,
-  fn: (el: WebElement, i: number) => Promise<T>,
-  options?: { noConcurrency?: boolean }
-): Promise<T[]> => {
-  const promises: Promise<T>[] = [];
-  const results: T[] = [];
-
-  const len = await driver
-    .findElements(By.xpath(xpath))
-    .then((els) => els.length);
-  verboseLog(`withElementsByXpath: ${len} elements found`);
-  for (let i = 0; i < len; i++) {
-    const getEl = () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`));
-
-    if (options?.noConcurrency) {
-      const r = await withElement(getEl, (el) => fn(el, i));
-      if (r !== undefined) {
-        results.push(r);
-      }
-    } else {
-      promises.push(
-        new Promise<T>((resolve) => {
-          withElement(getEl, (el) => resolve(fn(el, i)));
-        })
-      );
-    }
-  }
-  return options?.noConcurrency ? results : Promise.all(promises);
-};
-
-export const withElement = <F extends (el: WebElement) => any>(
-  getEl: () => WebElement | WebElementPromise,
-  fn: F
-): Promise<ReturnType<F>> => tryNTimes(3, async () => fn(await getEl()));
 
 export const withDOMChangesBlocked = async (
   driver: WebDriver,

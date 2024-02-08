@@ -45,19 +45,6 @@ type ComponentContext<S extends CustomState> = ImmutableState<S> &
   };
 
 // __________________________________________________________________________________________
-// component groups:
-type ComponentGroup<S extends CustomState> = {
-  initState: S extends Object ? (s: ComponentContextHelpers) => S : undefined;
-} & {
-  [K in ComponentCategory]?: Record<
-    string,
-    NonNullable<ComponentCategories<S>[K]>["data"]
-  >;
-};
-export const componentGroup = <S extends Object>(g: ComponentGroup<S>) => g;
-type ComponentGroupDefs = Record<string, ComponentGroup<any>>;
-
-// __________________________________________________________________________________________
 // component definitions:
 type Mutate<S extends CustomState> = S extends Object
   ? (c: ComponentContext<S>) => ImmutableState<S> | Promise<ImmutableState<S>>
@@ -82,8 +69,23 @@ type ComponentCategories<S extends CustomState> = {
     >;
   };
 };
-
 type ComponentCategory = keyof ComponentCategories<any>;
+type Builder = NonNullable<
+  ComponentCategories<any>[ComponentCategory]
+>["builder"];
+
+// __________________________________________________________________________________________
+// component groups:
+type ComponentGroup<S extends CustomState> = {
+  initState: S extends Object ? (s: ComponentContextHelpers) => S : undefined;
+} & {
+  [K in ComponentCategory]?: Record<
+    string,
+    NonNullable<ComponentCategories<S>[K]>["data"]
+  >;
+};
+export const componentGroup = <S extends Object>(g: ComponentGroup<S>) => g;
+type ComponentGroupDefs = Record<string, ComponentGroup<any>>;
 
 // __________________________________________________________________________________________
 // runtime maps:
@@ -270,7 +272,6 @@ export type SendEmbedOptions = {
   componentGroupDefs?: ComponentGroupDefs;
   initComponentOrder?: ComponentOrder;
 };
-type Builder = ButtonBuilder | StringSelectMenuBuilder;
 export const sendInteractive = async ({
   embeds: _embeds,
   componentGroupDefs,

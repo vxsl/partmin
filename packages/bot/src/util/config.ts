@@ -31,7 +31,7 @@ export const validateConfig = async () => {
     return;
   }
   const unreliableParams = Object.entries(unreliable).filter(
-    ([k, v]) =>
+    ([k]) =>
       !isDefaultValue(
         (c) => c.search.params.unreliableParams?.[k as keyof typeof unreliable]
       )

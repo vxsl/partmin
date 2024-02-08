@@ -17,11 +17,6 @@ import { Listing } from "listing.js";
 import { debugLog, log } from "util/log.js";
 import { splitString } from "util/misc.js";
 
-const getListingButtons = (l: Listing) => ({
-  ...(l.imgURLs.length > 1 && { imageCycle: imageCycle(l) }),
-  ...(l.details.longDescription && { descriptionToggle: descriptionToggle(l) }),
-});
-
 const ids = {
   img: "img",
   nextImg: "nextImg",
@@ -167,6 +162,11 @@ const imageCycle = (l: Listing) =>
       },
     },
   });
+
+const getListingButtons = (l: Listing) => ({
+  ...(l.imgURLs.length > 1 && { imageCycle: imageCycle(l) }),
+  ...(l.details.longDescription && { descriptionToggle: descriptionToggle(l) }),
+});
 
 export const sendListing = (
   l: Listing,

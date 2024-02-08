@@ -9,10 +9,6 @@ interface LogOptions {
   level?: LogLevel;
   skipDiscord?: boolean;
 }
-export const logNoDiscord = (
-  v: any,
-  options?: Omit<LogOptions, "skipDiscord">
-) => log(v, { ...(options ?? {}), skipDiscord: true });
 export const log = (_v: any, options?: LogOptions) => {
   if (options?.level && !config.logging?.[options.level]) {
     return;
@@ -47,3 +43,8 @@ export const debugLog = (msg: any, options?: Omit<LogOptions, "level">) =>
   log(msg, { ...options, level: "debug" });
 export const verboseLog = (msg: any, options?: Omit<LogOptions, "level">) =>
   log(msg, { ...options, level: "verbose" });
+
+export const logNoDiscord = (
+  v: any,
+  options?: Omit<LogOptions, "skipDiscord">
+) => log(v, { ...(options ?? {}), skipDiscord: true });

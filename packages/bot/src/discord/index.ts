@@ -1,6 +1,5 @@
 import cache from "cache.js";
 import config from "config.js";
-import { statusPathForAuditor } from "constants.js";
 import {
   BitField,
   CategoryChannel,
@@ -25,9 +24,8 @@ import {
   requiredPermissions,
 } from "discord/constants.js";
 import { setPresence } from "discord/presence.js";
-import { discordSend } from "discord/util.js";
+import { discordSend, writeStatusForAuditor } from "discord/util.js";
 import dotenv from "dotenv-mono";
-import { writeFileSync } from "fs";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { debugLog, log, logNoDiscord } from "util/log.js";
 import { waitSeconds } from "util/misc.js";
@@ -78,6 +76,11 @@ const authorize = (
     const timeoutSecs = 60;
     const pollSecs = 5;
 
+    let i = 0;
+    const spinnerID = setInterval(() => {
+      const spinner = ["|", "/", "-", "\\"];
+      singleLineStdOut(`${spinner[++i % spinner.length]} `);
+    }, 100);
     setTimeout(() => {
       clearInterval(spinnerID);
       if (!isAuthorized()) {
@@ -86,15 +89,9 @@ const authorize = (
       }
     }, timeoutSecs * 1000);
 
-    let i = 0;
-
     console.log(
       `[Waiting for bot to be authorized using the above link. After authorizing, please allow a potential delay of up to ${pollSecs} seconds.]`
     );
-    const spinnerID = setInterval(() => {
-      const spinner = ["|", "/", "-", "\\"];
-      singleLineStdOut(`${spinner[++i % spinner.length]} `);
-    }, 100);
 
     while (true) {
       try {
@@ -370,10 +367,6 @@ export const initDiscord = async () => {
     await discordClient.login(token);
   });
 };
-
-type DiscordBotLoggedInStatus = "logged-in" | "logged-out";
-export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
-  writeFileSync(statusPathForAuditor, status);
 
 export const shutdownDiscord = () => {
   return setPresence("offline", { skipDiscordLog: true }).then(async () => {
