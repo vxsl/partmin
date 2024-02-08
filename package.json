@@ -27,6 +27,7 @@
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
     "plugins": [
+      "@typescript-eslint",
       "unused-imports"
     ],
     "extends": [
@@ -39,6 +40,8 @@
           "**/*.tsx"
         ],
         "rules": {
+          "no-use-before-define": "warn",
+          "@typescript-eslint/no-unused-vars": "warn",
           "object-shorthand": [
             "error",
             "always"
