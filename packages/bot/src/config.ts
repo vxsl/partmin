@@ -150,7 +150,7 @@ const getUnderlyingField = (
   fields: { [key: string]: RuntypeBase },
   k: keyof typeof fields
 ) =>
-  "underlying" in fields[k]
+  "underlying" in (fields[k] ?? {})
     ? // At the time of writing there doesn't seem to be a clean way to get
       // the underlying type of a Runtype, agnostic of whether it's optional:
       // @ts-ignore
@@ -180,12 +180,18 @@ process.argv.slice(2).forEach((arg) => {
   const [_key, value] = arg.split("=");
   if (_key && value) {
     const key = _key.split("--")[1];
-    const path = key.split(".");
+    const path = key?.split(".") ?? [];
     let obj: any = _config;
     for (let i = 0; i < path.length - 1; i++) {
-      obj = obj[path[i]];
+      const p = path[i];
+      if (p === undefined) break;
+      obj = obj[p];
     }
     const lastKey = path[path.length - 1];
+    if (lastKey === undefined) {
+      console.error("Unexpected config key", key);
+      return;
+    }
     let v;
     if (value === "true" || value === "false") {
       v = value === "true";
@@ -194,6 +200,7 @@ process.argv.slice(2).forEach((arg) => {
     } else {
       v = value;
     }
+
     console.log(
       `Overriding config value ${key}: ${v} (original value ${obj[lastKey]})`
     );

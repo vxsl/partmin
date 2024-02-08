@@ -92,6 +92,9 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
   return circleData
     .map((circle) => {
       const [radius, lat, lon] = circle;
+      if (radius === undefined || lat === undefined || lon === undefined) {
+        throw new Error(`Error parsing circle data: ${circle}`);
+      }
       return Radius.build({
         lat: parseFloat(lat),
         lon: parseFloat(lon),

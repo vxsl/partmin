@@ -48,17 +48,21 @@ export const buildDriver = async () => {
 
   log(`launching Chrome with args: ${args.join(" ")}`);
 
-  const options = await getInstalledBrowsers({
+  const browsers = await getInstalledBrowsers({
     cacheDir: puppeteerCacheDir,
-  }).then(([b]) =>
-    new chrome.Options()
-      .addArguments(...args)
-      .setChromeBinaryPath(b.executablePath)
-  );
+  });
+  const [b] = browsers;
+  if (!b) {
+    throw new Error("No Chrome browser found");
+  }
 
   const driver = await new Builder()
     .forBrowser("chrome")
-    .setChromeOptions(options)
+    .setChromeOptions(
+      new chrome.Options()
+        .addArguments(...args)
+        .setChromeBinaryPath(b.executablePath)
+    )
     .build();
 
   await driver.manage().setTimeouts({ implicit: seleniumImplicitWait });

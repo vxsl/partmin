@@ -98,6 +98,9 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
             for (let i = 0; i < unseenListings.length; i++) {
               activity?.update(i + 1);
               const l = unseenListings[i];
+              if (!l) {
+                continue; // I don't know why TypeScript doesn't know that unseenListings[i] is defined here
+              }
               debugLog(
                 `visiting listing (${i + 1}/${unseenListings.length}): ${l.url}`
               );
@@ -117,6 +120,9 @@ const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
           for (let i = 0; i < validListings.length; i++) {
             activity?.update(i + 1);
             const l = validListings[i];
+            if (!l) {
+              continue; // I don't know why TypeScript doesn't know that unseenListings[i] is defined here
+            }
             singleLineStdOut(
               `Sending Discord embed for listing (${i + 1}/${
                 validListings.length

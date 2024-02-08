@@ -50,19 +50,17 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 
   await fbGet(driver, url);
 
-  const infoStringified = await driver
+  const info = await driver
     .findElements(
       By.xpath(`//script[contains(text(), "marketplace_product_details_page")]`)
     )
     .then((els) => els[0])
-    .then((el) => el.getAttribute("innerHTML"));
-
-  const productDetails = findNestedJSONProperty(
-    infoStringified,
-    "marketplace_product_details_page"
-  );
-
-  const info = productDetails?.target;
+    .then((el) => el?.getAttribute("innerHTML"))
+    .then(
+      (html) =>
+        findNestedJSONProperty(html ?? "", "marketplace_product_details_page")
+          ?.target
+    );
 
   if (!info) {
     discordSend(
@@ -404,6 +402,9 @@ export const main = async (driver: WebDriver) => {
 
   for (let i = 0; i < radii.length; i++) {
     const r = radii[i];
+    if (!r) {
+      continue; // I don't know why TypeScript doesn't know that r is not undefined here.
+    }
     const rLabel = `radius ${i + 1}/${radii.length}`;
     log(
       `visiting fb marketplace [${rLabel}]: ${Radius.toString(r, {

@@ -39,10 +39,13 @@ export const type = async (
   const isNumber = typeof v === "number";
   const str = `${v}`;
   for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === undefined) {
+      continue; // I don't know why TypeScript doesn't know that char is defined here
+    }
     await new Promise((resolve) =>
       setTimeout(
-        () =>
-          element.sendKeys(isNumber ? Number(str[i]) : str[i]).then(resolve),
+        () => element.sendKeys(isNumber ? Number(char) : char).then(resolve),
         Math.random() * 200
       )
     );

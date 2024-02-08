@@ -117,3 +117,6 @@ export const nonEmptyArrayOrUndefined = <T>(
   }
   return arr as NonEmptyArray<T>;
 };
+
+export const randomElement = <T>(arr: T[]): T =>
+  arr[Math.floor(Math.random() * arr.length)]!;

@@ -2,6 +2,7 @@ import { ActivityType, PresenceData } from "discord.js";
 import { presences } from "discord/constants.js";
 import { getDiscordClient } from "discord/index.js";
 import { log } from "util/log.js";
+import { randomElement } from "util/misc.js";
 
 type ActivityProgress = {
   percentage: number;
@@ -43,7 +44,7 @@ export const setPresence = async (
 
   await client.user.setPresence(presence);
   return log(
-    `Discord presence set to "${presence.activities?.[0].state || `{${p}}`}"`,
+    `Discord presence set to "${presence.activities?.[0]?.state || `{${p}}`}"`,
     {
       skipDiscord: options?.skipDiscordLog,
     }
@@ -153,14 +154,8 @@ export class PresenceActivity {
       now - (this.lastWarningEndedAt ?? 0) >= timeBetweenWarnings
     ) {
       this.curWarning = {
-        emoji:
-          longRunningWarningEmojis[
-            Math.floor(Math.random() * longRunningWarningEmojis.length)
-          ],
-        message:
-          longRunningWarnings[
-            Math.floor(Math.random() * longRunningWarnings.length)
-          ],
+        emoji: randomElement(longRunningWarningEmojis),
+        message: randomElement(longRunningWarnings),
       };
       setTimeout(() => {
         this.curWarning = undefined;
