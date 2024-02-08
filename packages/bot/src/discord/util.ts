@@ -3,7 +3,7 @@ import config from "config.js";
 import { ChannelType, DiscordAPIError, MessageCreateOptions } from "discord.js";
 import { ChannelKey, channelDefs } from "discord/constants.js";
 import { discordClient, discordIsReady } from "discord/index.js";
-import { sendEmbed } from "discord/interactive/index.js";
+import { sendInteractive } from "discord/interactive/index.js";
 import { shuttingDown } from "index.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString, splitString } from "util/misc.js";
@@ -31,7 +31,7 @@ export const discordError = (e: unknown) => {
     logNoDiscord("Discord client not ready, skipping error embed.");
     return;
   }
-  sendEmbed({
+  sendInteractive({
     embeds: [
       {
         color: "#ff0000",
@@ -49,7 +49,7 @@ export const discordWarning = (
 ) => {
   logNoDiscord("Sending Discord warning embed:");
   log(e);
-  sendEmbed({
+  sendInteractive({
     embeds: [
       {
         color: "#ebb734",
@@ -99,8 +99,10 @@ export const discordFormat = (s: string, options?: FormatOptions) => {
   return v;
 };
 
-export const manualDiscordSend = (createOptions: MessageCreateOptions) =>
-  discordSend(undefined, { createOptions });
+export const manualDiscordSend = (
+  createOptions: MessageCreateOptions,
+  options?: DiscordSendOptions
+) => discordSend(undefined, { ...options, createOptions });
 
 export const discordSend = (...args: Parameters<typeof _discordSend>) => {
   const [msg, options] = args;

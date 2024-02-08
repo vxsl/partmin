@@ -7,9 +7,9 @@ import {
 } from "discord/constants.js";
 import {
   SendEmbedOptions,
-  buttonGroup,
-  initializeInteractiveMessage,
-  sendEmbed,
+  componentGroup,
+  sendInteractive,
+  startInteractive,
 } from "discord/interactive/index.js";
 import listingEmbed, { colors } from "discord/interactive/listing/embed.js";
 import { discordFormat, getTextChannel } from "discord/util.js";
@@ -17,7 +17,7 @@ import { Listing } from "listing.js";
 import { debugLog, log } from "util/log.js";
 import { splitString } from "util/misc.js";
 
-const getListingButtonGroups = (l: Listing) => ({
+const getListingButtons = (l: Listing) => ({
   ...(l.imgURLs.length > 1 && { imageCycle: imageCycle(l) }),
   ...(l.details.longDescription && { descriptionToggle: descriptionToggle(l) }),
 });
@@ -53,21 +53,30 @@ const descriptionFields = (l: Listing) => {
 };
 
 const descriptionToggle = (l: Listing) =>
-  buttonGroup<{ toggled: boolean }>({
+  componentGroup<{ toggled: boolean }>({
     initState: ({ getButton }) => ({
       toggled: getButton(ids.desc).data.style === Discord.ButtonStyle.Primary,
     }),
-    buttonDefs: [
-      {
-        data: { customId: ids.desc, label: "📄" },
-        mutate: async ({ state, apply, getButton, embeds }) => {
-          embeds[0].setColor(colors.interacted);
+    buttons: {
+      [ids.desc]: {
+        label: "📄",
+        mutate: async ({
+          state,
+          componentOrder,
+          apply,
+          getButton,
+          getEmbed,
+        }) => {
           const desc = l.details.longDescription;
           if (desc === undefined) {
-            return state;
+            return { state, componentOrder };
           }
           const button = getButton(ids.desc);
-          const embed = embeds[0]; // TODO safe access index
+          const embed = getEmbed(0);
+          if (!embed) {
+            log("No embed found for descriptionToggle", { error: true });
+            return { state, componentOrder };
+          }
 
           embed.setColor(colors.interacted);
           button?.setDisabled(true);
@@ -102,59 +111,72 @@ const descriptionToggle = (l: Listing) =>
             )
             .setDisabled(false);
           await apply();
-          return { toggled: !state.toggled };
+          return {
+            state: { ...state, toggled: !state.toggled },
+            componentOrder,
+          };
         },
       },
-    ],
+    },
   });
 
 const imageCycle = (l: Listing) =>
-  buttonGroup<{ index: number }>({
+  componentGroup<{ index: number }>({
     initState: ({ getButton }) => {
-      const imgLabel = getButton("img").data.label;
+      const imgLabel = getButton(ids.img).data.label;
       let index = 0;
       if (imgLabel) {
         const match = imgLabel.match(/(\d+) \/ \d+/);
-        if (match) {
+        if (match?.[1]) {
           index = parseInt(match[1], 10) - 1;
         }
       }
       return { index };
     },
-    buttonDefs: [
-      {
-        data: { customId: ids.prevImg, label: "⬅" },
-        mutate: ({ state, apply, getButton, embeds }) => {
-          embeds[0].setColor(colors.interacted);
+    buttons: {
+      [ids.prevImg]: {
+        label: "⬅",
+        mutate: ({ state, getButton, getEmbed, componentOrder }) => {
+          const embed = getEmbed(0);
+          embed.setColor(colors.interacted);
           const len = l.imgURLs.length;
           state.index = (state.index - 1 + len) % len;
-          embeds[0].setImage(l.imgURLs[state.index]);
+          const url = l.imgURLs[state.index];
+          if (url) {
+            embed.setImage(url);
+          }
           getButton(ids.img).setLabel(`${state.index + 1} / ${len}`);
-          apply();
-          return state;
+          return { state, componentOrder };
         },
       },
-      { data: { customId: "img", label: `️1 / ${l.imgURLs.length}` } },
-      {
-        data: { customId: ids.nextImg, label: "➡" },
-        mutate: ({ state, apply, getButton, embeds }) => {
-          embeds[0].setColor(colors.interacted);
+      [ids.img]: { label: `️1 / ${l.imgURLs.length}` },
+      [ids.nextImg]: {
+        label: "➡",
+        mutate: ({ state, getButton, getEmbed, componentOrder }) => {
+          const embed = getEmbed(0);
+          embed.setColor(colors.interacted);
           const len = l.imgURLs.length;
           state.index = (state.index + 1) % len;
-          embeds[0].setImage(l.imgURLs[state.index]);
+          const url = l.imgURLs[state.index];
+          if (url) {
+            embed.setImage(url);
+          }
           getButton(ids.img).setLabel(`${state.index + 1} / ${len}`);
-          apply();
-          return state;
+          return { state, componentOrder };
         },
       },
-    ],
+    },
   });
 
-export const sendListing = (l: Listing, options?: SendEmbedOptions) =>
-  sendEmbed({
-    options,
+export const sendListing = (
+  l: Listing,
+  options?: Pick<SendEmbedOptions, "channel" | "interaction">
+) =>
+  sendInteractive({
+    ...options,
+    initComponentOrder: [[ids.prevImg, ids.img, ids.nextImg, ids.desc]],
     embeds: [listingEmbed(l).data],
-    buttonGroups: getListingButtonGroups(l),
+    componentGroupDefs: getListingButtons(l),
   });
 
 export const reinitializeInteractiveListingMessages = async () => {
@@ -194,9 +216,9 @@ export const reinitializeInteractiveListingMessages = async () => {
         return;
       }
       try {
-        initializeInteractiveMessage({
+        startInteractive({
           message,
-          buttonGroups: getListingButtonGroups(l),
+          componentGroupDefs: getListingButtons(l),
         });
         successCount++;
       } catch (e) {

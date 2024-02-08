@@ -3,6 +3,7 @@ import { startActivity } from "discord/presence.js";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { readableSeconds } from "util/data.js";
 import { debugLog, log } from "util/log.js";
+import { NonEmptyArray } from "util/type.js";
 
 export const splitString = (s: string, maxLength: number) => {
   const regex = new RegExp(`[\\s\\S]{1,${maxLength}}`, "g");
@@ -17,6 +18,10 @@ export const errToString = (e: unknown) =>
   e instanceof Error ? `${e.stack || `${e.name}: ${e.message}`}` : `${e}`;
 export const notUndefined = <T>(value: T | undefined): value is T =>
   value !== undefined;
+export const notNull = <T>(value: T | null): value is T => value !== null;
+export const notNullOrUndefined = <T>(
+  value: T | null | undefined
+): value is T => notNull(value) && notUndefined(value);
 
 export const isPlainObject = (value: unknown): value is Record<string, any> => {
   if (typeof value !== "object" || value === null) {
@@ -92,4 +97,23 @@ export const randomWait = async (options?: {
     await waitSeconds(1);
     i++;
   }
+};
+
+export const throwError = (message: string) => {
+  throw new Error(message);
+};
+
+export const nonEmptyArrayOrError = <T>(arr: T[]): NonEmptyArray<T> => {
+  if (arr.length === 0) {
+    throw new Error("Expected non-empty array");
+  }
+  return arr as NonEmptyArray<T>;
+};
+export const nonEmptyArrayOrUndefined = <T>(
+  arr: T[]
+): NonEmptyArray<T> | undefined => {
+  if (arr.length === 0) {
+    return;
+  }
+  return arr as NonEmptyArray<T>;
 };
