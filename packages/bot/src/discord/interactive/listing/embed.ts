@@ -17,12 +17,7 @@ export const colors = {
 };
 
 const listingEmbed = (l: Listing) => {
-  let descriptionHeader = [
-    `${
-      l.details.price
-        ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
-        : undefined
-    }`,
+  const location =
     l.computed?.locationLinkText && l.computed?.locationLinkURL
       ? discordFormat(
           `${l.computed.locationLinkText}${
@@ -40,10 +35,18 @@ const listingEmbed = (l: Listing) => {
       ? discordFormat(Coordinates.toString(l.details.coords), {
           link: getGoogleMapsLink(Coordinates.toString(l.details.coords)),
         })
-      : undefined,
+      : undefined;
+
+  let descriptionHeader = [
+    `💸${
+      l.details.price
+        ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
+        : undefined
+    }`,
+    location ? `📍${location}` : undefined,
   ]
     .filter(notUndefined)
-    .join("‎   •   ‎");
+    .join("‎    ‎    ‎      ‎ ");
 
   const dests = Object.keys(l.computed?.commuteDestinations ?? {});
 
