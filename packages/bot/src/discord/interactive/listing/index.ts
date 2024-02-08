@@ -175,9 +175,9 @@ export const reinitializeInteractiveListingMessages = async () => {
     });
     const firstMessageTime = messages.last()?.createdTimestamp;
     debugLog(
-      `Setting up collector for ${messages.size} messages prior to ${
+      `Checking ${messages.size} messages prior to ${
         !firstMessageTime ? "<invalid date>" : new Date(firstMessageTime)
-      }`
+      } for interactive listings to reinitialize...`
     );
 
     messages.forEach((message) => {
@@ -212,7 +212,11 @@ export const reinitializeInteractiveListingMessages = async () => {
       const lastMessageId = messages.lastKey();
       await fetchAndProcessMessages(lastMessageId);
     } else {
-      log(`Done reinitializing ${successCount} interactive listing messages`);
+      log(
+        successCount
+          ? `Reinitialized ${successCount} interactive listing messages`
+          : "No interactive listing messages to reinitialize"
+      );
     }
   };
   return fetchAndProcessMessages();

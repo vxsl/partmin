@@ -25,7 +25,6 @@ import { Platform, platforms } from "types/platform.js";
 import { detectConfigChange, validateConfig } from "util/config.js";
 import { debugLog, log, logNoDiscord } from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
-
 process.title = "partmin-bot";
 
 dotenv.load();
@@ -241,10 +240,7 @@ const shutdownWebdriver = async () => {
   }
   await driver
     .getAllWindowHandles()
-    .catch((e) => {
-      logNoDiscord("Error getting window handles:");
-      logNoDiscord(e);
-    })
+    .catch()
     .then(async (handles) => {
       for (const handle of handles || []) {
         await driver?.switchTo().window(handle);
@@ -263,9 +259,7 @@ const shutdownWebdriver = async () => {
       await driver?.quit();
       logNoDiscord("Closed the browser.");
     })
-    .catch((e) => {
-      logNoDiscord("Error calling driver.quit():", e);
-    });
+    .catch();
 };
 
 process.on("SIGINT", shutdown);

@@ -55,7 +55,7 @@ export const discordWarning = (
         color: "#ebb734",
         title: `⚠️ ${title}`,
         description: discordFormat(errToString(e), {
-          code: options?.monospace,
+          code: options?.monospace || e instanceof Error,
         }),
       },
     ],
@@ -69,6 +69,7 @@ interface FormatOptions {
   code?: boolean | string;
   quote?: boolean;
   link?: string;
+  underline?: boolean;
 }
 
 export const discordFormat = (s: string, options?: FormatOptions) => {
@@ -85,6 +86,9 @@ export const discordFormat = (s: string, options?: FormatOptions) => {
   }
   if (options?.italic) {
     v = `*${v}*`;
+  }
+  if (options?.underline) {
+    v = `__${v}__`;
   }
   if (options?.quote) {
     v = `> ${v.replace(/\n/g, "\n> ")}`;
@@ -186,9 +190,11 @@ const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
   });
 };
 
-const clearChannel = async (_c: ChannelKey) => {
+export const clearChannel = async (_c: ChannelKey) => {
   const c = await getTextChannel(_c);
-  while (await c.messages.fetch().then((m) => m.size > 0)) {
-    await c.messages.fetch().then(c.bulkDelete);
+  let msgs = await c.messages.fetch();
+  while (msgs.size > 0) {
+    await c.bulkDelete(msgs);
+    msgs = await c.messages.fetch();
   }
 };

@@ -7,7 +7,9 @@ export const acresToSqft = (a: number) => a * 43560;
 
 export const accessNestedProperty = (obj: any, _path: string | string[]) => {
   let result = obj;
-  const path = Array.isArray(_path) ? _path : _path.split(".");
+  const path = Array.isArray(_path)
+    ? _path
+    : _path.split(".").filter((s) => s !== "");
   for (const p of path) {
     result = result?.[p];
     if (result === undefined) {
