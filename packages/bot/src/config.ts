@@ -85,6 +85,7 @@ const Development = RuntypeRecord({
   headed: Optional(Boolean),
   testing: Optional(Boolean),
   noSandbox: Optional(Boolean),
+  noRetrieval: Optional(Boolean),
 });
 
 const Config = RuntypeRecord({
@@ -111,6 +112,7 @@ export const defaultConfigValues: RecursivePartial<Config> = {
     headed: false,
     testing: false,
     noSandbox: false,
+    noRetrieval: false,
   },
   logging: {
     debug: false,

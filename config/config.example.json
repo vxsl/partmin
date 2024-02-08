@@ -6,7 +6,8 @@
   "development": {
     "headed": false,
     "testing": false,
-    "noSandbox": false
+    "noSandbox": false,
+    "noRetrieval": false
   },
   "botBehaviour": {
     "suppressGreeting": false,

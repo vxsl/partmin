@@ -32,7 +32,7 @@ dotenv.load();
 let driver: WebDriver | undefined;
 export let shuttingDown = false;
 
-const runLoop = async (driver: WebDriver, platforms: Platform[]) => {
+const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
   await detectConfigChange(async () => {
     for (const {
       callbacks: { onSearchParamsChanged },
@@ -255,7 +255,13 @@ export const fatalError = async (e: unknown) => {
     driver = await buildDriver();
 
     setPresence("online");
-    await runLoop(driver, [platforms.fb, platforms.kijiji]);
+
+    if (!config.development?.noRetrieval) {
+      await retrieval(driver, [platforms.fb, platforms.kijiji]);
+    } else {
+      log("Skipping retrieval loop according to config option.");
+      await new Promise(() => {});
+    }
   } catch (e) {
     if (shuttingDown) {
       log("Caught error during shutdown:");
