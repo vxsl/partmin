@@ -7,6 +7,7 @@ import {
   Channel,
   ChannelType,
   Client,
+  Events,
   GatewayIntentBits,
   Guild,
   GuildChannel,
@@ -15,6 +16,7 @@ import {
   TextChannel,
 } from "discord.js";
 import { greetings } from "discord/chat.js";
+import setupCommands from "discord/commands/index.js";
 import {
   ChannelDef,
   ChannelKey,
@@ -277,13 +279,11 @@ const createChannels = async ({
   return results;
 };
 
-const setupGuild = async (
-  id: string,
-  guildInfo: RecursivePartial<GuildInfo>
-): Promise<GuildInfo> => {
+const setupGuild = async (guildInfo: RecursivePartial<GuildInfo>) => {
   let guild: Guild | undefined;
   let role: Role | undefined;
 
+  const id = await cache.discordGuildID.requireValue();
   const appID = await cache.discordAppID.requireValue();
 
   try {
@@ -331,31 +331,34 @@ const setupGuild = async (
     guild,
   });
 
-  // TODO use runtypes to throw if info is malformed.
-  return guildInfo as GuildInfo;
+  return guildInfo as GuildInfo; // TODO use runtypes to throw if info is malformed.
 };
 
 export const initDiscord = async () => {
-  const guildID = await cache.discordGuildID.requireValue({
+  await cache.discordGuildID.requireValue({
     message: `Your Discord server is not set up. To configure it, please retrieve your server's ID:\n - open Discord\n - right-click your server in the sidebar\n - Server Settings\n - Widget \n - SERVER ID\n\n${cache.discordGuildID.envVarInstruction}\n\nNote that partmin will create channels in this server, so make sure you have the necessary permissions to do so.`,
+  });
+  await cache.discordAppID.requireValue({
+    message: `Partmin requires a Discord app ID to run. To get this, go to the Discord Developer Portal, create a new application, and retrieve the application ID from the "General Information" section.\n\n${cache.discordAppID.envVarInstruction}`,
   });
 
   return await new Promise(async (resolve, reject) => {
-    discordClient.once("ready", async () => {
+    discordClient.once(Events.ClientReady, async () => {
       writeStatusForAuditor("logged-in");
-      if (cache.discordGuildInfo.value) {
+      const guildInfo = cache.discordGuildInfo.value;
+      if (guildInfo) {
         debugLog("Cached server information found.");
         // TODO use runtypes to throw (or warn?) if guildInfo is malformed.
       }
-      await setupGuild(guildID, {}).then((newGuildInfo) => {
-        cache.discordGuildInfo.writeValue(newGuildInfo);
-        log("Server configuration complete");
-      });
-
+      await setupGuild(guildInfo ?? {}).then((newGuildInfo) =>
+        cache.discordGuildInfo.writeValue(newGuildInfo)
+      );
+      await setupCommands();
+      log("Server configuration complete");
+      initComplete = true;
       if (!config.botBehaviour?.suppressGreeting) {
         discordSend(greetings[Math.floor(Math.random() * greetings.length)]);
       }
-      initComplete = true;
       resolve(discordClient);
     });
     discordClient.once("error", reject);
@@ -373,7 +376,6 @@ export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
   writeFileSync(statusPathForAuditor, status);
 
 export const shutdownDiscord = () => {
-  logNoDiscord("Setting bot presence to offline");
   return setPresence("offline", { skipDiscordLog: true }).then(async () => {
     logNoDiscord("Destroying discord client");
     await discordClient?.destroy();
