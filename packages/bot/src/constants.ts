@@ -1,7 +1,7 @@
-import config, { Config, PetType } from "config.js";
+import { PetType, StaticConfig, configDevelopment } from "config.js";
 
 export const dataDir = `${process.cwd()}/.${
-  config.development?.testing ? "test-" : ""
+  configDevelopment?.testing ? "test-" : ""
 }data`;
 export const statusPathForAuditor = `${dataDir}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";
@@ -10,7 +10,7 @@ export const seleniumImplicitWait = 10 * 1000;
 
 export const searchParamsBlacklist: Omit<
   Record<
-    keyof NonNullable<Config["search"]["params"]["exclude"]>,
+    keyof NonNullable<StaticConfig["search"]["params"]["exclude"]>,
     (string | RegExp)[]
   >,
   "basements"

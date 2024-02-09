@@ -18,6 +18,11 @@ export const requiredPermissions = new PermissionsBitField(
 export const maxEmbedLength = 2048;
 export const maxFieldLength = 1024;
 export const maxMessagesToFetchAtOnce = 100;
+export const fatalErrorColor = "#ff0000";
+export const warningColor = "#ebb734";
+export const errorColor = "#732f2f";
+export const successColor = "#4a874a";
+export const editConfigColor = "#2f4a73";
 
 // ------------------------------------------------------------
 // channels

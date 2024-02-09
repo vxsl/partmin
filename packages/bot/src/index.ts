@@ -1,5 +1,5 @@
 import cache from "cache.js";
-import config from "config.js";
+import { initConfig } from "config.js";
 import { dataDir, puppeteerCacheDir } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
@@ -8,7 +8,7 @@ import {
   sendListing,
 } from "discord/interactive/listing/index.js";
 import { setPresence, startActivity } from "discord/presence.js";
-import { discordError, discordWarning } from "discord/util.js";
+import { discordFatalError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import fs from "fs";
@@ -22,7 +22,7 @@ import psList from "ps-list";
 import { WebDriver } from "selenium-webdriver";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
-import { detectConfigChange, validateConfig } from "util/config.js";
+import { detectConfigChange } from "util/config.js";
 import { debugLog, log, logNoDiscord } from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
 process.title = "partmin-bot";
@@ -82,7 +82,7 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
       }
 
       try {
-        const listings = excludeListingsOutsideSearchArea(allListings);
+        const listings = await excludeListingsOutsideSearchArea(allListings);
         if (!listings.length) {
           log(`No listings found within the search area.`);
           continue;
@@ -224,7 +224,7 @@ export const shutdown = async () => {
 
 export const fatalError = async (e: unknown) => {
   if (discordIsReady()) {
-    await discordError(e);
+    await discordFatalError(e);
   } else {
     log(e, { error: true });
   }
@@ -234,11 +234,18 @@ export const fatalError = async (e: unknown) => {
 
 (async () => {
   try {
+    const config = await initConfig();
+
+    // prevalidateConfig(_config);
+    // cache.config.writeValue(Config.check(_config));
+    // const config = await getConfig(); // TODO no validate?
+    // const config = cache.config.value;
+
     [dataDir, puppeteerCacheDir].forEach(
       (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
     );
 
-    if (config.options?.disableGoogleMapsFeatures) {
+    if (config?.options?.disableGoogleMapsFeatures) {
       log(
         "Google Maps features are disabled. You can enable them by removing the 'options.disableGoogleMapsFeatures' config option."
       );
@@ -251,7 +258,8 @@ export const fatalError = async (e: unknown) => {
     await initDiscord();
     setPresence("launching");
     reinitializeInteractiveListingMessages();
-    await validateConfig();
+    // await validateConfig(config as StaticConfig);
+    cache.config.writeValue(config);
     driver = await buildDriver();
 
     setPresence("online");

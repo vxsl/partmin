@@ -1,10 +1,10 @@
 import { Browser, getInstalledBrowsers, install } from "@puppeteer/browsers";
-import config from "config.js";
 import {
   chromeVersion,
   puppeteerCacheDir,
   seleniumImplicitWait,
 } from "constants.js";
+import { getConfig } from "util/config.js";
 import { Builder } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { stdout as singleLineStdOut } from "single-line-log";
@@ -26,6 +26,7 @@ const installChrome = () =>
 
 export const buildDriver = async () => {
   await installChrome();
+  const config = await getConfig();
 
   const args: string[] = [];
   args.push("--disable-gpu", "--disable-software-rasterizer");

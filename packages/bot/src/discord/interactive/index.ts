@@ -1,9 +1,9 @@
 import {
   APIEmbed,
   ActionRowBuilder,
+  BaseMessageOptions,
   ButtonBuilder,
   ButtonStyle,
-  CommandInteraction,
   ComponentType,
   EmbedBuilder,
   InteractionButtonComponentData,
@@ -219,8 +219,10 @@ export const startInteractive = ({
   return message
     .createMessageComponentCollector({
       time: collectorAliveTime,
-      filter: (commandInteraction) =>
-        componentDefMap.has(commandInteraction.customId),
+      filter: (commandInteraction) => {
+        // commandInteraction.deferUpdate();
+        return componentDefMap.has(commandInteraction.customId);
+      },
     })
     .on("collect", async (componentInteraction) => {
       try {
@@ -252,7 +254,18 @@ export const startInteractive = ({
           });
         }
         // await message.edit({ embeds, components });
-        await componentInteraction.update({ embeds, components });
+        // if (!componentInteraction.interac) {
+        if (!componentInteraction.deferred && !componentInteraction.replied) {
+          console.log("im updating");
+          await componentInteraction.update({ embeds, components });
+        } else {
+          await componentInteraction.editReply({ embeds, components });
+          console.log(
+            `Im not updating because ${
+              componentInteraction.deferred ? "deferred" : "replied"
+            }`
+          );
+        }
       } catch (e) {
         log(`Error while handling interaction for message ${message.id}:`, {
           error: true,
@@ -265,7 +278,7 @@ export const startInteractive = ({
 // __________________________________________________________________________________________
 // function used to construct and send an interactive message:
 export type SendEmbedOptions = {
-  commandInteraction?: CommandInteraction;
+  customSendFn?: <T extends BaseMessageOptions>(o: T) => Promise<Message>;
   channel?: ChannelKey;
   embeds: (Omit<APIEmbed, "color"> & {
     color?: string | number;
@@ -273,12 +286,12 @@ export type SendEmbedOptions = {
   componentGroupDefs?: ComponentGroupDefs;
   initComponentOrder?: ComponentOrder;
 };
-export const sendInteractive = async ({
+export const constructAndSendRichMessage = async ({
   embeds: _embeds,
   componentGroupDefs,
-  commandInteraction,
   channel,
   initComponentOrder,
+  customSendFn,
 }: SendEmbedOptions) => {
   if (!discordIsReady()) {
     debugLog(
@@ -329,17 +342,12 @@ export const sendInteractive = async ({
     }),
   };
 
-  const message = commandInteraction
-    ? await commandInteraction.reply(payload).then((r) => r.fetch())
+  const message = customSendFn
+    ? await customSendFn(payload)
     : await manualDiscordSend(payload, { channel });
 
   if (!message) {
-    log(
-      `There was a problem sending the embed: ${
-        commandInteraction ? commandInteraction.commandName : channel
-      }`,
-      { error: true }
-    );
+    log(`There was a problem sending the rich message`, { error: true });
     return;
   }
   if (!componentGroupDefs || !payload.components?.length) return;

@@ -1,5 +1,6 @@
-import config, {
-  Config,
+import cache from "cache.js";
+import {
+  StaticConfig,
   defaultConfigValues,
   unreliabilityExplanations,
 } from "config.js";
@@ -10,18 +11,21 @@ import { accessNestedProperty } from "util/data.js";
 import { isValidAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
 
-export const isDefaultValue = (
-  path: string | ((config: Config) => any),
+export const getConfig = () => cache.config.requireValue();
+
+export const isDefaultValue = async (
+  path: string | ((config: StaticConfig) => any),
   options?: {
-    baseNest?: (config: Config) => any;
+    baseNest?: (config: StaticConfig) => any;
   }
 ) => {
   let actual, expected;
   try {
+    const config = await getConfig();
     const nestedConfig = options?.baseNest ? options.baseNest(config) : config;
     const nestedDefault = options?.baseNest
-      ? options.baseNest(defaultConfigValues as unknown as Config)
-      : (defaultConfigValues as unknown as Config);
+      ? options.baseNest(defaultConfigValues as unknown as StaticConfig)
+      : (defaultConfigValues as unknown as StaticConfig);
     if (typeof path === "string") {
       actual = accessNestedProperty(nestedConfig, path);
       expected = accessNestedProperty(nestedDefault, path);
@@ -41,7 +45,7 @@ export const isDefaultValue = (
   return actual === expected;
 };
 
-export const validateConfig = async (c: Config) => {
+export const validateConfig = async (c: StaticConfig) => {
   debugLog("Validating config:");
   debugLog(JSON.stringify(c));
   if (!c.options?.disableGoogleMapsFeatures) {
@@ -67,10 +71,10 @@ export const validateConfig = async (c: Config) => {
     return;
   }
   const unreliableParams = Object.entries(unreliable).filter(
-    ([k]) =>
-      !isDefaultValue(
+    async ([k]) =>
+      !(await isDefaultValue(
         (c) => c.search.params.unreliableParams?.[k as keyof typeof unreliable]
-      )
+      ))
   ) as [keyof typeof unreliabilityExplanations, boolean][] | never;
   if (unreliableParams.length) {
     discordWarning(
@@ -95,6 +99,7 @@ export const validateConfig = async (c: Config) => {
 };
 
 export const detectConfigChange = async (callback?: () => void) => {
+  const config = await getConfig();
   const path = `${dataDir}/config-search-params.json`;
   const cached = fs.existsSync(path)
     ? fs.readFileSync(path, "utf-8")
@@ -104,7 +109,7 @@ export const detectConfigChange = async (callback?: () => void) => {
   if (v) {
     log(
       !cached
-        ? "No cached search found."
+        ? "No previous search found."
         : "Change in search parameters detected."
     );
     await (callback ? callback() : Promise.resolve());

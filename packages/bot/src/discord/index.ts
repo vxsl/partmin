@@ -1,5 +1,4 @@
 import cache from "cache.js";
-import config from "config.js";
 import {
   BitField,
   CategoryChannel,
@@ -27,6 +26,7 @@ import { setPresence } from "discord/presence.js";
 import { discordSend, writeStatusForAuditor } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { stdout as singleLineStdOut } from "single-line-log";
+import { getConfig } from "util/config.js";
 import { debugLog, log, logNoDiscord } from "util/log.js";
 import { waitSeconds } from "util/misc.js";
 import { RecursivePartial } from "util/type.js";
@@ -130,6 +130,7 @@ const getChannelsToBeCreated = async ({
   guildInfo: RecursivePartial<GuildInfo>;
   guild: Guild;
 }) => {
+  const config = await getConfig();
   const actualChannels = await guild.channels
     .fetch()
     .then((coll) =>
@@ -338,6 +339,7 @@ export const initDiscord = async () => {
   await cache.discordAppID.requireValue({
     message: `Partmin requires a Discord app ID to run. To get this, go to the Discord Developer Portal, create a new application, and retrieve the application ID from the "General Information" section.\n\n${cache.discordAppID.envVarInstruction}`,
   });
+  const config = await getConfig();
 
   return await new Promise(async (resolve, reject) => {
     discordClient.once(Events.ClientReady, async () => {

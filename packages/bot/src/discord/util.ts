@@ -1,12 +1,21 @@
 import cache from "cache.js";
-import config from "config.js";
 import { statusPathForAuditor } from "constants.js";
 import { ChannelType, DiscordAPIError, MessageCreateOptions } from "discord.js";
-import { ChannelKey, channelDefs } from "discord/constants.js";
+import {
+  ChannelKey,
+  channelDefs,
+  errorColor,
+  fatalErrorColor,
+  warningColor,
+} from "discord/constants.js";
 import { discordClient, discordIsReady } from "discord/index.js";
-import { sendInteractive } from "discord/interactive/index.js";
+import {
+  SendEmbedOptions,
+  constructAndSendRichMessage,
+} from "discord/interactive/index.js";
 import { writeFileSync } from "fs";
 import { shuttingDown } from "index.js";
+import { getConfig } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString, splitString } from "util/misc.js";
 
@@ -66,17 +75,17 @@ export const getTextChannel = async (c: ChannelKey) => {
   return result;
 };
 
-export const discordError = (e: unknown) => {
+export const discordFatalError = (e: unknown) => {
   logNoDiscord("Sending Discord error embed:");
   logNoDiscord(e);
   if (!discordIsReady()) {
     logNoDiscord("Discord client not ready, skipping error embed.");
     return;
   }
-  sendInteractive({
+  return constructAndSendRichMessage({
     embeds: [
       {
-        color: "#ff0000",
+        color: fatalErrorColor,
         title: `🚨 Fatal error: partmin has crashed.`,
         description: discordFormat(errToString(e), { code: true }),
       },
@@ -87,17 +96,26 @@ export const discordError = (e: unknown) => {
 export const discordWarning = (
   title: string,
   e: unknown,
-  options?: { monospace?: boolean }
+  {
+    monospace,
+    error,
+    ...options
+  }: { monospace?: boolean; error?: boolean } & Omit<
+    SendEmbedOptions,
+    "embeds"
+  > = {}
 ) => {
-  logNoDiscord("Sending Discord warning embed:");
+  logNoDiscord(`Sending Discord ${error ? "error" : "warning"} embed:`);
   log(e);
-  sendInteractive({
+  return constructAndSendRichMessage({
+    ...options,
     embeds: [
       {
-        color: "#ebb734",
-        title: `⚠️ ${title}`,
+        ...(error
+          ? { color: errorColor, title: `❌ ${title}` }
+          : { color: warningColor, title: `⚠️ ${title}` }),
         description: discordFormat(errToString(e), {
-          code: options?.monospace || e instanceof Error,
+          code: monospace || e instanceof Error,
         }),
       },
     ],
@@ -122,6 +140,7 @@ const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
     );
     return;
   }
+  const config = await getConfig();
   const k: ChannelKey =
     options?.channel ??
     (config.development?.testing ? "test-listings" : "listings");

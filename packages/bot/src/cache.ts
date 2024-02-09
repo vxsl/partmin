@@ -1,3 +1,4 @@
+import { StaticConfig } from "config.js";
 import { dataDir } from "constants.js";
 import { GuildInfo } from "discord/index.js";
 import { Listing } from "listing.js";
@@ -6,6 +7,23 @@ import { CommuteSummary } from "util/geo.js";
 import { parseJSON } from "util/io.js";
 
 const cache = {
+  // ---------------------------------------
+  // config
+  config: new CacheDef<StaticConfig>({
+    path: `${dataDir}/config-cached.json`,
+    readTransform: (c) => {
+      const parsed = parseJSON<StaticConfig>(c);
+      // prevalidateConfig(parsed);
+      // validateConfig(parsed);
+      return parsed;
+    },
+    writeTransform: (c) => {
+      // prevalidateConfig(c);
+      // validateConfig(c);
+      return JSON.stringify(c);
+    },
+    label: "config",
+  }),
   // ---------------------------------------
   // geo
   commuteSummaries: new CacheDef<

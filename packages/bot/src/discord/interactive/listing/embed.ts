@@ -57,14 +57,16 @@ const listingEmbed = (l: Listing) => {
       [
         descriptionHeader,
         dests
-          .map((d) => {
+          .map(async (d) => {
             const o = getCommuteOrigin(l);
             const summ = l.computed?.commuteDestinations?.[d];
             return !summ || !o
               ? ""
               : [
                   dests.length > 1
-                    ? discordFormat(`${trimAddress(d)}:`, { italic: true })
+                    ? discordFormat(`${await trimAddress(d)}:`, {
+                        italic: true,
+                      })
                     : undefined,
                   formatCommuteSummaryMD(summ, o, d),
                 ]

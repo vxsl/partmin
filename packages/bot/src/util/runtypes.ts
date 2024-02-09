@@ -27,3 +27,23 @@ export const traverseRuntype = (runtype: Reflect, path: string[]): Reflect => {
   }
   return target;
 };
+
+export const castStringToRuntype = (runtype: Reflect, value: string) => {
+  const tag = runtype.tag === "optional" ? runtype.underlying.tag : runtype.tag;
+  if (tag === "number") {
+    // return parseFloat(value);
+    const n = parseFloat(value);
+    if (!Number.isNaN(n)) {
+      return n;
+    }
+  }
+  if (tag === "boolean") {
+    if (value === "true") {
+      return true;
+    }
+    if (value === "false") {
+      return false;
+    }
+  }
+  return value;
+};

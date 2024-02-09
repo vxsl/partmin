@@ -1,9 +1,29 @@
-import config from "config.js";
+import { getConfig } from "util/config.js";
 
 const sqFtToSqMetersRatio = 0.092903;
 export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
 export const sqMetersToSqft = (m2: number) => m2 / sqFtToSqMetersRatio;
 export const acresToSqft = (a: number) => a * 43560;
+
+export const modifyNestedProperty = (
+  obj: any,
+  _path: string | string[],
+  value: any
+) => {
+  const path = Array.isArray(_path) ? _path : _path.split(".");
+  const last = path.pop();
+  if (last === undefined) {
+    return;
+  }
+  let result = obj;
+  for (const p of path) {
+    if (result[p] === undefined) {
+      result[p] = {};
+    }
+    result = result[p];
+  }
+  result[last] = value;
+};
 
 export const accessNestedProperty = (obj: any, _path: string | string[]) => {
   let result = obj;
@@ -63,7 +83,8 @@ const sanitizeString = (s: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-export const trimAddress = (address: string): string => {
+export const trimAddress = async (address: string): Promise<string> => {
+  const config = await getConfig();
   const city = sanitizeString(config.search.location.city);
   const prov = sanitizeString(config.search.location.region);
   const cityIndex = sanitizeString(address).lastIndexOf(city);

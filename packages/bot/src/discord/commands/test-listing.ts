@@ -41,7 +41,9 @@ export const testListing = (commandInteraction: CommandInteraction) =>
         ],
       },
     },
-    { commandInteraction }
+    {
+      customSendFn: (o) => commandInteraction.reply({ ...o, fetchReply: true }),
+    }
   );
 
 export default testListing;
