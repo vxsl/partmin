@@ -1,7 +1,7 @@
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { CommandInteraction } from "discord.js";
 import { sendListing } from "discord/interactive/listing/index.js";
 
-export const testListing = (interaction: CommandInteraction) =>
+export const testListing = (commandInteraction: CommandInteraction) =>
   sendListing(
     {
       platform: "fb",
@@ -41,12 +41,7 @@ export const testListing = (interaction: CommandInteraction) =>
         ],
       },
     },
-    { interaction }
+    { commandInteraction }
   );
 
-export default {
-  data: new SlashCommandBuilder()
-    .setName("test-listing")
-    .setDescription("Sends a test listing"),
-  execute: (interaction: CommandInteraction) => testListing(interaction),
-};
+export default testListing;

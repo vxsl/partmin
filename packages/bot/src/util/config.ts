@@ -1,15 +1,51 @@
-import config, { isDefaultValue, unreliabilityExplanations } from "config.js";
+import config, {
+  Config,
+  defaultConfigValues,
+  unreliabilityExplanations,
+} from "config.js";
 import { dataDir } from "constants.js";
 import { discordFormat, discordWarning } from "discord/util.js";
 import fs from "fs";
+import { accessNestedProperty } from "util/data.js";
 import { isValidAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
 
-export const validateConfig = async () => {
+export const isDefaultValue = (
+  path: string | ((config: Config) => any),
+  options?: {
+    baseNest?: (config: Config) => any;
+  }
+) => {
+  let actual, expected;
+  try {
+    const nestedConfig = options?.baseNest ? options.baseNest(config) : config;
+    const nestedDefault = options?.baseNest
+      ? options.baseNest(defaultConfigValues as unknown as Config)
+      : (defaultConfigValues as unknown as Config);
+    if (typeof path === "string") {
+      actual = accessNestedProperty(nestedConfig, path);
+      expected = accessNestedProperty(nestedDefault, path);
+    } else {
+      actual = path(nestedConfig);
+      expected = path(nestedDefault);
+    }
+  } catch (e) {
+    log("Error while checking default value of config option", { error: true });
+    log({ actual, expected }, { error: true });
+    log(e, { error: true });
+    if (actual === undefined && expected === undefined) {
+      log("Assuming they are unequal", { error: true });
+      return false;
+    }
+  }
+  return actual === expected;
+};
+
+export const validateConfig = async (c: Config) => {
   debugLog("Validating config:");
-  debugLog(JSON.stringify(config));
-  if (!config.options?.disableGoogleMapsFeatures) {
-    for (const address of config.options?.commuteDestinations ?? []) {
+  debugLog(JSON.stringify(c));
+  if (!c.options?.disableGoogleMapsFeatures) {
+    for (const address of c.options?.commuteDestinations ?? []) {
       if (!(await isValidAddress(address))) {
         throw new Error(
           `Invalid address provided to config.options.commuteDestinations: ${address}`
@@ -18,7 +54,7 @@ export const validateConfig = async () => {
     }
   }
 
-  config.search.blacklistRegex?.forEach((r) => {
+  c.search.blacklistRegex?.forEach((r) => {
     try {
       new RegExp(r);
     } catch (e) {
@@ -26,8 +62,8 @@ export const validateConfig = async () => {
     }
   });
 
-  const unreliable = config.search.params.unreliableParams;
-  if (config.botBehaviour?.suppressUnreliableParamsWarning || !unreliable) {
+  const unreliable = c.search.params.unreliableParams;
+  if (c.botBehaviour?.suppressUnreliableParamsWarning || !unreliable) {
     return;
   }
   const unreliableParams = Object.entries(unreliable).filter(

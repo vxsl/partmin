@@ -170,7 +170,7 @@ const getListingButtons = (l: Listing) => ({
 
 export const sendListing = (
   l: Listing,
-  options?: Pick<SendEmbedOptions, "channel" | "interaction">
+  options?: Pick<SendEmbedOptions, "channel" | "commandInteraction">
 ) =>
   sendInteractive({
     ...options,

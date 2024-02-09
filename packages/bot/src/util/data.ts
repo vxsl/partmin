@@ -112,3 +112,6 @@ export const readableSeconds = (s: number) => {
   }
   return str;
 };
+
+export const maxEmptyLines = (s: string, n: number) =>
+  s.replace(new RegExp("\\n{" + Number(n + 2) + ",}", "g"), "\n".repeat(n + 1));

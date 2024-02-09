@@ -3,12 +3,13 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  CollectedInteraction,
   CommandInteraction,
   ComponentType,
   EmbedBuilder,
   InteractionButtonComponentData,
+  InteractionResponse,
   Message,
+  MessageComponentInteraction,
   StringSelectMenuBuilder,
   StringSelectMenuComponentData,
 } from "discord.js";
@@ -40,8 +41,8 @@ type ImmutableState<S extends CustomState> = {
 };
 type ComponentContext<S extends CustomState> = ImmutableState<S> &
   ComponentContextHelpers & {
-    interaction: CollectedInteraction;
-    apply: () => Promise<Message>;
+    componentInteraction: MessageComponentInteraction;
+    apply: () => Promise<InteractionResponse>;
   };
 
 // __________________________________________________________________________________________
@@ -218,29 +219,28 @@ export const startInteractive = ({
   return message
     .createMessageComponentCollector({
       time: collectorAliveTime,
-      filter: (interaction) => {
-        interaction.deferUpdate();
-        return componentDefMap.has(interaction.customId);
-      },
+      filter: (commandInteraction) =>
+        componentDefMap.has(commandInteraction.customId),
     })
-    .on("collect", async (interaction) => {
+    .on("collect", async (componentInteraction) => {
       try {
-        const target = componentDefMap.get(interaction.customId);
+        const target = componentDefMap.get(componentInteraction.customId);
         if (!target?.def?.mutate || !target?.groupKey) {
-          log(`No definition found for customId ${interaction.customId}`, {
-            error: true,
-          });
+          log(
+            `No definition found for customId ${componentInteraction.customId}`,
+            { error: true }
+          );
           return;
         }
         const oldState = stateMap.get(target.groupKey);
         const { state, componentOrder: newOrder } = await target.def.mutate({
-          interaction,
+          componentInteraction,
           state: oldState,
           getEmbed,
           componentOrder,
           getButton,
           getStringSelect,
-          apply: () => message.edit({ embeds, components }),
+          apply: () => componentInteraction.update({ embeds, components }),
         });
         stateMap.set(target.groupKey, state);
         if (JSON.stringify(newOrder) !== JSON.stringify(componentOrder)) {
@@ -251,7 +251,8 @@ export const startInteractive = ({
             componentDefMap,
           });
         }
-        message.edit({ embeds, components });
+        // await message.edit({ embeds, components });
+        await componentInteraction.update({ embeds, components });
       } catch (e) {
         log(`Error while handling interaction for message ${message.id}:`, {
           error: true,
@@ -264,7 +265,7 @@ export const startInteractive = ({
 // __________________________________________________________________________________________
 // function used to construct and send an interactive message:
 export type SendEmbedOptions = {
-  interaction?: CommandInteraction;
+  commandInteraction?: CommandInteraction;
   channel?: ChannelKey;
   embeds: (Omit<APIEmbed, "color"> & {
     color?: string | number;
@@ -275,7 +276,7 @@ export type SendEmbedOptions = {
 export const sendInteractive = async ({
   embeds: _embeds,
   componentGroupDefs,
-  interaction,
+  commandInteraction,
   channel,
   initComponentOrder,
 }: SendEmbedOptions) => {
@@ -328,14 +329,14 @@ export const sendInteractive = async ({
     }),
   };
 
-  const message = interaction
-    ? await interaction.reply(payload).then((r) => r.fetch())
+  const message = commandInteraction
+    ? await commandInteraction.reply(payload).then((r) => r.fetch())
     : await manualDiscordSend(payload, { channel });
 
   if (!message) {
     log(
       `There was a problem sending the embed: ${
-        interaction ? interaction.commandName : channel
+        commandInteraction ? commandInteraction.commandName : channel
       }`,
       { error: true }
     );

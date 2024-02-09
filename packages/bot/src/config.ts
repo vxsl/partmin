@@ -46,7 +46,7 @@ const PetParams = RuntypeRecord({
 
 export type PetType = keyof Static<typeof PetParams>;
 
-const SearchParams = RuntypeRecord({
+export const SearchParams = RuntypeRecord({
   pets: Optional(PetParams),
   exclude: Optional(
     RuntypeRecord({

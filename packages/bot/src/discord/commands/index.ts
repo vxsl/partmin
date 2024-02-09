@@ -6,7 +6,9 @@ import {
   Events,
   REST,
   Routes,
+  SlashCommandBuilder,
 } from "discord.js";
+import editConfig from "discord/commands/edit-config.js";
 import testListing from "discord/commands/test-listing.js";
 import { discordClient } from "discord/index.js";
 import { log } from "util/log.js";
@@ -18,9 +20,23 @@ interface Command {
   execute: (interaction: CommandInteraction) => any;
 }
 
-const commands = [config.development?.testing ? testListing : undefined].filter(
-  notUndefined
-);
+const commands = [
+  config.development?.testing
+    ? {
+        data: new SlashCommandBuilder()
+          .setName("test-listing")
+          .setDescription("Sends a test listing"),
+        execute: testListing,
+      }
+    : undefined,
+  {
+    data: new SlashCommandBuilder()
+      .setName("edit-config")
+      .setDescription("TODO RENAME THIS"),
+    execute: editConfig,
+  },
+].filter(notUndefined);
+
 const coll = new Collection<string, Command>(
   commands.map((command) => [
     command.data.name,
