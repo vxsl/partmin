@@ -8,7 +8,7 @@ import {
 import {
   SendEmbedOptions,
   componentGroup,
-  sendInteractive,
+  constructAndSendRichMessage,
   startInteractive,
 } from "discord/interactive/index.js";
 import listingEmbed, { colors } from "discord/interactive/listing/embed.js";
@@ -170,9 +170,9 @@ const getListingButtons = (l: Listing) => ({
 
 export const sendListing = (
   l: Listing,
-  options?: Pick<SendEmbedOptions, "channel" | "interaction">
+  options?: Pick<SendEmbedOptions, "channel" | "customSendFn">
 ) =>
-  sendInteractive({
+  constructAndSendRichMessage({
     ...options,
     initComponentOrder: [[ids.prevImg, ids.img, ids.nextImg, ids.desc]],
     embeds: [listingEmbed(l).data],
