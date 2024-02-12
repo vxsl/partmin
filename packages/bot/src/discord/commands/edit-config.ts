@@ -1,5 +1,5 @@
 import cache from "cache.js";
-import { SearchParams } from "config.js";
+import { SearchParams, StaticConfig } from "config.js";
 import {
   ActionRowBuilder,
   ButtonStyle,
@@ -17,7 +17,7 @@ import {
   constructAndSendRichMessage,
 } from "discord/interactive/index.js";
 import { discordFormat, discordWarning } from "discord/util.js";
-import { Reflect } from "runtypes";
+import { Reflect, ValidationError } from "runtypes";
 import { getConfig, isDefaultValue } from "util/config.js";
 import {
   accessNestedProperty,
@@ -58,16 +58,22 @@ const getTypeDescription = (
       )}`
     : translate(f.tag, { useArticle: options?.useArticle });
 
-const recursivePrint = async (
-  runtype: Reflect,
-  _path: string,
-  lvl: number = 0
-): Promise<{
+const recursivePrint = async ({
+  runtype,
+  config,
+  lastConfig,
+  path: _path,
+  lvl = 0,
+}: {
+  runtype: Reflect;
+  config: StaticConfig;
+  lastConfig?: StaticConfig;
+  path: string;
+  lvl?: number;
+}): Promise<{
   min: string;
   full: string;
 }> => {
-  const config = await getConfig();
-  // const
   let min = "";
   let full = "";
 
@@ -86,7 +92,13 @@ const recursivePrint = async (
       const prefix = `${indent}- `;
 
       if (record && Object.keys(record.fields).length > 0) {
-        const inner = await recursivePrint(record, path, lvl + 1);
+        const inner = await recursivePrint({
+          runtype: record,
+          config,
+          lastConfig,
+          path,
+          lvl: lvl + 1,
+        });
         const printCategory = (contents: string) =>
           (contents
             ? `\n${prefix}${discordFormat(key, {
@@ -96,6 +108,7 @@ const recursivePrint = async (
         min += printCategory(inner.min);
         full += printCategory(inner.full);
       } else {
+        const lastValue = accessNestedProperty(lastConfig?.search.params, path);
         const isPresent =
           key in accessParentOfNestedProperty(config.search.params, path);
         const isDefault = await isDefaultValue(path, {
@@ -103,8 +116,12 @@ const recursivePrint = async (
         });
         const value = accessNestedProperty(config.search.params, path);
         if (isPresent && !isDefault) {
+          const emoji =
+            !lastConfig || lastValue === value
+              ? definedValueEmoji
+              : newlyDefinedValueEmoji;
           const definedValue =
-            `${prefix}${definedValueEmoji} ` +
+            `${prefix}${emoji} ` +
             `${discordFormat(key, { bold: true })}: ${discordFormat(value, {
               monospace: true,
               bold: true,
@@ -132,8 +149,18 @@ const recursivePrint = async (
   return { min, full };
 };
 
-const printSearchParams = async () => {
-  const { min: _min, full: _full } = await recursivePrint(SearchParams, "");
+const printSearchParams = async ({
+  lastConfig,
+}: {
+  lastConfig?: StaticConfig;
+} = {}) => {
+  const config = await getConfig();
+  const { min: _min, full: _full } = await recursivePrint({
+    runtype: SearchParams,
+    config,
+    lastConfig,
+    path: "",
+  });
   return {
     min: maxEmptyLines(_min, 1),
     full: maxEmptyLines(_full, 1),
@@ -162,14 +189,12 @@ const defaultEditPlaceholder = "select a search parameter to edit";
 const pathPlaceholder = (path: string) =>
   path.length > 1
     ? // ? `${keyEmoji} ${path.startsWith(".") ? path.slice(1) : path}`
-      `${keyEmoji} select a value from "${
-        path.startsWith(".") ? path.slice(1) : path
-      }" to edit`
+      `${keyEmoji} select a value from "${path}" to edit`
     : defaultEditPlaceholder;
 
 const editConfig = async (commandInteraction: CommandInteraction) => {
+  let lastConfig: StaticConfig | undefined;
   let configPrint = await printSearchParams();
-  let lastConfigPrint = configPrint;
 
   return await constructAndSendRichMessage({
     customSendFn: (o) => commandInteraction.reply({ ...o, fetchReply: true }),
@@ -200,11 +225,9 @@ const editConfig = async (commandInteraction: CommandInteraction) => {
             options: getConfigSelectOptions(SearchParams),
             mutate: async ({
               state,
-              apply,
               componentOrder,
               componentInteraction,
               getStringSelect,
-              getButton,
               getEmbed,
             }) => {
               if (
@@ -220,151 +243,130 @@ const editConfig = async (commandInteraction: CommandInteraction) => {
                 );
                 return { state, componentOrder };
               }
-              const newPath = [state.editPath, option].join(".");
 
-              let newComponentOrder = componentOrder;
+              const newEditPath = [state.editPath, option]
+                .filter((s) => s !== "")
+                .join(".");
+              const level = newEditPath.split(".").length;
+              const field = traverseRuntype(
+                SearchParams,
+                newEditPath.split(".").filter((s) => s !== "")
+              );
 
-              const level = newPath.split(".").length;
-              if (level > 1) {
-                newComponentOrder = [
-                  componentOrder[0].includes(ids.upOneLevel)
-                    ? componentOrder[0]
-                    : [...componentOrder[0], ids.upOneLevel],
-                  ...componentOrder.slice(1),
-                ];
+              const record = getRecord(field);
+              if (record) {
+                component
+                  .setPlaceholder(pathPlaceholder(newEditPath))
+                  .setOptions(getConfigSelectOptions(record));
+                return {
+                  state: { ...state, editPath: newEditPath },
+                  componentOrder:
+                    level > 1
+                      ? [
+                          componentOrder[0].includes(ids.upOneLevel)
+                            ? componentOrder[0]
+                            : [...componentOrder[0], ids.upOneLevel],
+                          ...componentOrder.slice(1),
+                        ]
+                      : componentOrder,
+                };
               }
 
-              const f = traverseRuntype(
-                SearchParams,
-                newPath.split(".").filter((s) => s !== "")
-              );
-              const record = getRecord(f);
-
-              if (!record) {
-                const isOptional = f.tag === "optional";
-                const uuid = `${ids.valueEditModal}-${option}-${Math.random()
-                  .toString(36)
-                  .substring(4)}`;
-                await componentInteraction.showModal(
-                  new ModalBuilder()
-                    .setCustomId(uuid)
-                    .setTitle(`Edit search parameter`)
-                    .addComponents(
-                      new ActionRowBuilder<TextInputBuilder>().addComponents(
-                        new TextInputBuilder()
-                          .setCustomId(ids.valueEditInput)
-                          .setLabel(option)
-                          .setStyle(TextInputStyle.Short)
-                          .setRequired(!isOptional)
-                          .setPlaceholder(
-                            `enter ${[
-                              getTypeDescription(f, {
-                                omitOptional: true,
-                                useArticle: true,
-                              }),
-                              isOptional ? ", or leave blank" : undefined,
-                            ]
-                              .filter(notUndefined)
-                              .join("")}`
-                          )
-                      )
+              const isOptional = field.tag === "optional";
+              const uuid = `${ids.valueEditModal}-${option}-${Math.random()
+                .toString(36)
+                .substring(4)}`;
+              await componentInteraction.showModal(
+                new ModalBuilder()
+                  .setCustomId(uuid)
+                  .setTitle(`Edit search parameter`)
+                  .addComponents(
+                    new ActionRowBuilder<TextInputBuilder>().addComponents(
+                      new TextInputBuilder()
+                        .setCustomId(ids.valueEditInput)
+                        .setLabel(option)
+                        .setStyle(TextInputStyle.Short)
+                        .setRequired(!isOptional)
+                        .setPlaceholder(
+                          `enter ${[
+                            getTypeDescription(field, {
+                              omitOptional: true,
+                              useArticle: true,
+                            }),
+                            isOptional ? ", or leave blank" : undefined,
+                          ]
+                            .filter(notUndefined)
+                            .join("")}`
+                        )
                     )
-                );
+                  )
+              );
 
-                // componentInteraction
-
-                // Get the Modal Submit Interaction that is emitted once the User submits the Modal
-                const submitted = await componentInteraction
-                  .awaitModalSubmit({
-                    // Timeout after a minute of not receiving any valid Modals
-                    time: 60000,
-                    // Make sure we only accept Modals from the User who sent the original componentInteraction we're responding to
-                    filter: (i) =>
-                      i.user.id === componentInteraction.user.id &&
-                      i.isModalSubmit() &&
-                      i.customId === uuid,
-                  })
-                  .catch((error) => {
-                    // Catch any Errors that are thrown (e.g. if the awaitModalSubmit times out after 60000 ms)
-                    console.error(error);
-                    return null;
-                  });
-
-                await submitted?.deferUpdate().catch((e) => {
-                  // TODO rewrite
-                  console.log("deferUpdate error", e);
+              const submitted = await componentInteraction
+                .awaitModalSubmit({
+                  time: 60000,
+                  filter: (i) =>
+                    i.user.id === componentInteraction.user.id &&
+                    i.isModalSubmit() &&
+                    i.customId === uuid,
+                })
+                .catch((error) => {
+                  // TODO
+                  console.error(error);
+                  return null;
                 });
 
-                // const field = submitted?.fields.getField(ids.valueEditInput);
-                if (!submitted) {
-                  console.log("TODO rewrite thiss, there is no f");
-                  return { state, componentOrder };
-                }
+              await submitted?.deferUpdate().catch((e) => {
+                // TODO rewrite
+                console.log("deferUpdate error", e);
+              });
 
-                const { ...config } = await getConfig();
-                // modify the config:
-                const v = castStringToRuntype(
-                  f,
-                  submitted.fields.getTextInputValue(ids.valueEditInput).trim()
+              if (!submitted) {
+                console.log("TODO rewrite thiss, there is no f");
+                return { state, componentOrder };
+              }
+
+              const { ...config } = await getConfig();
+              const v = castStringToRuntype(
+                field,
+                submitted.fields.getTextInputValue(ids.valueEditInput).trim()
+              );
+
+              if (
+                v === accessNestedProperty(config.search.params, newEditPath)
+              ) {
+                await discordWarning(
+                  "No change",
+                  `${discordFormat(option, {
+                    monospace: true,
+                  })} is already set to ${discordFormat(`${v}`, {
+                    monospace: true,
+                  })}`,
+                  {
+                    customSendFn: (o) =>
+                      submitted.followUp({
+                        ...o,
+                        fetchReply: true,
+                      }),
+                  }
                 );
-
-                const validation = f.validate(v);
-                if (v === accessNestedProperty(config.search.params, newPath)) {
-                  await discordWarning(
-                    `No change detected`,
-                    `The value for ${discordFormat(option, {
-                      monospace: true,
-                    })} is already set to ${discordFormat(`${v}`, {
-                      monospace: true,
-                    })}`,
-                    {
-                      customSendFn: (o) =>
-                        submitted.followUp({
-                          ...o,
-                          fetchReply: true,
-                        }),
-                    }
+                configPrint = await printSearchParams();
+                getEmbed(0).setDescription(
+                  state.showAll ? configPrint.full : configPrint.min
+                );
+                return { state, componentOrder };
+              } else {
+                try {
+                  lastConfig = JSON.parse(JSON.stringify(config));
+                  const newConfig = JSON.parse(JSON.stringify(config));
+                  modifyNestedProperty(
+                    newConfig,
+                    "search.params." + newEditPath,
+                    v
                   );
-                  configPrint = await printSearchParams();
-                  getEmbed(0).setDescription(
-                    state.showAll ? configPrint.full : configPrint.min
-                  );
-                } else if (validation.success) {
-                  // validation.
+                  cache.config.writeValue(newConfig);
 
-                  modifyNestedProperty(config, "search.params" + newPath, v);
-                  cache.config.writeValue(config);
-                  lastConfigPrint = configPrint;
-                  configPrint = await printSearchParams().then((prints) =>
-                    Object.entries(prints).reduce(
-                      (acc, [_key, print]) => {
-                        let newValuesCount = 0;
-                        const key = _key as keyof typeof configPrint;
-                        acc[key] = print.split("\n").reduce((acc, line, i) => {
-                          const oldLine =
-                            lastConfigPrint[key].split("\n")[
-                              i + newValuesCount
-                            ];
-                          if (oldLine !== undefined && line !== oldLine) {
-                            acc +=
-                              line.replace(
-                                definedValueEmoji,
-                                newlyDefinedValueEmoji
-                              ) + "\n";
-                            if (!line.split(":")[0]?.includes(option)) {
-                              newValuesCount++;
-                            }
-                          } else {
-                            acc += line + "\n";
-                          }
-                          return acc;
-                        });
-                        return acc;
-                      },
-                      { ...configPrint }
-                    )
-                  );
-
+                  configPrint = await printSearchParams({ lastConfig });
                   getEmbed(0).setDescription(
                     state.showAll ? configPrint.full : configPrint.min
                   );
@@ -382,33 +384,42 @@ const editConfig = async (commandInteraction: CommandInteraction) => {
                       },
                     ],
                   });
-                } else {
-                  await discordWarning(
-                    `Invalid value ${discordFormat(v, {
-                      monospace: true,
-                    })} for ${discordFormat(option, {
-                      monospace: true,
-                    })}:`,
-                    validation.message,
-                    {
-                      error: true,
-                      customSendFn: (o) =>
-                        submitted.followUp({ ...o, fetchReply: true }),
-                    }
-                  );
+                } catch (e) {
+                  if (e instanceof ValidationError) {
+                    await discordWarning(
+                      `Invalid value ${discordFormat(`${v}`, {
+                        monospace: true,
+                      })} for ${discordFormat(option, {
+                        monospace: true,
+                      })}:`,
+                      `${accessNestedProperty(
+                        accessNestedProperty(e.details, "search.params"),
+                        newEditPath
+                      )}`,
+                      {
+                        error: true,
+                        customSendFn: (o) =>
+                          submitted.followUp({ ...o, fetchReply: true }),
+                      }
+                    );
+                  } else {
+                    await discordWarning(
+                      `An error occurred while updating ${discordFormat(
+                        option,
+                        { monospace: true }
+                      )}`,
+                      e,
+                      {
+                        error: true,
+                        customSendFn: (o) =>
+                          submitted.followUp({ ...o, fetchReply: true }),
+                      }
+                    );
+                  }
                 }
-
-                return { state, componentOrder: newComponentOrder };
               }
 
-              component
-                .setPlaceholder(pathPlaceholder(newPath))
-                .setOptions(getConfigSelectOptions(record));
-
-              return {
-                state: { ...state, editPath: newPath },
-                componentOrder: newComponentOrder,
-              };
+              return { state, componentOrder };
             },
           },
         },

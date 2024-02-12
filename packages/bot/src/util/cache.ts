@@ -1,7 +1,7 @@
 import dotenv from "dotenv-mono";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { fatalError, shutdown } from "index.js";
-import { debugLog } from "util/log.js";
+import { debugLog, log } from "util/log.js";
 
 dotenv.load();
 
@@ -12,24 +12,28 @@ export class CacheDef<T> {
   private label: string;
   protected readTransform: (read: string) => NonNullable<T>;
   protected writeTransform: (v: T) => string;
+  protected validate?: (v: T) => boolean;
   constructor({
     path,
     envVar,
     label,
     readTransform,
     writeTransform,
+    validate,
   }: {
     path: string;
     envVar?: string;
     label: string;
     readTransform: (read: string) => NonNullable<T>;
     writeTransform: (v: T) => string;
+    validate?: (v: T) => boolean;
   }) {
     this.path = path;
     this.envVar = envVar;
     this.label = label;
     this.readTransform = readTransform;
     this.writeTransform = writeTransform;
+    this.validate = validate;
     const read = this.readValue();
     if (read) {
       this.loaded = this.readTransform(read);
@@ -50,6 +54,10 @@ export class CacheDef<T> {
     return result;
   }
   writeValue(v: T, options?: { skipLog?: boolean }) {
+    if (this.validate && !this.validate(v)) {
+      log(`Invalid value for ${this.label}`);
+      return;
+    }
     this.loaded = v;
     const s = this.writeTransform(v);
     if (!options?.skipLog) {
@@ -81,6 +89,9 @@ export class CacheDef<T> {
     const v = read !== undefined ? this.readTransform(read) : undefined;
     if (v) {
       this.writeValue(v);
+      if (this.validate && !this.validate(v)) {
+        return undefined;
+      }
     }
     return v;
   }

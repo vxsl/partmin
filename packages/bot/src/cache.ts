@@ -1,28 +1,47 @@
-import { StaticConfig } from "config.js";
+import { StaticConfig, prevalidateConfig } from "config.js";
 import { dataDir } from "constants.js";
 import { GuildInfo } from "discord/index.js";
+import { writeFileSync } from "fs";
 import { Listing } from "listing.js";
 import { CacheDef, StringCacheDef } from "util/cache.js";
+import { getConfig, validateConfig } from "util/config.js";
 import { CommuteSummary } from "util/geo.js";
 import { parseJSON } from "util/io.js";
+import { log } from "util/log.js";
 
 const cache = {
   // ---------------------------------------
   // config
   config: new CacheDef<StaticConfig>({
     path: `${dataDir}/config-cached.json`,
-    readTransform: (c) => {
-      const parsed = parseJSON<StaticConfig>(c);
-      // prevalidateConfig(parsed);
-      // validateConfig(parsed);
-      return parsed;
+    validate: (c) => {
+      prevalidateConfig(c);
+      validateConfig(c);
+      return true;
     },
-    writeTransform: (c) => {
-      // prevalidateConfig(c);
-      // validateConfig(c);
-      return JSON.stringify(c);
+    readTransform: parseJSON<StaticConfig>,
+    writeTransform: (v) => {
+      getConfig().then((c) => {
+        if (!c.development?.preventConfigOverwrite) {
+          log(
+            "Overwriting user config since 'preventConfigOverwrite' is not set."
+          );
+          writeFileSync("../../config/config.json", JSON.stringify(v, null, 2));
+        } else {
+          log(
+            "Not overwriting user config since 'preventConfigOverwrite' is true."
+          );
+        }
+      });
+      return JSON.stringify(v);
     },
     label: "config",
+  }),
+  currentSearchParams: new CacheDef<StaticConfig["search"]["params"]>({
+    path: `${dataDir}/current-search-params.json`,
+    readTransform: parseJSON,
+    writeTransform: JSON.stringify,
+    label: "current search params",
   }),
   // ---------------------------------------
   // geo

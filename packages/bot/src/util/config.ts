@@ -4,14 +4,12 @@ import {
   defaultConfigValues,
   unreliabilityExplanations,
 } from "config.js";
-import { dataDir } from "constants.js";
 import { discordFormat, discordWarning } from "discord/util.js";
-import fs from "fs";
 import { accessNestedProperty } from "util/data.js";
 import { isValidAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
 
-export const getConfig = () => cache.config.requireValue();
+export const getConfig = async () => await cache.config.requireValue();
 
 export const isDefaultValue = async (
   path: string | ((config: StaticConfig) => any),
@@ -98,24 +96,27 @@ export const validateConfig = async (c: StaticConfig) => {
   }
 };
 
-export const detectConfigChange = async (callback?: () => void) => {
-  const config = await getConfig();
-  const path = `${dataDir}/config-search-params.json`;
-  const cached = fs.existsSync(path)
-    ? fs.readFileSync(path, "utf-8")
-    : undefined;
-  const cur = JSON.stringify(config.search.params, null, 2);
-  let v = cached !== cur;
-  if (v) {
-    log(
-      !cached
-        ? "No previous search found."
-        : "Change in search parameters detected."
-    );
-    await (callback ? callback() : Promise.resolve());
-    fs.writeFileSync(path, cur);
-  } else {
-    log("No change in search parameters since last run.");
+export const isConfigChanged = async () => {
+  const userFile = await getConfig().then((c) => c.search.params);
+  const cached = await cache.currentSearchParams.value;
+  if (!cached) {
+    log("No previous search parameters found.");
+    return true;
   }
-  return v;
+  if (JSON.stringify(cached) === JSON.stringify(userFile)) {
+    log("No change in search parameters detected.");
+    return false;
+  }
+  log("Change in search parameters detected.");
+  return true;
+};
+
+export const ifConfigChanged = async (callback?: () => void) => {
+  const userFile = await getConfig().then((c) => c.search.params);
+  return isConfigChanged().then(async (changed) => {
+    if (changed) {
+      await (callback ? callback() : Promise.resolve());
+      cache.currentSearchParams.writeValue(userFile);
+    }
+  });
 };

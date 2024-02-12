@@ -11,7 +11,9 @@ interface LogOptions {
   skipDiscord?: boolean;
 }
 export const log = async (_v: any, options?: LogOptions) => {
-  const config = await getConfig();
+  const config = await getConfig().catch(() => ({
+    logging: { debug: true, verbose: true },
+  }));
   if (options?.level && !config.logging?.[options.level]) {
     return;
   }

@@ -1,4 +1,3 @@
-import cache from "cache.js";
 import { presenceActivities } from "discord/constants.js";
 import { startActivity } from "discord/presence.js";
 import dotenv from "dotenv-mono";
@@ -17,27 +16,6 @@ dotenv.load();
 
 export const getSeenKey = (platform: string, id: string) => `${platform}-${id}`;
 export const getListingKey = (l: Listing) => getSeenKey(l.platform, l.id);
-
-export const withUnseenListings = async <T>(
-  newListings: Listing[],
-  fn: (listings: Listing[]) => Promise<T>
-) => {
-  const config = await getConfig();
-  const seen = cache.listings.value ?? [];
-  const seenKeys = new Set(seen.map(getListingKey));
-  const unseen = newListings.filter((l) => !seenKeys.has(getListingKey(l)));
-  const result = await fn(unseen);
-  cache.listings.writeValue([...seen, ...unseen]);
-  log(
-    `${unseen.length} unseen listing${unseen.length !== 1 ? "s" : ""} out of ${
-      newListings.length
-    }${config.logging?.verbose ? ":" : "."}`
-  );
-  if (unseen.length) {
-    verboseLog(unseen.map((l) => l.url).join(", "));
-  }
-  return result;
-};
 
 export const processListings = async (unseenListings: Listing[]) => {
   const activity = startActivity(
@@ -97,7 +75,7 @@ export const processListings = async (unseenListings: Listing[]) => {
   return validResults;
 };
 
-export const excludeListingsOutsideSearchArea = async (listings: Listing[]) => {
+export const preProcessListings = async (listings: Listing[]) => {
   const config = await getConfig();
   return listings.filter(async (l) => {
     if (!l.details.coords) return true;

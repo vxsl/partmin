@@ -86,6 +86,7 @@ const Development = RuntypeRecord({
   testing: Optional(Boolean),
   noSandbox: Optional(Boolean),
   noRetrieval: Optional(Boolean),
+  preventConfigOverwrite: Optional(Boolean),
 });
 
 export const Config = RuntypeRecord({
@@ -113,6 +114,7 @@ export const defaultConfigValues: RecursivePartial<StaticConfig> = {
     testing: false,
     noSandbox: false,
     noRetrieval: false,
+    preventConfigOverwrite: false,
   },
   logging: {
     debug: false,
@@ -210,7 +212,10 @@ process.argv.slice(2).forEach((arg) => {
   }
 });
 
-export const prevalidateConfig = (c: StaticConfig) => {
+export const prevalidateConfig = (c: StaticConfig, tthrow?: boolean) => {
+  if (tthrow) {
+    throw new Error("UH OH");
+  }
   try {
     Config.check(c);
   } catch (e) {

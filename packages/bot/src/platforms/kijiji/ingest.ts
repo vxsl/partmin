@@ -174,7 +174,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 };
 
 export const onSearchParamsChanged = async (driver: WebDriver) => {
-  log("Building new Kijiji RSS feed");
+  log("Building new Kijiji RSS feed... (this may take a while)");
   await kijijiGet(baseURL, driver);
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
 
