@@ -250,11 +250,11 @@ export const startInteractive = ({
               log(e);
             }),
         });
-        if (mutateResult === null) {
-          return;
-        }
 
-        const { state, componentOrder: newOrder } = mutateResult;
+        const { state, componentOrder: newOrder } = mutateResult ?? {
+          state: oldState,
+          componentOrder,
+        };
         stateMap.set(target.groupKey, state);
         if (JSON.stringify(newOrder) !== JSON.stringify(componentOrder)) {
           componentOrder = newOrder;

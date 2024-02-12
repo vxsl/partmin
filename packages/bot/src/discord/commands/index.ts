@@ -25,14 +25,14 @@ const commands = [
     ? {
         data: new SlashCommandBuilder()
           .setName("test-listing")
-          .setDescription("Sends a test listing"),
+          .setDescription("Sends a test listing."),
         execute: testListing,
       }
     : undefined,
   {
     data: new SlashCommandBuilder()
-      .setName("edit-config")
-      .setDescription("TODO RENAME THIS"),
+      .setName("edit-search")
+      .setDescription("Edit your apartment search parameters interactively."),
     execute: editConfig,
   },
 ];

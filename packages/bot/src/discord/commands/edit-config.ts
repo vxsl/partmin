@@ -454,7 +454,7 @@ const editConfig = async (commandInteraction: CommandInteraction) => {
                       title: "⚙️ Search parameters updated",
                       description: `${userMention(
                         submitted.user.id
-                      )} changed ${discordFormat(option, {
+                      )} changed ${discordFormat(newEditPath, {
                         monospace: true,
                       })} to ${discordFormat(`${v}`, { monospace: true })}`,
                       color: successColor,
@@ -481,9 +481,10 @@ const editConfig = async (commandInteraction: CommandInteraction) => {
                   );
                 } else {
                   await discordWarning(
-                    `An error occurred while updating ${discordFormat(option, {
-                      monospace: true,
-                    })}`,
+                    `An error occurred while updating ${discordFormat(
+                      newEditPath,
+                      { monospace: true }
+                    )}`,
                     e,
                     {
                       error: true,
