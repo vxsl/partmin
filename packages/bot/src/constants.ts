@@ -1,11 +1,17 @@
 import { PetType, StaticConfig, configDevelopment } from "config.js";
+import { existsSync, mkdirSync } from "fs";
 
 export const dataDir = `${process.cwd()}/.${
   configDevelopment?.testing ? "test-" : ""
 }data`;
+export const puppeteerCacheDir = `${process.cwd()}/.puppeteer`;
+
+[dataDir, puppeteerCacheDir].forEach(
+  (dir) => !existsSync(dir) && mkdirSync(dir)
+);
+
 export const statusPathForAuditor = `${dataDir}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";
-export const puppeteerCacheDir = `${process.cwd()}/.puppeteer`;
 export const seleniumImplicitWait = 10 * 1000;
 
 export const searchParamsBlacklist: Omit<

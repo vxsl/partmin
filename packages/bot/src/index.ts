@@ -1,6 +1,5 @@
 import cache from "cache.js";
 import { configDevelopment, initConfig, prevalidateConfig } from "config.js";
-import { dataDir, puppeteerCacheDir } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
 import {
@@ -11,7 +10,6 @@ import { setPresence, startActivity } from "discord/presence.js";
 import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
-import fs from "fs";
 import { Listing } from "listing.js";
 import {
   getListingKey,
@@ -321,10 +319,6 @@ export const fatalError = async (e: unknown) => {
 
 (async () => {
   try {
-    [dataDir, puppeteerCacheDir].forEach(
-      (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
-    );
-
     const config = await initConfig();
 
     if (config?.options?.disableGoogleMapsFeatures) {
