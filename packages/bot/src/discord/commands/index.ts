@@ -8,7 +8,7 @@ import {
   Routes,
   SlashCommandBuilder,
 } from "discord.js";
-import editConfig from "discord/commands/edit-config.js";
+import editSearch from "discord/commands/edit-search.js";
 import testListing from "discord/commands/test-listing.js";
 import { discordClient } from "discord/index.js";
 import { log } from "util/log.js";
@@ -33,7 +33,7 @@ const commands = [
     data: new SlashCommandBuilder()
       .setName("edit-search")
       .setDescription("Edit your apartment search parameters interactively."),
-    execute: editConfig,
+    execute: editSearch,
   },
 ];
 const setupCommands = async () => {

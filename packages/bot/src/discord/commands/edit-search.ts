@@ -12,7 +12,7 @@ import {
   TextInputStyle,
   userMention,
 } from "discord.js";
-import { editConfigColor, successColor } from "discord/constants.js";
+import { editSearchColor, successColor } from "discord/constants.js";
 import {
   componentGroup,
   constructAndSendRichMessage,
@@ -192,7 +192,7 @@ const pathPlaceholder = (path: string) =>
     ? `${keyEmoji} select a value from "${path}" to edit`
     : defaultEditPlaceholder;
 
-const editConfig = async (commandInteraction: CommandInteraction) => {
+const editSearch = async (commandInteraction: CommandInteraction) => {
   let lastConfig: StaticConfig | undefined;
   let configPrint = await printSearchParams();
 
@@ -202,7 +202,7 @@ const editConfig = async (commandInteraction: CommandInteraction) => {
       {
         title: "Your search",
         description: configPrint.min,
-        color: editConfigColor,
+        color: editSearchColor,
       },
     ],
     initComponentOrder: [[ids.toggleShowAll, ids.toggleEdit]],
@@ -504,4 +504,4 @@ const editConfig = async (commandInteraction: CommandInteraction) => {
   });
 };
 
-export default editConfig;
+export default editSearch;
