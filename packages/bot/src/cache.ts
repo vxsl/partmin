@@ -24,12 +24,12 @@ const cache = {
       getConfig().then((c) => {
         if (!c.development?.preventConfigOverwrite) {
           log(
-            "Overwriting user config since 'preventConfigOverwrite' is not set."
+            "WARNING: The user config file WILL be overwritten in this run, since 'preventConfigOverwrite' is set."
           );
           writeFileSync("../../config/config.json", JSON.stringify(v, null, 2));
         } else {
           log(
-            "Not overwriting user config since 'preventConfigOverwrite' is true."
+            "The user config file will not be overwritten in this run, since 'preventConfigOverwrite' is set."
           );
         }
       });
