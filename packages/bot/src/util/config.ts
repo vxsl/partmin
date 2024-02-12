@@ -1,15 +1,53 @@
-import config, { isDefaultValue, unreliabilityExplanations } from "config.js";
-import { dataDir } from "constants.js";
+import cache from "cache.js";
+import {
+  StaticConfig,
+  defaultConfigValues,
+  unreliabilityExplanations,
+} from "config.js";
 import { discordFormat, discordWarning } from "discord/util.js";
-import fs from "fs";
+import { accessNestedProperty } from "util/data.js";
 import { isValidAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
 
-export const validateConfig = async () => {
+export const getConfig = async () => await cache.config.requireValue();
+
+export const isDefaultValue = async (
+  path: string | ((config: StaticConfig) => any),
+  options?: {
+    baseNest?: (config: StaticConfig) => any;
+  }
+) => {
+  let actual, expected;
+  try {
+    const config = await getConfig();
+    const nestedConfig = options?.baseNest ? options.baseNest(config) : config;
+    const nestedDefault = options?.baseNest
+      ? options.baseNest(defaultConfigValues as unknown as StaticConfig)
+      : (defaultConfigValues as unknown as StaticConfig);
+    if (typeof path === "string") {
+      actual = accessNestedProperty(nestedConfig, path);
+      expected = accessNestedProperty(nestedDefault, path);
+    } else {
+      actual = path(nestedConfig);
+      expected = path(nestedDefault);
+    }
+  } catch (e) {
+    log("Error while checking default value of config option", { error: true });
+    log({ actual, expected }, { error: true });
+    log(e, { error: true });
+    if (actual === undefined && expected === undefined) {
+      log("Assuming they are unequal", { error: true });
+      return false;
+    }
+  }
+  return actual === expected;
+};
+
+export const validateConfig = async (c: StaticConfig) => {
   debugLog("Validating config:");
-  debugLog(JSON.stringify(config));
-  if (!config.options?.disableGoogleMapsFeatures) {
-    for (const address of config.options?.commuteDestinations ?? []) {
+  debugLog(JSON.stringify(c));
+  if (!c.options?.disableGoogleMapsFeatures) {
+    for (const address of c.options?.commuteDestinations ?? []) {
       if (!(await isValidAddress(address))) {
         throw new Error(
           `Invalid address provided to config.options.commuteDestinations: ${address}`
@@ -18,7 +56,7 @@ export const validateConfig = async () => {
     }
   }
 
-  config.search.blacklistRegex?.forEach((r) => {
+  c.search.blacklistRegex?.forEach((r) => {
     try {
       new RegExp(r);
     } catch (e) {
@@ -26,28 +64,38 @@ export const validateConfig = async () => {
     }
   });
 
-  const unreliable = config.search.params.unreliableParams;
-  if (config.botBehaviour?.suppressUnreliableParamsWarning || !unreliable) {
+  const unreliable = JSON.parse(
+    JSON.stringify(c.search.params.unreliableParams)
+  ) as typeof c.search.params.unreliableParams;
+  if (
+    c.botBehaviour?.suppressUnreliableParamsWarning ||
+    !unreliable ||
+    !c.search.params.unreliableParams
+  ) {
     return;
   }
-  const unreliableParams = Object.entries(unreliable).filter(
-    ([k]) =>
-      !isDefaultValue(
-        (c) => c.search.params.unreliableParams?.[k as keyof typeof unreliable]
-      )
-  ) as [keyof typeof unreliabilityExplanations, boolean][] | never;
-  if (unreliableParams.length) {
+
+  for (const _k of Object.keys(c.search.params.unreliableParams)) {
+    const k = _k as keyof typeof c.search.params.unreliableParams;
+    if (await isDefaultValue((c) => c.search.params.unreliableParams![k])) {
+      delete unreliable[k];
+    }
+  }
+
+  if (Object.values(unreliable).length) {
     discordWarning(
       `Warning: you have specified ${
-        unreliableParams.length > 1
+        Object.values(unreliable).length > 1
           ? "search parameters that are"
           : "a search parameter that is"
       } prone to false negatives.`,
-      `${unreliableParams
+      `${Object.entries(unreliable)
         .map(
           ([k, v]) =>
             `- ${discordFormat(`"${k}": ${v}`, { monospace: true })}\n> ${
-              unreliabilityExplanations[k]
+              unreliabilityExplanations[
+                k as keyof typeof unreliabilityExplanations
+              ]
             }`
         )
         .join("\n")}\n\n${discordFormat(
@@ -58,23 +106,27 @@ export const validateConfig = async () => {
   }
 };
 
-export const detectConfigChange = async (callback?: () => void) => {
-  const path = `${dataDir}/config-search-params.json`;
-  const cached = fs.existsSync(path)
-    ? fs.readFileSync(path, "utf-8")
-    : undefined;
-  const cur = JSON.stringify(config.search.params, null, 2);
-  let v = cached !== cur;
-  if (v) {
-    log(
-      !cached
-        ? "No cached search found."
-        : "Change in search parameters detected."
-    );
-    await (callback ? callback() : Promise.resolve());
-    fs.writeFileSync(path, cur);
-  } else {
-    log("No change in search parameters since last run.");
+export const isConfigChanged = async () => {
+  const userFile = await getConfig().then((c) => c.search.params);
+  const cached = await cache.currentSearchParams.value;
+  if (!cached) {
+    log("No previous search parameters found.");
+    return true;
   }
-  return v;
+  if (JSON.stringify(cached) === JSON.stringify(userFile)) {
+    log("No change in search parameters detected.");
+    return false;
+  }
+  log("Change in search parameters detected.");
+  return true;
+};
+
+export const ifConfigChanged = async (callback?: () => void) => {
+  const userFile = await getConfig().then((c) => c.search.params);
+  return isConfigChanged().then(async (changed) => {
+    if (changed) {
+      await (callback ? callback() : Promise.resolve());
+      cache.currentSearchParams.writeValue(userFile);
+    }
+  });
 };

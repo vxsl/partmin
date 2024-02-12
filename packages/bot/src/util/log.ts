@@ -1,8 +1,17 @@
-import config, { LogLevel } from "config.js";
+import { LogLevel } from "config.js";
 import { discordSend } from "discord/util.js";
+import { getConfig } from "util/config.js";
 import { errToString, isPlainObject } from "util/misc.js";
 
 const time = () => new Date().toLocaleTimeString("it-IT");
+
+let logLevels: undefined | Partial<Record<LogLevel, boolean>>;
+(async () => {
+  const config = await getConfig().catch(() => ({
+    logging: { debug: true, verbose: true },
+  }));
+  logLevels = config.logging;
+})();
 
 interface LogOptions {
   error?: boolean;
@@ -10,7 +19,7 @@ interface LogOptions {
   skipDiscord?: boolean;
 }
 export const log = (_v: any, options?: LogOptions) => {
-  if (options?.level && !config.logging?.[options.level]) {
+  if (options?.level && !logLevels?.[options.level]) {
     return;
   }
   const t = time();

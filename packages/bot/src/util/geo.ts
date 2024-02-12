@@ -1,7 +1,7 @@
 import axios from "axios";
 import cache from "cache.js";
-import config from "config.js";
 import haversine from "haversine";
+import { getConfig } from "util/config.js";
 import { abbreviateDuration } from "util/data.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined } from "util/misc.js";
@@ -104,7 +104,8 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
     .filter(notUndefined);
 };
 
-export const isWithinRadii = (coords: Coordinates) => {
+export const isWithinRadii = async (coords: Coordinates) => {
+  const config = await getConfig();
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
   verboseLog(
     `checking if ${Coordinates.toString(coords)} is within ${

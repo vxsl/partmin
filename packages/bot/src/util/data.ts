@@ -1,4 +1,4 @@
-import config from "config.js";
+import { getConfig } from "util/config.js";
 
 const sqFtToSqMetersRatio = 0.092903;
 export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
@@ -63,7 +63,8 @@ const sanitizeString = (s: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-export const trimAddress = (address: string): string => {
+export const trimAddress = async (address: string): Promise<string> => {
+  const config = await getConfig();
   const city = sanitizeString(config.search.location.city);
   const prov = sanitizeString(config.search.location.region);
   const cityIndex = sanitizeString(address).lastIndexOf(city);

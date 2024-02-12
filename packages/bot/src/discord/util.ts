@@ -122,6 +122,7 @@ const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
     );
     return;
   }
+  const config = await getConfig();
   const k: ChannelKey =
     options?.channel ??
     (config.development?.testing ? "test-listings" : "listings");

@@ -1,5 +1,3 @@
-import cache from "cache.js";
-import config from "config.js";
 import { presenceActivities } from "discord/constants.js";
 import { startActivity } from "discord/presence.js";
 import dotenv from "dotenv-mono";
@@ -10,6 +8,7 @@ import {
   ensureLocationLink,
   isValid,
 } from "listing.js";
+import { getConfig } from "util/config.js";
 import { isWithinRadii } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
 
@@ -18,31 +17,12 @@ dotenv.load();
 export const getSeenKey = (platform: string, id: string) => `${platform}-${id}`;
 export const getListingKey = (l: Listing) => getSeenKey(l.platform, l.id);
 
-export const withUnseenListings = async <T>(
-  newListings: Listing[],
-  fn: (listings: Listing[]) => Promise<T>
-) => {
-  const seen = cache.listings.value ?? [];
-  const seenKeys = new Set(seen.map(getListingKey));
-  const unseen = newListings.filter((l) => !seenKeys.has(getListingKey(l)));
-  const result = await fn(unseen);
-  cache.listings.writeValue([...seen, ...unseen]);
-  log(
-    `${unseen.length} unseen listing${unseen.length !== 1 ? "s" : ""} out of ${
-      newListings.length
-    }${config.logging?.verbose ? ":" : "."}`
-  );
-  if (unseen.length) {
-    verboseLog(unseen.map((l) => l.url).join(", "));
-  }
-  return result;
-};
-
 export const processListings = async (unseenListings: Listing[]) => {
   const activity = startActivity(
     presenceActivities.processing,
     unseenListings.length
   );
+  const config = await getConfig();
   const [validResults, invalidResults] = await unseenListings.reduce<
     Promise<[Listing[], Listing[]]>
   >(async (promises, l, i) => {
@@ -95,10 +75,11 @@ export const processListings = async (unseenListings: Listing[]) => {
   return validResults;
 };
 
-export const excludeListingsOutsideSearchArea = (listings: Listing[]) =>
-  listings.filter((l) => {
+export const preprocessListings = async (listings: Listing[]) => {
+  const config = await getConfig();
+  return listings.filter(async (l) => {
     if (!l.details.coords) return true;
-    const v = isWithinRadii(l.details.coords);
+    const v = await isWithinRadii(l.details.coords);
     if (!v) {
       log(
         `Listing ${getListingKey(l)} is outside of the search area${
@@ -109,3 +90,4 @@ export const excludeListingsOutsideSearchArea = (listings: Listing[]) =>
     }
     return v;
   });
+};

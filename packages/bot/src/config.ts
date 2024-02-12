@@ -1,3 +1,4 @@
+import cache from "cache.js";
 import {
   Array,
   Boolean,
@@ -46,7 +47,7 @@ const PetParams = RuntypeRecord({
 
 export type PetType = keyof Static<typeof PetParams>;
 
-const SearchParams = RuntypeRecord({
+export const SearchParams = RuntypeRecord({
   pets: Optional(PetParams),
   exclude: Optional(
     RuntypeRecord({
@@ -71,7 +72,7 @@ const Location = RuntypeRecord({
 });
 
 export type LogLevel = "debug" | "verbose";
-const Logging = RuntypeRecord<Record<LogLevel, RuntypeBase>>({
+const Logging = RuntypeRecord<Record<LogLevel, Optional<Boolean>>>({
   debug: Optional(Boolean),
   verbose: Optional(Boolean),
 });
@@ -88,7 +89,7 @@ const Development = RuntypeRecord({
   noRetrieval: Optional(Boolean),
 });
 
-const Config = RuntypeRecord({
+export const Config = RuntypeRecord({
   botBehaviour: Optional(BotBehaviour),
   development: Optional(Development),
   logging: Optional(Logging),
@@ -101,9 +102,9 @@ const Config = RuntypeRecord({
   }),
 });
 
-export type Config = Static<typeof Config>;
+export type StaticConfig = Static<typeof Config>;
 
-export const defaultConfigValues: RecursivePartial<Config> = {
+export const defaultConfigValues: RecursivePartial<StaticConfig> = {
   botBehaviour: {
     suppressGreeting: false,
     suppressUnreliableParamsWarning: false,
@@ -210,45 +211,20 @@ process.argv.slice(2).forEach((arg) => {
   }
 });
 
-let config: Config;
-try {
-  config = Config.check(_config);
-} catch (e) {
-  console.log("Config.json is invalid:", { error: true });
-  throw e;
-}
-
-throwOnUnknownKey(config);
-
-export const isDefaultValue = (
-  path: string | ((config: Config) => any),
-  options?: {
-    baseNest?: (config: Config) => any;
-  }
-) => {
-  let actual, expected;
+export const prevalidateConfig = (c: StaticConfig) => {
   try {
-    const nestedConfig = options?.baseNest ? options.baseNest(config) : config;
-    const nestedDefault = options?.baseNest
-      ? options.baseNest(defaultConfigValues as unknown as Config)
-      : (defaultConfigValues as unknown as Config);
-    if (typeof path === "string") {
-      actual = accessNestedProperty(nestedConfig, path);
-      expected = accessNestedProperty(nestedDefault, path);
-    } else {
-      actual = path(nestedConfig);
-      expected = path(nestedDefault);
-    }
+    Config.check(c);
   } catch (e) {
-    console.error("Error while checking default value of config option");
-    console.error({ actual, expected });
-    console.error(e);
-    if (actual === undefined && expected === undefined) {
-      console.error("Assuming they are unequal");
-      return false;
-    }
+    console.error("Invalid config.");
+    throw e;
   }
-  return actual === expected;
+  throwOnUnknownKey(c);
 };
 
-export default config;
+export const initConfig = async () => {
+  prevalidateConfig(_config);
+  cache.config.writeValue(Config.check(_config));
+  return await cache.config.requireValue();
+};
+
+export const configDevelopment = _config.development;

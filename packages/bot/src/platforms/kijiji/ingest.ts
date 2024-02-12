@@ -1,5 +1,4 @@
 import cache from "cache.js";
-import config from "config.js";
 import { startActivity } from "discord/presence.js";
 import he from "he";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
@@ -8,6 +7,7 @@ import kijiji from "platforms/kijiji/index.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
+import { getConfig } from "util/config.js";
 import { trimAddress } from "util/data.js";
 import { getGoogleMapsLink } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
@@ -67,7 +67,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   try {
     const loc = data.viewItemPage.viewItemData.adLocation.mapAddress;
     if (loc) {
-      l.details.shortAddress = trimAddress(loc);
+      l.details.shortAddress = await trimAddress(loc);
       l.details.longAddress = loc;
       l.computed = {
         ...(l.computed ?? {}),
@@ -78,6 +78,8 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   } catch {
     // TODO
   }
+
+  const config = await getConfig();
 
   try {
     const attrs = data.viewItemPage.viewItemData.adAttributes.attributes.filter(
@@ -172,9 +174,11 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 };
 
 export const onSearchParamsChanged = async (driver: WebDriver) => {
-  log("Building new Kijiji RSS feed");
+  log("Building new Kijiji RSS feed... (this may take a while)");
   await kijijiGet(baseURL, driver);
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
+
+  const config = await getConfig();
 
   await waitSeconds(2); // TODO don't arbitrary wait. Figure out the multiple renders of this element
   await withElement(

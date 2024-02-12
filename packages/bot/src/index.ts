@@ -1,5 +1,5 @@
 import cache from "cache.js";
-import config from "config.js";
+import { initConfig, prevalidateConfig } from "config.js";
 import { dataDir, puppeteerCacheDir } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
@@ -14,17 +14,22 @@ import { buildDriver } from "driver.js";
 import fs from "fs";
 import { Listing } from "listing.js";
 import {
-  excludeListingsOutsideSearchArea,
+  getListingKey,
+  preprocessListings,
   processListings,
-  withUnseenListings,
 } from "process/index.js";
 import psList from "ps-list";
 import { WebDriver } from "selenium-webdriver";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
-import { detectConfigChange, validateConfig } from "util/config.js";
-import { debugLog, log, logNoDiscord } from "util/log.js";
+import {
+  ifConfigChanged,
+  isConfigChanged,
+  validateConfig,
+} from "util/config.js";
+import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
+
 process.title = "partmin-bot";
 
 dotenv.load();
@@ -32,15 +37,27 @@ dotenv.load();
 let driver: WebDriver | undefined;
 export let shuttingDown = false;
 
+const logBreakIfConfigChanged = async (platform: string) => {
+  const res = await isConfigChanged();
+  if (res) {
+    log(`Config change detected, aborting ${platform} retrieval loop`);
+  }
+  return res;
+};
+
 const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
-  await detectConfigChange(async () => {
-    for (const {
-      callbacks: { onSearchParamsChanged },
-      name: platform,
-    } of platforms) {
-      if (onSearchParamsChanged) {
+  while (true) {
+    await ifConfigChanged(async () => {
+      for (const {
+        callbacks: { onSearchParamsChanged },
+        name: platform,
+      } of platforms) {
+        if (!onSearchParamsChanged) continue;
+
         const n = 3;
-        log(`Running preparation for ${platform}.`);
+        log(
+          `Since the config has changed, running essential preparation for ${platform} retrieval loop.`
+        );
         await tryNTimes(
           n,
           () => onSearchParamsChanged(driver) ?? Promise.resolve()
@@ -50,10 +67,8 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
           );
         });
       }
-    }
-  });
+    });
 
-  while (true) {
     for (const {
       name: platform,
       callbacks,
@@ -81,70 +96,142 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
         continue;
       }
 
+      // abort if config changed:
+      if (await logBreakIfConfigChanged(platform)) break;
+
+      // pre-process listings before per-listing callbacks
+      let listings: Listing[] = [];
       try {
-        const listings = excludeListingsOutsideSearchArea(allListings);
+        listings = await preprocessListings(allListings);
         if (!listings.length) {
           log(`No listings found within the search area.`);
           continue;
         }
         debugLog(`Found ${listings.length} listings within the search area.`);
-
-        await withUnseenListings(listings, async (unseenListings) => {
-          if (callbacks.perListing) {
-            const activity = startActivity(
-              presences?.perListing,
-              unseenListings.length
-            );
-            for (let i = 0; i < unseenListings.length; i++) {
-              activity?.update(i + 1);
-              const l = unseenListings[i];
-              if (!l) {
-                continue; // I don't know why TypeScript doesn't know that unseenListings[i] is defined here
-              }
-              debugLog(
-                `visiting listing (${i + 1}/${unseenListings.length}): ${l.url}`
-              );
-              await callbacks
-                .perListing(driver, l)
-                ?.then(() =>
-                  randomWait({ short: true, suppressProgressLog: true })
-                );
-            }
-          }
-          const validListings = await processListings(unseenListings);
-
-          const activity = startActivity(
-            presenceActivities.notifying,
-            validListings.length
+      } catch (e) {
+        if (!shuttingDown) {
+          discordWarning(
+            `Error while pre-processing listings from ${platform}:`,
+            e
           );
-          for (let i = 0; i < validListings.length; i++) {
+        }
+        continue;
+      }
+
+      // abort if config changed:
+      if (await logBreakIfConfigChanged(platform)) break;
+
+      const seen = cache.listings.value ?? [];
+      const seenKeys = new Set(seen.map(getListingKey));
+      const unseen = listings.filter((l) => !seenKeys.has(getListingKey(l)));
+      log(
+        `${unseen.length} unseen listing${
+          unseen.length !== 1 ? "s" : ""
+        } out of ${listings.length}.}`
+      );
+      if (unseen.length) {
+        verboseLog(unseen.map((l) => l.url).join(", "));
+      }
+
+      // per-listing callbacks:
+      if (callbacks.perListing) {
+        try {
+          const activity = startActivity(presences?.perListing, unseen.length);
+          for (let i = 0; i < unseen.length; i++) {
             activity?.update(i + 1);
-            const l = validListings[i];
-            if (!l) {
-              continue; // I don't know why TypeScript doesn't know that unseenListings[i] is defined here
-            }
-            singleLineStdOut(
-              `Sending Discord embed for listing (${i + 1}/${
-                validListings.length
-              }): ${l.url}`
-            );
-            try {
-              await sendListing(l);
-            } catch (e) {
-              discordWarning(
-                `Error while sending Discord embed for listing ${i + 1}/${
-                  validListings.length
-                }: ${l.url}`,
-                e
+            const l = unseen[i];
+            if (!l) continue;
+
+            debugLog(`visiting listing (${i + 1}/${unseen.length}): ${l.url}`);
+            await callbacks
+              .perListing(driver, l)
+              ?.then(() =>
+                randomWait({ short: true, suppressProgressLog: true })
               );
-            }
-            await waitSeconds(0.5);
+            if (await logBreakIfConfigChanged(platform)) break;
           }
-        });
+        } catch (e) {
+          if (!shuttingDown) {
+            discordWarning(
+              `Error while visiting listings from ${platform}:`,
+              e
+            );
+          }
+        }
+      }
+
+      // abort if config changed:
+      if (await logBreakIfConfigChanged(platform)) break;
+
+      // process listings:
+      let validListings: Listing[] = [];
+      try {
+        validListings = await processListings(unseen);
       } catch (e) {
         if (!shuttingDown) {
           discordWarning(
             `Error while processing listings from ${platform}:`,
+            e
+          );
+        }
+      }
+
+      // abort if config changed:
+      if (await logBreakIfConfigChanged(platform)) break;
+
+      // notify:
+      try {
+        const activity = startActivity(
+          presenceActivities.notifying,
+          validListings.length
+        );
+
+        let stopDueToConfigChange = false;
+
+        const notificationPromises = validListings.map(async (l, i) => {
+          activity?.update(i + 1);
+          if (!l) return;
+
+          singleLineStdOut(
+            `Sending Discord notification for listing (${i + 1}/${
+              validListings.length
+            }): ${l.url}`
+          );
+          try {
+            await sendListing(l);
+          } catch (e) {
+            discordWarning(
+              `Error while sending Discord notification for listing ${i + 1}/${
+                validListings.length
+              }: ${l.url}`,
+              e
+            );
+          }
+          if (await logBreakIfConfigChanged(platform)) {
+            stopDueToConfigChange = true;
+          }
+          await waitSeconds(0.5);
+        });
+
+        await Promise.all(
+          notificationPromises.map((p) =>
+            Promise.race([
+              p,
+              new Promise((_, reject) => {
+                if (stopDueToConfigChange) {
+                  reject();
+                }
+              }),
+            ])
+          )
+        );
+
+        // save listings only once all notifications have been sent
+        cache.listings.writeValue([...seen, ...unseen]);
+      } catch (e) {
+        if (!shuttingDown) {
+          discordWarning(
+            `Error while sending Discord listing notifications: ${platform}:`,
             e
           );
         }
@@ -238,7 +325,9 @@ export const fatalError = async (e: unknown) => {
       (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
     );
 
-    if (config.options?.disableGoogleMapsFeatures) {
+    const config = await initConfig();
+
+    if (config?.options?.disableGoogleMapsFeatures) {
       log(
         "Google Maps features are disabled. You can enable them by removing the 'options.disableGoogleMapsFeatures' config option."
       );
@@ -251,10 +340,11 @@ export const fatalError = async (e: unknown) => {
     await initDiscord();
     setPresence("launching");
     reinitializeInteractiveListingMessages();
-    await validateConfig();
     driver = await buildDriver();
 
     setPresence("online");
+    prevalidateConfig(config);
+    validateConfig(config);
 
     if (!config.development?.noRetrieval) {
       await retrieval(driver, [platforms.fb, platforms.kijiji]);
