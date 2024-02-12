@@ -3,6 +3,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "g:tsx": "tsx",
     "bot": "yarn workspace presence-auditor start & yarn workspace bot start",
     "bot-check": "yarn workspace bot check && yarn workspace presence-auditor check",
     "bot-dev": "yarn bot-check && yarn bot"

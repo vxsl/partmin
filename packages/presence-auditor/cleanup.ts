@@ -8,7 +8,7 @@ if (!statusPath) {
   throw new Error("No status path provided");
 }
 
-const botPath = "../bot";
+const botPath = "packages/bot";
 const cachePath = `${botPath}/.data`;
 
 const paths = {
@@ -22,7 +22,12 @@ const values = Object.fromEntries(
     if (!existsSync(v)) {
       throw new Error(`Missing required file: ${v}`);
     }
-    return [k, readFileSync(v, "utf-8")];
+    return [
+      k,
+      v.endsWith(".json")
+        ? JSON.parse(readFileSync(v, "utf-8"))
+        : readFileSync(v, "utf-8"),
+    ];
   })
 );
 
@@ -40,19 +45,17 @@ const log = (s: string) => console.log(`[presence-auditor] ${s}`);
     };
     log(`Logged in. Setting presence to ${JSON.stringify(p)}`);
 
-    c.user.setPresence(p);
-
     const guild = c.guilds.cache.get(values.serverID);
     if (!guild) {
       throw new Error("Could not find guild");
     }
 
-    for (const [k, v] of Object.entries(values.channelIDs)) {
+    for (const [k, v] of Object.entries(values.guildInfo.channelIDs)) {
       if (!v) {
         console.error(`Missing channel ID for ${k}`);
         continue;
       }
-      const channel = guild.channels.cache.get(v);
+      const channel = await guild.channels.fetch(v as string);
       if (!channel || !channel.isTextBased()) {
         console.error(`Could not find channel for ${k}`);
         continue;
@@ -60,12 +63,15 @@ const log = (s: string) => console.log(`[presence-auditor] ${s}`);
 
       const messages = await channel.messages.fetch({ limit: 100 });
       const lastCrash = messages.find((m) =>
-        m.content.toLowerCase().includes("crash")
+        m.embeds.some(
+          (e) =>
+            e.title?.toLowerCase().includes("crash") ||
+            e.description?.toLowerCase().includes("crash")
+        )
       );
-
       if (
         !lastCrash ||
-        Date.now() - lastCrash.createdTimestamp < 1000 * 60 * 5
+        Date.now() - lastCrash.createdTimestamp > 1000 * 60 * 5
       ) {
         log(
           `No crash message found in ${channel.name}. Sending crash message to logs channel.`
@@ -76,12 +82,14 @@ const log = (s: string) => console.log(`[presence-auditor] ${s}`);
               color: 0xff0000,
               title: "Crash detected",
               description:
-                "Partmin has crashed for an unknown reason. Please check the logs for more information.",
+                "Partmin has gone offline for an unknown reason. Please check the logs for more information.",
             },
           ],
         });
       }
     }
+
+    c.user.setPresence(p);
 
     log("Done. Logging out...");
     c.destroy().then(() => {

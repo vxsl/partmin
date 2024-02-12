@@ -6,7 +6,7 @@
   "scripts": {
     "check": "yarn typecheck && yarn lint",
     "cleanup-dev": "yarn typecheck && yarn lint && yarn cleanup",
-    "cleanup": "tsx cleanup.ts",
+    "cleanup": "yarn g:tsx packages/presence-auditor/cleanup.ts",
     "start": "bash daemon.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."

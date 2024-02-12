@@ -68,5 +68,7 @@ export const buildDriver = async () => {
 
   await driver.manage().setTimeouts({ implicit: seleniumImplicitWait });
 
+  log("Driver ready");
+
   return driver;
 };
