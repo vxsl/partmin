@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "check": "yarn typecheck && yarn lint",
-    "kill-dev": "yarn typecheck && yarn lint && yarn kill",
-    "kill": "tsx kill.ts",
+    "cleanup-dev": "yarn typecheck && yarn lint && yarn cleanup",
+    "cleanup": "tsx cleanup.ts",
     "start": "bash daemon.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."

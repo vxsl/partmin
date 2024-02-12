@@ -21,7 +21,7 @@ on_proc_dead() {
             plog "noop: graceful shutdown detected"
             status=0
             elif [ "$status" = "logged-in" ]; then
-            yarn kill "$signal_path"
+            yarn cleanup "$signal_path"
         else
             plog "Unknown status: $status"
             status=1
