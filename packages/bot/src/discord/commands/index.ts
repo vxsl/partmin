@@ -39,6 +39,7 @@ const commands = [
 const setupCommands = async () => {
   const token = await cache.discordBotToken.requireValue();
   const appID = await cache.discordAppID.requireValue();
+  const guildID = await cache.discordGuildID.requireValue();
 
   const rest = new REST({ timeout: 5000 }).setToken(token);
 
@@ -83,7 +84,7 @@ const setupCommands = async () => {
 
   log("Registering Discord commands");
   await tryNTimes(3, () =>
-    rest.put(Routes.applicationCommands(appID), { body: coll })
+    rest.put(Routes.applicationGuildCommands(appID, guildID), { body: coll })
   );
 };
 
