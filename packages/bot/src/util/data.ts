@@ -5,6 +5,26 @@ export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
 export const sqMetersToSqft = (m2: number) => m2 / sqFtToSqMetersRatio;
 export const acresToSqft = (a: number) => a * 43560;
 
+export const modifyNestedProperty = (
+  obj: any,
+  _path: string | string[],
+  value: any
+) => {
+  const path = Array.isArray(_path) ? _path : _path.split(".");
+  const last = path.pop();
+  if (last === undefined) {
+    return;
+  }
+  let result = obj;
+  for (const p of path) {
+    if (result[p] === undefined) {
+      result[p] = {};
+    }
+    result = result[p];
+  }
+  result[last] = value;
+};
+
 export const accessNestedProperty = (obj: any, _path: string | string[]) => {
   let result = obj;
   const path = Array.isArray(_path)
@@ -113,3 +133,6 @@ export const readableSeconds = (s: number) => {
   }
   return str;
 };
+
+export const maxEmptyLines = (s: string, n: number) =>
+  s.replace(new RegExp("\\n{" + Number(n + 2) + ",}", "g"), "\n".repeat(n + 1));

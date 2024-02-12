@@ -7,7 +7,7 @@ import {
 import { discordFormat, discordWarning } from "discord/util.js";
 import { accessNestedProperty } from "util/data.js";
 import { isValidAddress } from "util/geo.js";
-import { debugLog, log } from "util/log.js";
+import { debugLog, log, verboseLog } from "util/log.js";
 
 export const getConfig = async () => await cache.config.requireValue();
 
@@ -114,7 +114,7 @@ export const isConfigChanged = async () => {
     return true;
   }
   if (JSON.stringify(cached) === JSON.stringify(userFile)) {
-    log("No change in search parameters detected.");
+    verboseLog("No change in search parameters detected.");
     return false;
   }
   log("Change in search parameters detected.");

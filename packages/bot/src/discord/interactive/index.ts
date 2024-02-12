@@ -48,7 +48,9 @@ type ComponentContext<S extends CustomState> = ImmutableState<S> &
 // __________________________________________________________________________________________
 // component definitions:
 type Mutate<S extends CustomState> = S extends Object
-  ? (c: ComponentContext<S>) => ImmutableState<S> | Promise<ImmutableState<S>>
+  ? (
+      c: ComponentContext<S>
+    ) => null | ImmutableState<S> | Promise<null | ImmutableState<S>>
   : undefined;
 type ComponentCategories<S extends CustomState> = {
   buttons?: {
@@ -233,7 +235,7 @@ export const startInteractive = ({
           return;
         }
         const oldState = stateMap.get(target.groupKey);
-        const { state, componentOrder: newOrder } = await target.def.mutate({
+        const mutateResult = await target.def.mutate({
           componentInteraction,
           state: oldState,
           getEmbed,
@@ -242,6 +244,11 @@ export const startInteractive = ({
           getStringSelect,
           apply: () => componentInteraction.update({ embeds, components }),
         });
+        if (mutateResult === null) {
+          return;
+        }
+
+        const { state, componentOrder: newOrder } = mutateResult;
         stateMap.set(target.groupKey, state);
         if (JSON.stringify(newOrder) !== JSON.stringify(componentOrder)) {
           componentOrder = newOrder;

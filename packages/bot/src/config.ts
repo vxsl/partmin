@@ -9,7 +9,6 @@ import {
   String,
 } from "runtypes";
 import { RuntypeBase } from "runtypes/lib/runtype.js";
-import { accessNestedProperty } from "util/data.js";
 import { RecursivePartial } from "util/type.js";
 import _config from "../../../config/config.json";
 
@@ -87,6 +86,7 @@ const Development = RuntypeRecord({
   testing: Optional(Boolean),
   noSandbox: Optional(Boolean),
   noRetrieval: Optional(Boolean),
+  preventConfigOverwrite: Optional(Boolean),
 });
 
 export const Config = RuntypeRecord({
@@ -114,6 +114,7 @@ export const defaultConfigValues: RecursivePartial<StaticConfig> = {
     testing: false,
     noSandbox: false,
     noRetrieval: false,
+    preventConfigOverwrite: false,
   },
   logging: {
     debug: false,
