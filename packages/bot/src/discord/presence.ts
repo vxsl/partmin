@@ -54,9 +54,9 @@ export const setPresence = async (
 const longRunningWarningEmojis = [`🐢`, `🐌`, `🐢️`, `💤`];
 const longRunningWarnings = [
   `I'm going slowly so nobody thinks I'm a bot`,
-  `I'm taking my time to dodge bot detection`,
+  `I'm taking my time in order to dodge bot detection`,
   `️I'm taking it slow to avoid being blocked`,
-  `I'm moving carefully to avoid being flagged`,
+  `I'm moving slowly to avoid being flagged`,
 ];
 
 const timeBetweenWarnings = 2 * 60 * 1000;
@@ -109,7 +109,7 @@ export class PresenceActivity {
       if (p) {
         v += `${p} `;
       }
-      v += `${w.message}: ${msg}`;
+      v += `${w.message}. ${`${msg.charAt(0).toUpperCase()}${msg.slice(1)}`}`;
     } else {
       if (this.def.emoji) {
         v += `${this.def.emoji} `;

@@ -105,7 +105,6 @@ const descriptionToggle = (l: Listing) =>
                 : Discord.ButtonStyle.Primary
             )
             .setDisabled(false);
-          await apply();
           return {
             state: { ...state, toggled: !state.toggled },
             componentOrder,
