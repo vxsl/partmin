@@ -6,7 +6,7 @@ tmp
 todo.md
 **/.tmp
 **/.cache
-**/.data
+**/.data*
 **/.test-data
 .scratchpad.md
 config.json

@@ -71,7 +71,7 @@ const Location = RuntypeRecord({
 });
 
 export type LogLevel = "debug" | "verbose";
-const Logging = RuntypeRecord<Record<LogLevel, RuntypeBase>>({
+const Logging = RuntypeRecord<Record<LogLevel, Optional<Boolean>>>({
   debug: Optional(Boolean),
   verbose: Optional(Boolean),
 });

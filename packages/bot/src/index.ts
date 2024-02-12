@@ -51,7 +51,9 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
         if (!onSearchParamsChanged) continue;
 
         const n = 3;
-        log(`Running preparation for ${platform}.`);
+        log(
+          `Since the config has changed, running essential preparation for ${platform} retrieval loop.`
+        );
         await tryNTimes(
           n,
           () => onSearchParamsChanged(driver) ?? Promise.resolve()
@@ -315,16 +317,11 @@ export const fatalError = async (e: unknown) => {
 
 (async () => {
   try {
-    const config = await initConfig();
-
-    // prevalidateConfig(_config);
-    // cache.config.writeValue(Config.check(_config));
-    // const config = await getConfig(); // TODO no validate?
-    // const config = cache.config.value;
-
     [dataDir, puppeteerCacheDir].forEach(
       (dir) => !fs.existsSync(dir) && fs.mkdirSync(dir)
     );
+
+    const config = await initConfig();
 
     if (config?.options?.disableGoogleMapsFeatures) {
       log(
@@ -339,8 +336,6 @@ export const fatalError = async (e: unknown) => {
     await initDiscord();
     setPresence("launching");
     reinitializeInteractiveListingMessages();
-    // await validateConfig(config as StaticConfig);
-    cache.config.writeValue(config);
     driver = await buildDriver();
 
     setPresence("online");

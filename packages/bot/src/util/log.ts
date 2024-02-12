@@ -5,16 +5,21 @@ import { errToString, isPlainObject } from "util/misc.js";
 
 const time = () => new Date().toLocaleTimeString("it-IT");
 
+let logLevels: undefined | Partial<Record<LogLevel, boolean>>;
+(async () => {
+  const config = await getConfig().catch(() => ({
+    logging: { debug: true, verbose: true },
+  }));
+  logLevels = config.logging;
+})();
+
 interface LogOptions {
   error?: boolean;
   level?: LogLevel;
   skipDiscord?: boolean;
 }
-export const log = async (_v: any, options?: LogOptions) => {
-  const config = await getConfig().catch(() => ({
-    logging: { debug: true, verbose: true },
-  }));
-  if (options?.level && !config.logging?.[options.level]) {
+export const log = (_v: any, options?: LogOptions) => {
+  if (options?.level && !logLevels?.[options.level]) {
     return;
   }
   const t = time();
