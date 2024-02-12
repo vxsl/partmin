@@ -3,6 +3,7 @@ import { ColorResolvable, EmbedBuilder } from "discord.js";
 import { discordFormat } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
+import { getConfig } from "util/config.js";
 import { trimAddress } from "util/data.js";
 import {
   Coordinates,
@@ -48,24 +49,25 @@ const listingEmbed = async (l: Listing) => {
     .filter(notUndefined)
     .join("‎    ‎    ‎      ‎ ");
 
-  const commutes = await Object.keys(l.computed?.commuteDestinations ?? {})
-    .map(async (d) => {
-      const o = getCommuteOrigin(l);
+  const config = await getConfig();
+
+  const commuteOrigin = getCommuteOrigin(l);
+  const commutes = await Promise.all(
+    (config.options?.commuteDestinations ?? []).map(async (d) => {
       const summ = l.computed?.commuteDestinations?.[d];
-      return !summ || !o
-        ? ""
-        : [
-            Object.keys(l.computed?.commuteDestinations ?? {}).length > 1
-              ? discordFormat(`${await trimAddress(d)}:`, {
-                  italic: true,
-                })
-              : undefined,
-            formatCommuteSummaryMD(summ, o, d),
-          ]
-            .filter(notUndefined)
-            .join("\n");
+      if (!summ || !commuteOrigin) {
+        return "";
+      }
+      return [
+        discordFormat(`${await trimAddress(d)}:`, {
+          italic: true,
+        }),
+        formatCommuteSummaryMD(summ, commuteOrigin, d),
+      ]
+        .filter(notUndefined)
+        .join("\n");
     })
-    .join("\n");
+  ).then((arr) => arr.join("\n\n") ?? "");
 
   return new EmbedBuilder()
     .setColor(colors.uninteracted)
