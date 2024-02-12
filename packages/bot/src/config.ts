@@ -231,10 +231,14 @@ export const prevalidateConfig = (c: StaticConfig) => {
   });
 };
 
+export let logLevels: undefined | Partial<Record<LogLevel, boolean>>;
+
 export const initConfig = async () => {
   prevalidateConfig(_config);
   await cache.config.writeValue(Config.check(_config), { skipValidate: true });
-  return await cache.config.requireValue();
+  const result = await cache.config.requireValue();
+  logLevels = result.logging;
+  return result;
 };
 
 export const configDevelopment: Static<typeof Development> =
