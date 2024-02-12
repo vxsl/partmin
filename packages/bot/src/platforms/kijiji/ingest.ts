@@ -93,7 +93,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
             value: a.localeSpecificValues.en.value,
           }))
       );
-    } else if (config.search.params.unreliableParams?.outdoorSpace) {
+    } else if (config.search.params.unreliableParams?.requireOutdoorSpace) {
       invalidateListing(
         l,
         "unreliableParamsMismatch",
@@ -113,7 +113,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
         key: attr.localeSpecificValues.en.label,
         value: attr.localeSpecificValues.en.value,
       });
-    } else if (config.search.params.unreliableParams?.parking) {
+    } else if (config.search.params.unreliableParams?.requireParking) {
       invalidateListing(
         l,
         "unreliableParamsMismatch",

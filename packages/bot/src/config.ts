@@ -14,8 +14,8 @@ import _config from "../../../config/config.json";
 
 const UnreliableParams = RuntypeRecord({
   minAreaSqFt: Optional(RuntypeNumber),
-  outdoorSpace: Optional(Boolean),
-  parking: Optional(Boolean),
+  requireOutdoorSpace: Optional(Boolean),
+  requireParking: Optional(Boolean),
   petsStrict: Optional(Boolean),
 });
 
@@ -26,9 +26,9 @@ export const unreliabilityExplanations: Record<
   // TODO ensure functionality matches these descriptions:
   minAreaSqFt:
     "This will exclude listings that specify a square footage less than the configured value. Posters often report the area of their listing using the wrong units.",
-  outdoorSpace:
+  requireOutdoorSpace:
     "This will exclude listings that don't explicitly offer a yard, balcony, etc. Posters often don't bother to fill out this field, even if their listing has outdoor space.",
-  parking:
+  requireParking:
     "This will exclude listings that don't explicitly offer parking. Posters often don't bother to fill out this field, even if their listing has parking.",
   petsStrict:
     "This will exclude listings that don't explicitly allow your type(s) of pet defined in `search.params.pets`. Posters often don't bother to fill out the pets field, even if their listing does allow pets.",
@@ -136,8 +136,8 @@ export const defaultConfigValues: RecursivePartial<Config> = {
       minBedrooms: 0,
       unreliableParams: {
         minAreaSqFt: 0,
-        outdoorSpace: false,
-        parking: false,
+        requireOutdoorSpace: false,
+        requireParking: false,
         petsStrict: false,
       },
     },

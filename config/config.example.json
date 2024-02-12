@@ -37,9 +37,9 @@
         "other": false
       },
       "unreliableParams": {
-        "minAreaSqFt": 500,
-        "parking": true,
-        "outdoorSpace": true
+        "minAreaSqFt": 0,
+        "requireParking": false,
+        "requireOutdoorSpace": false
       }
     },
     "location": {

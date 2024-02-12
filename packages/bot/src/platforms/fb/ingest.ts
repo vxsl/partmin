@@ -112,7 +112,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 
     try {
       if (
-        unreliableParams?.outdoorSpace &&
+        unreliableParams?.requireOutdoorSpace &&
         !unitIncludes.pdp_fields.some((f: any) =>
           f.display_label.match(/balcony|terrace|deck|yard/i)
         )
@@ -130,7 +130,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 
     try {
       if (
-        unreliableParams?.parking &&
+        unreliableParams?.requireParking &&
         !unitIncludes.pdp_fields.some((f: any) =>
           f.display_label.match(/parking|garage/i)
         )
