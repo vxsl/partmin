@@ -12,7 +12,7 @@ import testListing from "discord/commands/test-listing.js";
 import { discordClient } from "discord/index.js";
 import { getConfig } from "util/config.js";
 import { log } from "util/log.js";
-import { notUndefined } from "util/misc.js";
+import { notUndefined, tryNTimes } from "util/misc.js";
 
 interface Command {
   name: string;
@@ -45,7 +45,7 @@ const setupCommands = async () => {
   const appID = await cache.discordAppID.requireValue();
   const guildID = await cache.discordGuildID.requireValue();
 
-  const rest = new REST().setToken(token);
+  const rest = new REST({ timeout: 5000 }).setToken(token);
 
   const coll = new Collection<string, Command>(
     await getCommands().then((commands) =>
@@ -89,9 +89,14 @@ const setupCommands = async () => {
   });
 
   log("Registering Discord commands");
-  await rest.put(Routes.applicationGuildCommands(appID, guildID), {
-    body: coll,
+  await tryNTimes(3, async () => {
+    await rest.put(Routes.applicationCommands(appID), {
+      body: coll,
+    });
   });
+  // await rest.put(Routes.applicationGuildCommands(appID, guildID), {
+  //   body: coll,
+  // });
 };
 
 export default setupCommands;

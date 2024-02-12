@@ -212,10 +212,7 @@ process.argv.slice(2).forEach((arg) => {
   }
 });
 
-export const prevalidateConfig = (c: StaticConfig, tthrow?: boolean) => {
-  if (tthrow) {
-    throw new Error("UH OH");
-  }
+export const prevalidateConfig = (c: StaticConfig) => {
   try {
     Config.check(c);
   } catch (e) {

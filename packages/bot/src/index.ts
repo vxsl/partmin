@@ -1,5 +1,5 @@
 import cache from "cache.js";
-import { initConfig } from "config.js";
+import { initConfig, prevalidateConfig } from "config.js";
 import { dataDir, puppeteerCacheDir } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
@@ -22,7 +22,11 @@ import psList from "ps-list";
 import { WebDriver } from "selenium-webdriver";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
-import { ifConfigChanged, isConfigChanged } from "util/config.js";
+import {
+  ifConfigChanged,
+  isConfigChanged,
+  validateConfig,
+} from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
 
@@ -339,6 +343,8 @@ export const fatalError = async (e: unknown) => {
     driver = await buildDriver();
 
     setPresence("online");
+    prevalidateConfig(config);
+    validateConfig(config);
 
     if (!config.development?.noRetrieval) {
       await retrieval(driver, [platforms.fb, platforms.kijiji]);

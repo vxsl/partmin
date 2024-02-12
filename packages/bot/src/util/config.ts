@@ -64,28 +64,38 @@ export const validateConfig = async (c: StaticConfig) => {
     }
   });
 
-  const unreliable = c.search.params.unreliableParams;
-  if (c.botBehaviour?.suppressUnreliableParamsWarning || !unreliable) {
+  const unreliable = JSON.parse(
+    JSON.stringify(c.search.params.unreliableParams)
+  ) as typeof c.search.params.unreliableParams;
+  if (
+    c.botBehaviour?.suppressUnreliableParamsWarning ||
+    !unreliable ||
+    !c.search.params.unreliableParams
+  ) {
     return;
   }
-  const unreliableParams = Object.entries(unreliable).filter(
-    async ([k]) =>
-      !(await isDefaultValue(
-        (c) => c.search.params.unreliableParams?.[k as keyof typeof unreliable]
-      ))
-  ) as [keyof typeof unreliabilityExplanations, boolean][] | never;
-  if (unreliableParams.length) {
+
+  for (const _k of Object.keys(c.search.params.unreliableParams)) {
+    const k = _k as keyof typeof c.search.params.unreliableParams;
+    if (await isDefaultValue((c) => c.search.params.unreliableParams![k])) {
+      delete unreliable[k];
+    }
+  }
+
+  if (Object.values(unreliable).length) {
     discordWarning(
       `Warning: you have specified ${
-        unreliableParams.length > 1
+        Object.values(unreliable).length > 1
           ? "search parameters that are"
           : "a search parameter that is"
       } prone to false negatives.`,
-      `${unreliableParams
+      `${Object.entries(unreliable)
         .map(
           ([k, v]) =>
             `- ${discordFormat(`"${k}": ${v}`, { monospace: true })}\n> ${
-              unreliabilityExplanations[k]
+              unreliabilityExplanations[
+                k as keyof typeof unreliabilityExplanations
+              ]
             }`
         )
         .join("\n")}\n\n${discordFormat(
