@@ -91,21 +91,30 @@ export const withElement = <F extends (el: WebElement) => any>(
   fn: F
 ): Promise<ReturnType<F>> => tryNTimes(3, async () => fn(await getEl()));
 
+type WithElementsByXpathOptions = {
+  noConcurrency?: boolean;
+  parent?: WebElement;
+  parentXpath?: string;
+};
+
 export const withElementsByXpath = async <T>(
   driver: WebDriver,
-  xpath: string,
+  _selector: string,
   fn: (el: WebElement, i: number) => Promise<T>,
-  options?: { noConcurrency?: boolean }
+  options?: WithElementsByXpathOptions
 ): Promise<T[]> => {
   const promises: Promise<T>[] = [];
   const results: T[] = [];
 
+  const selector = `${options?.parentXpath ?? ""}${_selector}`;
+
   const len = await driver
-    .findElements(By.xpath(xpath))
+    .findElements(By.xpath(selector))
     .then((els) => els.length);
   verboseLog(`withElementsByXpath: ${len} elements found`);
   for (let i = 0; i < len; i++) {
-    const getEl = () => driver.findElement(By.xpath(`(${xpath})[${i + 1}]`));
+    const xpath = `(${selector})[${i + 1}]`;
+    const getEl = () => driver.findElement(By.xpath(xpath));
 
     if (options?.noConcurrency) {
       const r = await withElement(getEl, (el) => fn(el, i));
@@ -143,30 +152,23 @@ export const clickByXPath = async (
 
 export const clickAllByXPath = async (
   driver: WebDriver,
-  _selector: string,
-  options?: {
-    parent?: WebElement;
-    parentXpath?: string;
+  xpath: string,
+  options?: WithElementsByXpathOptions & {
     afterClick?: () => Promise<void>;
   }
 ) => {
-  const selector = `${options?.parentXpath ?? ""}${_selector}`;
-  const len = await (options?.parent ?? driver)
-    .findElements(By.xpath(selector))
-    .then((els) => els.length);
-  for (let i = 0; i < len; i++) {
-    const xpath = `(${selector})[${i + 1}]`;
-    await withElement(
-      () => (options?.parent ?? driver).findElement(By.xpath(xpath)),
-      async (el) => {
-        await elementShouldBeInteractable(driver, el, { xpath });
-        await el.click();
-        if (options?.afterClick) {
-          await options.afterClick();
-        }
-      }
-    );
-  }
+  await withElementsByXpath(
+    driver,
+    xpath,
+    async (el, i) => {
+      await elementShouldBeInteractable(driver, el, {
+        name: `${i}th ${xpath}`,
+      });
+      await el.click();
+      await (options?.afterClick?.() ?? Promise.resolve());
+    },
+    options
+  );
 };
 
 export const fillInputByLabel = async (

@@ -61,6 +61,7 @@ const filterInteractions: FilterInteractionsMap = {
       noopCondition: (v) => !v,
       func: (d, _, xpath) =>
         clickAllByXPath(d, `//label[not(text()='Basement')]`, {
+          noConcurrency: true,
           parentXpath: `${xpath}/..`,
           afterClick: async () => {
             await waitUntilUrlChanges(d);
@@ -97,6 +98,7 @@ const filterInteractions: FilterInteractionsMap = {
         `//label[number(translate(., ' ', '')) >= ${v}]`,
       ]) {
         await clickAllByXPath(d, p, {
+          noConcurrency: true,
           parentXpath: `${xpath}/..`,
           afterClick: async () => {
             await waitUntilUrlChanges(d);
