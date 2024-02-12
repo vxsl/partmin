@@ -1,5 +1,5 @@
 import cache from "cache.js";
-import { initConfig, prevalidateConfig } from "config.js";
+import { configDevelopment, initConfig, prevalidateConfig } from "config.js";
 import { dataDir, puppeteerCacheDir } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
@@ -121,7 +121,7 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
       // abort if config changed:
       if (await logBreakIfConfigChanged(platform)) break;
 
-      const seen = cache.listings.value ?? [];
+      const seen = (await cache.listings.value()) ?? [];
       const seenKeys = new Set(seen.map(getListingKey));
       const unseen = listings.filter((l) => !seenKeys.has(getListingKey(l)));
       log(
@@ -227,7 +227,7 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
         );
 
         // save listings only once all notifications have been sent
-        cache.listings.writeValue([...seen, ...unseen]);
+        await cache.listings.writeValue([...seen, ...unseen]);
       } catch (e) {
         if (!shuttingDown) {
           discordWarning(
@@ -333,7 +333,7 @@ export const fatalError = async (e: unknown) => {
       );
     } else {
       await cache.googleMapsAPIKey.requireValue({
-        message: `A Google Maps API key with permissions for the Geocoding and Distance Matrix APIs is required for some partmin features. ${cache.discordGuildID.envVarInstruction}\n\nYou may disable these features by setting the 'options.disableGoogleMapsFeatures' config option.`,
+        message: `A Google Maps API key with permissions for the Geocoding and Distance Matrix APIs is required for some partmin features. ${cache.googleMapsAPIKey.envVarInstruction}\n\nYou may disable these features by setting the 'options.disableGoogleMapsFeatures' config option.`,
       });
     }
 
@@ -346,7 +346,7 @@ export const fatalError = async (e: unknown) => {
     prevalidateConfig(config);
     validateConfig(config);
 
-    if (!config.development?.noRetrieval) {
+    if (!configDevelopment.noRetrieval) {
       await retrieval(driver, [platforms.fb, platforms.kijiji]);
     } else {
       log("Skipping retrieval loop according to config option.");

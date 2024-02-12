@@ -75,7 +75,7 @@ const descriptionToggle = (l: Listing) =>
 
           embed.setColor(colors.interacted);
           button?.setDisabled(true);
-          apply();
+          await apply();
 
           const toToggle = discordFormat(desc, { quote: true });
           const og = (embed.data.description ?? "")
@@ -168,19 +168,19 @@ const getListingButtons = (l: Listing) => ({
   ...(l.details.longDescription && { descriptionToggle: descriptionToggle(l) }),
 });
 
-export const sendListing = (
+export const sendListing = async (
   l: Listing,
   options?: Pick<SendEmbedOptions, "channel" | "customSendFn">
 ) =>
   constructAndSendRichMessage({
     ...options,
     initComponentOrder: [[ids.prevImg, ids.img, ids.nextImg, ids.desc]],
-    embeds: [listingEmbed(l).data],
+    embeds: [(await listingEmbed(l)).data],
     componentGroupDefs: getListingButtons(l),
   });
 
 export const reinitializeInteractiveListingMessages = async () => {
-  const listings = cache.listings.value;
+  const listings = await cache.listings.value();
   if (!listings?.length) {
     return;
   }

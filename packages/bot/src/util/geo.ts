@@ -141,7 +141,7 @@ export const getGoogleMapsLink = (query: string) =>
   `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
 export const approxLocationLink = async (coords: Coordinates) => {
-  const addresses = cache.approximateAddresses.value ?? {};
+  const addresses = (await cache.approximateAddresses.value()) ?? {};
   const cacheKey = Coordinates.toString(coords, { raw: true });
   const cached = addresses?.[cacheKey];
   if (cached) {
@@ -165,7 +165,7 @@ export const approxLocationLink = async (coords: Coordinates) => {
     (comps.find((c: any) => c.types.includes("neighborhood"))?.short_name ??
       comps.find((c: any) => c.types.includes("sublocality"))?.short_name);
 
-  cache.approximateAddresses.writeValue({
+  await cache.approximateAddresses.writeValue({
     ...addresses,
     [cacheKey]: [displayAddr, data.results[0].formatted_address],
   });
@@ -176,7 +176,7 @@ export const approxLocationLink = async (coords: Coordinates) => {
 
 export const isValidAddress = async (address: string) => {
   let result;
-  const validities = cache.addressValidity.value ?? {};
+  const validities = (await cache.addressValidity.value()) ?? {};
   if (address in validities) {
     debugLog(`Address found in cache: ${address}`);
     result = validities[address];
@@ -188,7 +188,10 @@ export const isValidAddress = async (address: string) => {
         )}&${await gMapsAPIKey()}`
       );
       result = !!data.results[0]?.geometry?.location;
-      cache.addressValidity.writeValue({ ...validities, [address]: result });
+      await cache.addressValidity.writeValue({
+        ...validities,
+        [address]: result,
+      });
     } catch (e) {
       debugLog(`Error validating address: ${address}`);
       debugLog(e);
@@ -206,7 +209,7 @@ type CommuteMode = (typeof commuteModes)[number];
 export type CommuteSummary = Record<CommuteMode, string>;
 
 export const getCommuteSummary = async (origin: string, dest: string) => {
-  const summaries = cache.commuteSummaries.value ?? {};
+  const summaries = (await cache.commuteSummaries.value()) ?? {};
   const cached = summaries[origin]?.[dest];
   let rawData: Partial<Record<CommuteMode, any>> = {};
   if (cached !== undefined) {
@@ -246,7 +249,7 @@ export const getCommuteSummary = async (origin: string, dest: string) => {
     })
   ) as CommuteSummary;
   if (!cached) {
-    cache.commuteSummaries.writeValue({
+    await cache.commuteSummaries.writeValue({
       ...summaries,
       [origin]: { ...summaries[origin], [dest]: result },
     });

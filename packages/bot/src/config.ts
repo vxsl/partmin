@@ -219,13 +219,23 @@ export const prevalidateConfig = (c: StaticConfig) => {
     console.error("Invalid config.");
     throw e;
   }
+
   throwOnUnknownKey(c);
+
+  c.search.blacklistRegex?.forEach((r) => {
+    try {
+      new RegExp(r);
+    } catch (e) {
+      throw new Error(`Invalid blacklistRegex in config: ${r}`);
+    }
+  });
 };
 
 export const initConfig = async () => {
   prevalidateConfig(_config);
-  cache.config.writeValue(Config.check(_config));
+  await cache.config.writeValue(Config.check(_config), { skipValidate: true });
   return await cache.config.requireValue();
 };
 
-export const configDevelopment = _config.development;
+export const configDevelopment: Static<typeof Development> =
+  _config.development ?? {};

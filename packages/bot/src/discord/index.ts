@@ -1,4 +1,5 @@
 import cache from "cache.js";
+import { configDevelopment } from "config.js";
 import {
   BitField,
   CategoryChannel,
@@ -130,7 +131,6 @@ const getChannelsToBeCreated = async ({
   guildInfo: RecursivePartial<GuildInfo>;
   guild: Guild;
 }) => {
-  const config = await getConfig();
   const actualChannels = await guild.channels
     .fetch()
     .then((coll) =>
@@ -148,7 +148,7 @@ const getChannelsToBeCreated = async ({
   const alreadyExist: Partial<Record<ChannelKey, GuildChannel>> = {};
   const toCreate: Partial<Record<ChannelKey, ChannelDef>> = {};
   for (const [_key, def] of Object.entries(
-    config.development?.testing ? channelDefs : prodChannelDefs
+    configDevelopment.testing ? channelDefs : prodChannelDefs
   )) {
     const key = _key as ChannelKey;
     for (const c of actualChannels) {
@@ -344,7 +344,7 @@ export const initDiscord = async () => {
   return await new Promise(async (resolve, reject) => {
     discordClient.once(Events.ClientReady, async () => {
       writeStatusForAuditor("logged-in");
-      const guildInfo = cache.discordGuildInfo.value;
+      const guildInfo = await cache.discordGuildInfo.value();
       if (guildInfo) {
         debugLog("Cached server information found.");
         // TODO use runtypes to throw (or warn?) if guildInfo is malformed.

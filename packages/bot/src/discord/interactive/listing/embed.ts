@@ -16,7 +16,7 @@ export const colors = {
   interacted: "#424549" as ColorResolvable,
 };
 
-const listingEmbed = (l: Listing) => {
+const listingEmbed = async (l: Listing) => {
   const location =
     l.computed?.locationLinkText && l.computed?.locationLinkURL
       ? discordFormat(
@@ -48,7 +48,24 @@ const listingEmbed = (l: Listing) => {
     .filter(notUndefined)
     .join("‎    ‎    ‎      ‎ ");
 
-  const dests = Object.keys(l.computed?.commuteDestinations ?? {});
+  const commutes = await Object.keys(l.computed?.commuteDestinations ?? {})
+    .map(async (d) => {
+      const o = getCommuteOrigin(l);
+      const summ = l.computed?.commuteDestinations?.[d];
+      return !summ || !o
+        ? ""
+        : [
+            Object.keys(l.computed?.commuteDestinations ?? {}).length > 1
+              ? discordFormat(`${await trimAddress(d)}:`, {
+                  italic: true,
+                })
+              : undefined,
+            formatCommuteSummaryMD(summ, o, d),
+          ]
+            .filter(notUndefined)
+            .join("\n");
+    })
+    .join("\n");
 
   return new EmbedBuilder()
     .setColor(colors.uninteracted)
@@ -56,24 +73,7 @@ const listingEmbed = (l: Listing) => {
     .setDescription(
       [
         descriptionHeader,
-        dests
-          .map(async (d) => {
-            const o = getCommuteOrigin(l);
-            const summ = l.computed?.commuteDestinations?.[d];
-            return !summ || !o
-              ? ""
-              : [
-                  dests.length > 1
-                    ? discordFormat(`${await trimAddress(d)}:`, {
-                        italic: true,
-                      })
-                    : undefined,
-                  formatCommuteSummaryMD(summ, o, d),
-                ]
-                  .filter(notUndefined)
-                  .join("\n");
-          })
-          .join("\n"),
+        commutes,
         l.computed?.bulletPoints
           ?.map((p) => {
             const prefix = `- `;

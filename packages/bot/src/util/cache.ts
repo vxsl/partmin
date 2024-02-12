@@ -10,9 +10,9 @@ export class CacheDef<T> {
   private path: string;
   private loaded: T | undefined;
   private label: string;
-  protected readTransform: (read: string) => NonNullable<T>;
+  protected readTransform: (read: string) => NonNullable<T> | undefined;
   protected writeTransform: (v: T) => string;
-  protected validate?: (v: T) => boolean;
+  protected validate?: (v: T) => boolean | Promise<boolean>;
   constructor({
     path,
     envVar,
@@ -24,9 +24,9 @@ export class CacheDef<T> {
     path: string;
     envVar?: string;
     label: string;
-    readTransform: (read: string) => NonNullable<T>;
+    readTransform: (read: string) => NonNullable<T> | undefined;
     writeTransform: (v: T) => string;
-    validate?: (v: T) => boolean;
+    validate?: (v: T) => boolean | Promise<boolean>;
   }) {
     this.path = path;
     this.envVar = envVar;
@@ -38,6 +38,15 @@ export class CacheDef<T> {
     if (read) {
       this.loaded = this.readTransform(read);
     }
+    if (this.loaded === undefined || this.loaded === "") {
+      const env = this.readEnvVar();
+      if (env !== undefined) {
+        this.loaded = this.readTransform(env);
+        if (this.loaded !== undefined) {
+          this.writeValue(this.loaded);
+        }
+      }
+    }
   }
   get envVarInstruction() {
     return this.envVar
@@ -48,13 +57,18 @@ export class CacheDef<T> {
     let result = existsSync(this.path)
       ? readFileSync(this.path, { encoding: "utf-8" })
       : undefined;
-    if (this.envVar && (result === undefined || result === "")) {
-      result = process.env[this.envVar];
-    }
     return result;
   }
-  writeValue(v: T, options?: { skipLog?: boolean }) {
-    if (this.validate && !this.validate(v)) {
+  protected readEnvVar() {
+    if (this.envVar) {
+      return process.env[this.envVar];
+    }
+  }
+  async writeValue(
+    v: T,
+    options?: { skipLog?: boolean; skipValidate?: boolean }
+  ) {
+    if (!options?.skipValidate && this.validate && !(await this.validate(v))) {
       log(`Invalid value for ${this.label}`);
       return;
     }
@@ -65,11 +79,11 @@ export class CacheDef<T> {
     }
     writeFileSync(this.path, s);
   }
-  requireValue(options?: {
+  async requireValue(options?: {
     message?: string;
-  }): NonNullable<T> | Promise<never> {
-    const v = this.value;
-    if (v) {
+  }): Promise<NonNullable<T | never>> {
+    const v = await this.value();
+    if (v !== undefined) {
       return v;
     }
     if (options?.message) {
@@ -81,7 +95,7 @@ export class CacheDef<T> {
       );
     }
   }
-  get value() {
+  async value() {
     if (this.loaded) {
       return this.loaded;
     }
@@ -89,7 +103,7 @@ export class CacheDef<T> {
     const v = read !== undefined ? this.readTransform(read) : undefined;
     if (v) {
       this.writeValue(v);
-      if (this.validate && !this.validate(v)) {
+      if (this.validate && !(await this.validate(v))) {
         return undefined;
       }
     }

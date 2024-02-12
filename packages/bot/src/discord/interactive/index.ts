@@ -42,7 +42,7 @@ type ImmutableState<S extends CustomState> = {
 type ComponentContext<S extends CustomState> = ImmutableState<S> &
   ComponentContextHelpers & {
     componentInteraction: MessageComponentInteraction;
-    apply: () => Promise<InteractionResponse>;
+    apply: () => Promise<InteractionResponse | void>;
   };
 
 // __________________________________________________________________________________________
@@ -242,7 +242,13 @@ export const startInteractive = ({
           componentOrder,
           getButton,
           getStringSelect,
-          apply: () => componentInteraction.update({ embeds, components }),
+          apply: () =>
+            componentInteraction.update({ embeds, components }).catch((e) => {
+              log(`Error while applying component interaction:`, {
+                error: true,
+              });
+              log(e);
+            }),
         });
         if (mutateResult === null) {
           return;

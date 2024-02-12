@@ -210,7 +210,7 @@ export const onSearchParamsChanged = async (driver: WebDriver) => {
     .findElement(By.xpath(`//div[@data-testid="srp-rss-feed-button"]//a`))
     .then((el) => el.getAttribute("href"));
   log(`Kijiji RSS feed: ${rss}`);
-  cache.kijijiRSS.writeValue(rss);
+  await cache.kijijiRSS.writeValue(rss);
 };
 
 export const main = async (): Promise<Listing[]> => {

@@ -46,6 +46,7 @@ export const isDefaultValue = async (
 export const validateConfig = async (c: StaticConfig) => {
   debugLog("Validating config:");
   debugLog(JSON.stringify(c));
+
   if (!c.options?.disableGoogleMapsFeatures) {
     for (const address of c.options?.commuteDestinations ?? []) {
       if (!(await isValidAddress(address))) {
@@ -55,14 +56,6 @@ export const validateConfig = async (c: StaticConfig) => {
       }
     }
   }
-
-  c.search.blacklistRegex?.forEach((r) => {
-    try {
-      new RegExp(r);
-    } catch (e) {
-      throw new Error(`Invalid blacklistRegex in config: ${r}`);
-    }
-  });
 
   const unreliable = JSON.parse(
     JSON.stringify(c.search.params.unreliableParams)
@@ -108,7 +101,7 @@ export const validateConfig = async (c: StaticConfig) => {
 
 export const isConfigChanged = async () => {
   const userFile = await getConfig().then((c) => c.search.params);
-  const cached = await cache.currentSearchParams.value;
+  const cached = await cache.currentSearchParams.value();
   if (!cached) {
     log("No previous search parameters found.");
     return true;

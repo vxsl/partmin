@@ -441,7 +441,7 @@ const editConfig = async (commandInteraction: CommandInteraction) => {
                   "search.params." + newEditPath,
                   v
                 );
-                cache.config.writeValue(newConfig);
+                await cache.config.writeValue(newConfig);
 
                 configPrint = await printSearchParams({ lastConfig });
                 getEmbed(0).setDescription(
