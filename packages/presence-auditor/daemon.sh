@@ -1,6 +1,6 @@
 #!/bin/bash
 
-interval=10
+interval=30
 
 printf partmin-presence-auditor > /proc/$$/comm
 
