@@ -1,5 +1,5 @@
 import cache from "cache.js";
-import { startActivity } from "discord/presence.js";
+import { setPresence, startActivity } from "discord/presence.js";
 import he from "he";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import { baseURL } from "platforms/kijiji/constants.js";
@@ -175,6 +175,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 
 export const onSearchParamsChanged = async (driver: WebDriver) => {
   log("Building new Kijiji RSS feed... (this may take a while)");
+  await setPresence("🧰 building Kijiji RSS feed (this may take a while)...");
   await kijijiGet(baseURL, driver);
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
 
