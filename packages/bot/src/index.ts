@@ -340,6 +340,8 @@ export const fatalError = async (e: unknown) => {
     prevalidateConfig(config);
     validateConfig(config);
 
+    log("Starting main retrieval loop...");
+
     if (!configDevelopment.noRetrieval) {
       await retrieval(driver, [platforms.fb, platforms.kijiji]);
     } else {

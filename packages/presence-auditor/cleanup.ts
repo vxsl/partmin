@@ -31,7 +31,13 @@ const values = Object.fromEntries(
   })
 );
 
-const log = (s: string) => console.log(`[presence-auditor] ${s}`);
+const prefix = "[presence-auditor]";
+const log = (s: string) => console.log(`${prefix} ${s}`);
+const error = (s: string) => console.error(`${prefix} ${s}`);
+
+const crashMessage =
+  "Partmin has gone offline for an unknown reason. Please check the logs for more information.";
+
 (() => {
   log("Bot is no longer running - clearing presence.");
   const c = new Discord.Client({ intents: 0 });
@@ -43,7 +49,7 @@ const log = (s: string) => console.log(`[presence-auditor] ${s}`);
       activities: null,
       afk: true,
     };
-    log(`Logged in. Setting presence to ${JSON.stringify(p)}`);
+    log(`Logged in.`);
 
     const guild = c.guilds.cache.get(values.serverID);
     if (!guild) {
@@ -52,12 +58,12 @@ const log = (s: string) => console.log(`[presence-auditor] ${s}`);
 
     for (const [k, v] of Object.entries(values.guildInfo.channelIDs)) {
       if (!v) {
-        console.error(`Missing channel ID for ${k}`);
+        error(`Missing channel ID for ${k}`);
         continue;
       }
       const channel = await guild.channels.fetch(v as string);
       if (!channel || !channel.isTextBased()) {
-        console.error(`Could not find channel for ${k}`);
+        error(`Could not find channel for ${k}`);
         continue;
       }
 
@@ -71,6 +77,7 @@ const log = (s: string) => console.log(`[presence-auditor] ${s}`);
       );
       if (
         !lastCrash ||
+        lastCrash.embeds[0].description === crashMessage ||
         Date.now() - lastCrash.createdTimestamp > 1000 * 60 * 5
       ) {
         log(
@@ -81,14 +88,14 @@ const log = (s: string) => console.log(`[presence-auditor] ${s}`);
             {
               color: 0xff0000,
               title: "Crash detected",
-              description:
-                "Partmin has gone offline for an unknown reason. Please check the logs for more information.",
+              description: crashMessage,
             },
           ],
         });
       }
     }
 
+    log(`Setting presence to ${JSON.stringify(p)}`);
     c.user.setPresence(p);
 
     log("Done. Logging out...");

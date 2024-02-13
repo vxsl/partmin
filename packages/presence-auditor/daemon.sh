@@ -29,21 +29,27 @@ on_proc_dead() {
     fi
     
     if [ -e "$signal_path" ]; then
-        status=$(cat "$signal_path")
-        if [ "$status" = "logged-out" ]; then
+        bot_status=$(cat "$signal_path")
+        if [ "$bot_status" = "logged-out" ]; then
             plog "noop: graceful shutdown detected"
             status=0
-            elif [ "$status" = "logged-in" ]; then
+            elif [ "$bot_status" = "logged-in" ]; then
             cd $script_dir && yarn workspace presence-auditor cleanup "$signal_path"
+            status=0
         else
-            plog "Unknown status: $status"
+            plog "Unknown status: $bot_status"
             status=1
         fi
     else
         plog "noop: no bot status file found at $signal_path"
         status=0
     fi
-    kill $poll_sleep_pid
+    
+    if ps -p "$poll_sleep_pid" > /dev/null; then
+        plog "Killing poll_sleep_pid: $poll_sleep_pid"
+        kill $poll_sleep_pid
+    fi
+    
     plog "Killing process group..."
     pkill -P $$
     plog "Exiting"
