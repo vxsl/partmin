@@ -92,11 +92,6 @@ const cache = {
     envVar: "DISCORD_APP_ID",
     label: "Discord app ID",
   }),
-  discordGuildID: new StringCacheDef({
-    path: `${dataDir}/discord-server-id`,
-    envVar: "DISCORD_SERVER_ID",
-    label: "Discord guild ID",
-  }),
   discordGuildInfo: new CacheDef<GuildInfo>({
     path: `${dataDir}/discord-guild-info.json`,
     readTransform: parseJSON,

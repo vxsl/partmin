@@ -20,6 +20,7 @@ import {
   ChannelDef,
   ChannelKey,
   channelDefs,
+  discordGuildID,
   prodChannelDefs,
   requiredPermissions,
 } from "discord/constants.js";
@@ -281,11 +282,10 @@ const setupGuild = async (guildInfo: RecursivePartial<GuildInfo>) => {
   let guild: Guild | undefined;
   let role: Role | undefined;
 
-  const id = await cache.discordGuildID.requireValue();
   const appID = await cache.discordAppID.requireValue();
 
   try {
-    guild = await getGuild(id);
+    guild = await getGuild(discordGuildID);
     role = await getRole(guild, appID);
   } catch {}
 
@@ -300,7 +300,7 @@ const setupGuild = async (guildInfo: RecursivePartial<GuildInfo>) => {
     await authorize(
       "It looks like you haven't added partmin to your server yet. Please invite the bot to your preferred server, and come back when you're done",
       async () => {
-        guild = await getGuild(id);
+        guild = await getGuild(discordGuildID);
         role = await getRole(guild, appID);
         return !!guild && !!role;
       }
@@ -333,9 +333,6 @@ const setupGuild = async (guildInfo: RecursivePartial<GuildInfo>) => {
 };
 
 export const initDiscord = async () => {
-  await cache.discordGuildID.requireValue({
-    message: `Your Discord server is not set up. To configure it, please retrieve your server's ID:\n - open Discord\n - right-click your server in the sidebar\n - Server Settings\n - Widget \n - SERVER ID\n\n${cache.discordGuildID.envVarInstruction}\n\nNote that partmin will create channels in this server, so make sure you have the necessary permissions to do so.`,
-  });
   await cache.discordAppID.requireValue({
     message: `Partmin requires a Discord app ID to run. To get this, go to the Discord Developer Portal, create a new application, and retrieve the application ID from the "General Information" section.\n\n${cache.discordAppID.envVarInstruction}`,
   });

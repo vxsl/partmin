@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 import editSearch from "discord/commands/edit-search.js";
 import testListing from "discord/commands/test-listing.js";
+import { discordGuildID } from "discord/constants.js";
 import { discordClient } from "discord/index.js";
 import { log } from "util/log.js";
 import { notUndefined, tryNTimes } from "util/misc.js";
@@ -39,7 +40,6 @@ const commands = [
 const setupCommands = async () => {
   const token = await cache.discordBotToken.requireValue();
   const appID = await cache.discordAppID.requireValue();
-  const guildID = await cache.discordGuildID.requireValue();
 
   const rest = new REST({ timeout: 5000 }).setToken(token);
 
@@ -84,7 +84,9 @@ const setupCommands = async () => {
 
   log("Registering Discord commands");
   await tryNTimes(3, () =>
-    rest.put(Routes.applicationGuildCommands(appID, guildID), { body: coll })
+    rest.put(Routes.applicationGuildCommands(appID, discordGuildID), {
+      body: coll,
+    })
   );
 };
 

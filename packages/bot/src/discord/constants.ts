@@ -7,10 +7,26 @@ import {
   PresenceData,
 } from "discord.js";
 import { PresenceActivityDef } from "discord/presence.js";
+import { load } from "dotenv-mono";
 import { readableSeconds } from "util/data.js";
+import { log } from "util/log.js";
+import { envVarInstruction } from "util/misc.js";
+
+load();
 
 // ------------------------------------------------------------
 // misc. constants
+
+const guildIDEnvVar = "DISCORD_SERVER_ID";
+export const discordGuildID = process.env[guildIDEnvVar]!;
+if (!discordGuildID) {
+  log(
+    `Your Discord server is not set up. To configure it, please retrieve your server's ID:\n - open Discord\n - right-click your server in the sidebar\n - Server Settings\n - Widget \n - SERVER ID\n\n${envVarInstruction(
+      guildIDEnvVar
+    )}\n\nNote that partmin will create channels in this server, so make sure you have the necessary permissions to do so.`
+  );
+  process.exit(1);
+}
 
 export const requiredPermissions = new PermissionsBitField(
   BigInt(1084815309904)

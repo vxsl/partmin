@@ -2,6 +2,7 @@ import dotenv from "dotenv-mono";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { fatalError, shutdown } from "index.js";
 import { debugLog, log } from "util/log.js";
+import { envVarInstruction } from "util/misc.js";
 
 dotenv.load();
 
@@ -49,9 +50,7 @@ export class CacheDef<T> {
     }
   }
   get envVarInstruction() {
-    return this.envVar
-      ? `Paste the value into a .env file at the project root like so:\n${this.envVar}=_____________`
-      : "";
+    return this.envVar ? envVarInstruction(this.envVar) : "";
   }
   protected readValue() {
     let result = existsSync(this.path)
