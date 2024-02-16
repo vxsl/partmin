@@ -38,7 +38,7 @@ const commands = [
   },
 ];
 const setupCommands = async () => {
-  const token = await cache.discordBotToken.requireValue();
+  const token = await cache.botToken.requireValue();
   const appID = await cache.discordAppID.requireValue();
 
   const rest = new REST({ timeout: 5000 }).setToken(token);

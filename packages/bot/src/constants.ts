@@ -1,16 +1,17 @@
 import { PetType, StaticConfig, configDevelopment } from "config.js";
+import { discordGuildID } from "discord/constants.js";
 import { existsSync, mkdirSync } from "fs";
 
-export const dataDir = `${process.cwd()}/.${
-  configDevelopment?.testing ? "test-" : ""
-}data`;
-export const puppeteerCacheDir = `${process.cwd()}/.puppeteer`;
+const dirPrefix = configDevelopment?.testing ? "test-" : "";
+const cwd = process.cwd();
+export const dirs = {
+  data: `${cwd}/.${dirPrefix}data-${discordGuildID}`,
+  commonData: `${cwd}/.${dirPrefix}data`,
+  puppeteerCache: `${cwd}/.puppeteer`,
+};
+Object.values(dirs).forEach((dir) => !existsSync(dir) && mkdirSync(dir));
 
-[dataDir, puppeteerCacheDir].forEach(
-  (dir) => !existsSync(dir) && mkdirSync(dir)
-);
-
-export const statusPathForAuditor = `${dataDir}/discord-bot-status-for-auditor`;
+export const statusPathForAuditor = `${dirs.data}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";
 export const seleniumImplicitWait = 10 * 1000;
 

@@ -60,7 +60,7 @@ export const discordFormat = (s: string, options?: FormatOptions) => {
 };
 
 export const getTextChannel = async (c: ChannelKey) => {
-  const guildInfo = await cache.discordGuildInfo.requireValue();
+  const guildInfo = await cache.channelIDs.requireValue();
   const id = guildInfo.channelIDs[c];
   const result = await (discordClient.channels.cache.get(id) ??
     discordClient.channels.fetch(id));

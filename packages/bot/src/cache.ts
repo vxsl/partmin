@@ -1,6 +1,5 @@
 import { StaticConfig, configDevelopment, prevalidateConfig } from "config.js";
-import { dataDir } from "constants.js";
-import { GuildInfo } from "discord/index.js";
+import { ChannelIDs } from "discord/index.js";
 import { writeFileSync } from "fs";
 import { Listing } from "listing.js";
 import { CacheDef, StringCacheDef } from "util/cache.js";
@@ -14,7 +13,7 @@ const cache = {
   // config
   config: new CacheDef<StaticConfig>({
     label: "config",
-    path: `${dataDir}/config-cached.json`,
+    path: `config-cached.json`,
     validate: async (c) => {
       prevalidateConfig(c);
       await validateConfig(c);
@@ -36,7 +35,7 @@ const cache = {
     },
   }),
   currentSearchParams: new CacheDef<StaticConfig["search"]["params"]>({
-    path: `${dataDir}/current-search-params.json`,
+    path: `current-search-params.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "current search params",
@@ -46,33 +45,37 @@ const cache = {
   commuteSummaries: new CacheDef<
     Record<string, Record<string, CommuteSummary>>
   >({
-    path: `${dataDir}/commute-summaries.json`,
+    path: `commute-summaries.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "commute summaries",
+    common: true,
   }),
   addressValidity: new CacheDef<{ [k: string]: boolean }>({
-    path: `${dataDir}/address-validity.json`,
+    path: `address-validity.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "address validity",
+    common: true,
   }),
   approximateAddresses: new CacheDef<{ [k: string]: [string, string] }>({
-    path: `${dataDir}/approximate-addresses.json`,
+    path: `approximate-addresses.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "address approximations",
+    common: true,
   }),
   googleMapsAPIKey: new StringCacheDef({
-    path: `${dataDir}/google-maps-api-key`,
+    path: `google-maps-api-key`,
     label: "Google Maps API key",
     envVar: "GOOGLE_MAPS_API_KEY",
+    common: true,
   }),
 
   // ---------------------------------------
   // process
   listings: new CacheDef<Listing[]>({
-    path: `${dataDir}/listings.json`,
+    path: `listings.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "all listings",
@@ -81,27 +84,30 @@ const cache = {
   // ---------------------------------------
   // kijiji
   kijijiRSS: new StringCacheDef({
-    path: `${dataDir}/kijiji-rss-url`,
+    path: `kijiji-rss-url`,
     label: "Kijiji RSS feed URL",
+    common: true,
   }),
 
   // ---------------------------------------
   // discord
   discordAppID: new StringCacheDef({
-    path: `${dataDir}/discord-app-id`,
+    path: `discord-app-id`,
     envVar: "DISCORD_APP_ID",
     label: "Discord app ID",
+    common: true,
   }),
-  discordGuildInfo: new CacheDef<GuildInfo>({
-    path: `${dataDir}/discord-guild-info.json`,
+  channelIDs: new CacheDef<ChannelIDs>({
+    path: `channel-ids.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
-    label: "Discord guild info",
+    label: "channel IDs",
   }),
-  discordBotToken: new StringCacheDef({
-    path: `${dataDir}/discord-bot-token`,
+  botToken: new StringCacheDef({
+    path: `bot-token`,
     envVar: "DISCORD_BOT_TOKEN",
-    label: "Discord bot token",
+    label: "bot token",
+    common: true,
   }),
 };
 

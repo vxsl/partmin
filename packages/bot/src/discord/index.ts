@@ -59,7 +59,7 @@ export const getDiscordClient = (options?: {
   return discordClient;
 };
 
-export interface GuildInfo {
+export interface ChannelIDs {
   channelIDs: Record<ChannelKey, string>;
 }
 
@@ -129,7 +129,7 @@ const getChannelsToBeCreated = async ({
   guild,
   guildInfo,
 }: {
-  guildInfo: RecursivePartial<GuildInfo>;
+  guildInfo: RecursivePartial<ChannelIDs>;
   guild: Guild;
 }) => {
   const actualChannels = await guild.channels
@@ -193,7 +193,7 @@ const createChannels = async ({
 }: {
   toCreate: Partial<Record<ChannelKey, ChannelDef>>;
   alreadyExist: Partial<Record<ChannelKey, GuildChannel>>;
-  guildInfo: RecursivePartial<GuildInfo>;
+  guildInfo: RecursivePartial<ChannelIDs>;
   guild: Guild;
 }) => {
   const results: Channel[] = [];
@@ -278,7 +278,7 @@ const createChannels = async ({
   return results;
 };
 
-const setupGuild = async (guildInfo: RecursivePartial<GuildInfo>) => {
+const setupGuild = async (guildInfo: RecursivePartial<ChannelIDs>) => {
   let guild: Guild | undefined;
   let role: Role | undefined;
 
@@ -329,7 +329,7 @@ const setupGuild = async (guildInfo: RecursivePartial<GuildInfo>) => {
     guild,
   });
 
-  return guildInfo as GuildInfo; // TODO use runtypes to throw if info is malformed.
+  return guildInfo as ChannelIDs; // TODO use runtypes to throw if info is malformed.
 };
 
 export const initDiscord = async () => {
@@ -341,13 +341,13 @@ export const initDiscord = async () => {
   return await new Promise(async (resolve, reject) => {
     discordClient.once(Events.ClientReady, async () => {
       writeStatusForAuditor("logged-in");
-      const guildInfo = await cache.discordGuildInfo.value();
+      const guildInfo = await cache.channelIDs.value();
       if (guildInfo) {
         debugLog("Cached server information found.");
         // TODO use runtypes to throw (or warn?) if guildInfo is malformed.
       }
       await setupGuild(guildInfo ?? {}).then((newGuildInfo) =>
-        cache.discordGuildInfo.writeValue(newGuildInfo)
+        cache.channelIDs.writeValue(newGuildInfo)
       );
       await setupCommands();
       log("Server configuration complete");
@@ -360,8 +360,8 @@ export const initDiscord = async () => {
     discordClient.once("error", reject);
 
     log("Discord client logging in...");
-    const token = await cache.discordBotToken.requireValue({
-      message: `Partmin requires a Discord bot token to run. ${cache.discordBotToken.envVarInstruction}`,
+    const token = await cache.botToken.requireValue({
+      message: `Partmin requires a Discord bot token to run. ${cache.botToken.envVarInstruction}`,
     });
     await discordClient.login(token);
   });
