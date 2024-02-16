@@ -338,7 +338,7 @@ export const fatalError = async (e: unknown) => {
 
     setPresence("online");
     prevalidateConfig(config);
-    validateConfig(config);
+    await validateConfig(config);
 
     log("Starting main retrieval loop...");
 
