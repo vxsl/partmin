@@ -1,3 +1,4 @@
+import { logLevels } from "advanced-config.js";
 import { presenceActivities } from "discord/constants.js";
 import { startActivity } from "discord/presence.js";
 import dotenv from "dotenv-mono";
@@ -8,7 +9,7 @@ import {
   ensureLocationLink,
   isValid,
 } from "listing.js";
-import { getConfig } from "util/config.js";
+import { getUserConfig } from "util/config.js";
 import { isWithinRadii } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
 
@@ -22,7 +23,7 @@ export const processListings = async (unseenListings: Listing[]) => {
     presenceActivities.processing,
     unseenListings.length
   );
-  const config = await getConfig();
+  const config = await getUserConfig();
   const [validResults, invalidResults] = await unseenListings.reduce<
     Promise<[Listing[], Listing[]]>
   >(async (promises, l, i) => {
@@ -44,7 +45,7 @@ export const processListings = async (unseenListings: Listing[]) => {
   log(
     `${validResults.length} new valid result${
       validResults.length !== 1 ? "s" : ""
-    }${validResults.length && config.logging?.verbose ? ":" : "."}`
+    }${validResults.length && logLevels.verbose ? ":" : "."}`
   );
   if (validResults.length) {
     verboseLog(validResults.map((l) => l.url).join(", "));
@@ -54,7 +55,7 @@ export const processListings = async (unseenListings: Listing[]) => {
     log(
       `${invalidResults.length} invalid result${
         invalidResults.length !== 1 ? "s" : ""
-      }${config.logging?.verbose ? ":" : "."}`
+      }${logLevels.verbose ? ":" : "."}`
     );
     verboseLog(
       invalidResults
@@ -75,15 +76,14 @@ export const processListings = async (unseenListings: Listing[]) => {
   return validResults;
 };
 
-export const preprocessListings = async (listings: Listing[]) => {
-  const config = await getConfig();
+export const preprocessListings = (listings: Listing[]) => {
   return listings.filter(async (l) => {
     if (!l.details.coords) return true;
     const v = await isWithinRadii(l.details.coords);
     if (!v) {
       log(
         `Listing ${getListingKey(l)} is outside of the search area${
-          config.logging?.verbose ? "." : ""
+          logLevels.verbose ? "." : ""
         }`
       );
       verboseLog(l);

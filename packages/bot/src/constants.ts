@@ -1,8 +1,9 @@
-import { PetType, StaticConfig, configDevelopment } from "config.js";
+import { devOptions } from "advanced-config.js";
 import { discordGuildID } from "discord/constants.js";
 import { existsSync, mkdirSync } from "fs";
+import { PetType, StaticUserConfig } from "user-config.js";
 
-const dirPrefix = configDevelopment?.testing ? "test-" : "";
+const dirPrefix = devOptions?.testing ? "test-" : "";
 const cwd = process.cwd();
 export const dirs = {
   data: `${cwd}/.${dirPrefix}data-${discordGuildID}`,
@@ -17,7 +18,7 @@ export const seleniumImplicitWait = 10 * 1000;
 
 export const searchParamsBlacklist: Omit<
   Record<
-    keyof NonNullable<StaticConfig["search"]["params"]["exclude"]>,
+    keyof NonNullable<StaticUserConfig["search"]["params"]["exclude"]>,
     (string | RegExp)[]
   >,
   "basements"

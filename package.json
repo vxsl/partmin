@@ -71,7 +71,7 @@
       },
       {
         "files": [
-          "config.ts"
+          "advanced-config.ts"
         ],
         "rules": {
           "no-restricted-imports": "off"

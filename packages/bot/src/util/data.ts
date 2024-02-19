@@ -1,5 +1,3 @@
-import { getConfig } from "util/config.js";
-
 const sqFtToSqMetersRatio = 0.092903;
 export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
 export const sqMetersToSqft = (m2: number) => m2 / sqFtToSqMetersRatio;
@@ -77,27 +75,11 @@ export const findNestedJSONProperty = (
   return undefined;
 };
 
-const sanitizeString = (s: string) =>
+export const sanitizeString = (s: string) =>
   s
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
-
-export const trimAddress = async (address: string): Promise<string> => {
-  const config = await getConfig();
-  const city = sanitizeString(config.search.location.city);
-  const prov = sanitizeString(config.search.location.region);
-  const cityIndex = sanitizeString(address).lastIndexOf(city);
-  const provIndex = sanitizeString(address).lastIndexOf(prov);
-  if (cityIndex === 0 || provIndex <= cityIndex) {
-    return address;
-  }
-  const result = address.substring(0, cityIndex).trim();
-  if (result[result.length - 1] === ",") {
-    return result.substring(0, result.length - 1);
-  }
-  return result;
-};
 
 export const abbreviateDuration = (input: string) =>
   input
@@ -136,3 +118,42 @@ export const readableSeconds = (s: number) => {
 
 export const maxEmptyLines = (s: string, n: number) =>
   s.replace(new RegExp("\\n{" + Number(n + 2) + ",}", "g"), "\n".repeat(n + 1));
+
+export const aOrAn = (word: string) =>
+  "aeiou".includes(word[0]?.toLowerCase() ?? "") ? `an ${word}` : `a ${word}`;
+
+export interface DiscordFormatOptions {
+  monospace?: true;
+  bold?: true;
+  italic?: true;
+  code?: boolean | string;
+  quote?: boolean;
+  link?: string;
+  underline?: boolean;
+}
+export const discordFormat = (s: string, options?: DiscordFormatOptions) => {
+  let v =
+    options?.code === true
+      ? `\`\`\`${s}\`\`\``
+      : options?.code
+      ? `\`\`\`${options.code}\n${s}\`\`\``
+      : options?.monospace
+      ? `\`${s}\``
+      : s;
+  if (options?.bold) {
+    v = `**${v}**`;
+  }
+  if (options?.italic) {
+    v = `*${v}*`;
+  }
+  if (options?.underline) {
+    v = `__${v}__`;
+  }
+  if (options?.quote) {
+    v = `> ${v.replace(/\n/g, "\n> ")}`;
+  }
+  if (options?.link) {
+    v = `[${v}](${options.link})`;
+  }
+  return v;
+};

@@ -1,29 +1,30 @@
 import cache from "cache.js";
-import {
-  StaticConfig,
-  defaultConfigValues,
-  unreliabilityExplanations,
-} from "config.js";
 import { discordFormat, discordWarning } from "discord/util.js";
+import {
+  StaticUserConfig,
+  defaultUserConfigValues,
+  unreliabilityExplanations,
+} from "user-config.js";
 import { accessNestedProperty } from "util/data.js";
 import { isValidAddress } from "util/geo.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 
-export const getConfig = async () => await cache.config.requireValue();
+export const getUserConfig = async () =>
+  await cache.cachedUserConfig.requireValue();
 
 export const isDefaultValue = async (
-  path: string | ((config: StaticConfig) => any),
+  path: string | ((config: StaticUserConfig) => any),
   options?: {
-    baseNest?: (config: StaticConfig) => any;
+    baseNest?: (config: StaticUserConfig) => any;
   }
 ) => {
   let actual, expected;
   try {
-    const config = await getConfig();
+    const config = await getUserConfig();
     const nestedConfig = options?.baseNest ? options.baseNest(config) : config;
     const nestedDefault = options?.baseNest
-      ? options.baseNest(defaultConfigValues as unknown as StaticConfig)
-      : (defaultConfigValues as unknown as StaticConfig);
+      ? options.baseNest(defaultUserConfigValues as unknown as StaticUserConfig)
+      : (defaultUserConfigValues as unknown as StaticUserConfig);
     if (typeof path === "string") {
       actual = accessNestedProperty(nestedConfig, path);
       expected = accessNestedProperty(nestedDefault, path);
@@ -43,8 +44,8 @@ export const isDefaultValue = async (
   return actual === expected;
 };
 
-export const validateConfig = async (c: StaticConfig) => {
-  debugLog("Validating config:");
+export const dynamicValidateUserConfig = async (c: StaticUserConfig) => {
+  debugLog("Validating user config:");
   debugLog(JSON.stringify(c));
 
   if (!c.options?.disableGoogleMapsFeatures) {
@@ -57,11 +58,13 @@ export const validateConfig = async (c: StaticConfig) => {
     }
   }
 
+  const advancedConfig = await cache.cachedAdvancedConfig.value();
+
   const unreliable = JSON.parse(
     JSON.stringify(c.search.params.unreliableParams)
   ) as typeof c.search.params.unreliableParams;
   if (
-    c.botBehaviour?.suppressUnreliableParamsWarning ||
+    advancedConfig?.botBehaviour?.suppressUnreliableParamsWarning ||
     !unreliable ||
     !c.search.params.unreliableParams
   ) {
@@ -99,27 +102,27 @@ export const validateConfig = async (c: StaticConfig) => {
   }
 };
 
-export const isConfigChanged = async () => {
-  const userFile = await getConfig().then((c) => c.search.params);
-  const cached = await cache.currentSearchParams.value();
+export const isUserConfigChanged = async () => {
+  const userFile = await getUserConfig();
+  const cached = await cache.userConfig.value();
   if (!cached) {
-    log("No previous search parameters found.");
+    log("No previous configuration found.");
     return true;
   }
   if (JSON.stringify(cached) === JSON.stringify(userFile)) {
-    verboseLog("No change in search parameters detected.");
+    verboseLog("No change in configuration detected.");
     return false;
   }
-  log("Change in search parameters detected.");
+  log("Change in configuration detected.");
   return true;
 };
 
-export const ifConfigChanged = async (callback?: () => void) => {
-  const userFile = await getConfig().then((c) => c.search.params);
-  return isConfigChanged().then(async (changed) => {
+export const ifUserConfigChanged = async (callback?: () => void) => {
+  const userFile = await getUserConfig();
+  return isUserConfigChanged().then(async (changed) => {
     if (changed) {
       await (callback ? callback() : Promise.resolve());
-      cache.currentSearchParams.writeValue(userFile);
+      cache.userConfig.writeValue(userFile);
     }
   });
 };

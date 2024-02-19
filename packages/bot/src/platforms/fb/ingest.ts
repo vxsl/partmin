@@ -1,4 +1,3 @@
-import { PetType } from "config.js";
 import { startActivity } from "discord/presence.js";
 import { discordSend } from "discord/util.js";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
@@ -6,7 +5,8 @@ import { fbListingXpath } from "platforms/fb/constants.js";
 import fb from "platforms/fb/index.js";
 import { By, WebDriver } from "selenium-webdriver";
 import { PlatformKey } from "types/platform.js";
-import { getConfig } from "util/config.js";
+import { PetType } from "user-config.js";
+import { getUserConfig } from "util/config.js";
 import {
   acresToSqft,
   findNestedJSONProperty,
@@ -107,7 +107,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
     // TODO
   }
 
-  const config = await getConfig();
+  const config = await getUserConfig();
 
   try {
     const params = config.search.params;
@@ -272,7 +272,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 };
 
 export const visitMarketplace = async (driver: WebDriver, radius: Radius) => {
-  const config = await getConfig();
+  const config = await getUserConfig();
   const vals = {
     // location:
     latitude: radius.lat,
@@ -334,7 +334,7 @@ export const visitMarketplace = async (driver: WebDriver, radius: Radius) => {
 };
 
 export const getListings = async (driver: WebDriver): Promise<Listing[]> => {
-  const config = await getConfig();
+  const config = await getUserConfig();
 
   verboseLog("Waiting for search page to be ready");
   await elementShouldExist("css", '[aria-label="Search Marketplace"]', driver);
@@ -400,7 +400,7 @@ export const getListings = async (driver: WebDriver): Promise<Listing[]> => {
 };
 
 export const main = async (driver: WebDriver) => {
-  const config = await getConfig();
+  const config = await getUserConfig();
   const listings: Listing[] = [];
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
   let listingCount = 0;

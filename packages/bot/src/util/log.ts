@@ -1,4 +1,4 @@
-import { LogLevel, logLevels } from "config.js";
+import { LogLevel, logLevels } from "advanced-config.js";
 import { discordSend } from "discord/util.js";
 import { errToString, isPlainObject } from "util/misc.js";
 

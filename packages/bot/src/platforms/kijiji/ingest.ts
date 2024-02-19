@@ -7,9 +7,8 @@ import kijiji from "platforms/kijiji/index.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
 import { By, WebDriver, until } from "selenium-webdriver";
-import { getConfig } from "util/config.js";
-import { trimAddress } from "util/data.js";
-import { getGoogleMapsLink } from "util/geo.js";
+import { getUserConfig } from "util/config.js";
+import { getGoogleMapsLink, trimAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
 import { notUndefined, waitSeconds } from "util/misc.js";
 import { clickByXPath, manualClear, type, withElement } from "util/selenium.js";
@@ -79,7 +78,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
     // TODO
   }
 
-  const config = await getConfig();
+  const config = await getUserConfig();
 
   try {
     const attrs = data.viewItemPage.viewItemData.adAttributes.attributes.filter(
@@ -179,7 +178,7 @@ export const onSearchParamsChanged = async (driver: WebDriver) => {
   await kijijiGet(baseURL, driver);
   await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
 
-  const config = await getConfig();
+  const config = await getUserConfig();
 
   await waitSeconds(2); // TODO don't arbitrary wait. Figure out the multiple renders of this element
   await withElement(

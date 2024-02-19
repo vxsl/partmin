@@ -1,8 +1,8 @@
 import axios from "axios";
 import cache from "cache.js";
 import haversine from "haversine";
-import { getConfig } from "util/config.js";
-import { abbreviateDuration } from "util/data.js";
+import { getUserConfig } from "util/config.js";
+import { abbreviateDuration, sanitizeString } from "util/data.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined } from "util/misc.js";
 
@@ -105,7 +105,7 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
 };
 
 export const isWithinRadii = async (coords: Coordinates) => {
-  const config = await getConfig();
+  const config = await getUserConfig();
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
   verboseLog(
     `checking if ${Coordinates.toString(coords)} is within ${
@@ -277,4 +277,20 @@ export const formatCommuteSummaryMD = (
   return `[*${commuteModes
     .map((mode) => `${commuteEmojis[mode]}${abbreviateDuration(summary[mode])}`)
     .join("  ")}*](${url})`;
+};
+
+export const trimAddress = async (address: string): Promise<string> => {
+  const config = await getUserConfig();
+  const city = sanitizeString(config.search.location.city);
+  const prov = sanitizeString(config.search.location.region);
+  const cityIndex = sanitizeString(address).lastIndexOf(city);
+  const provIndex = sanitizeString(address).lastIndexOf(prov);
+  if (cityIndex === 0 || provIndex <= cityIndex) {
+    return address;
+  }
+  const result = address.substring(0, cityIndex).trim();
+  if (result[result.length - 1] === ",") {
+    return result.substring(0, result.length - 1);
+  }
+  return result;
 };

@@ -1,7 +1,7 @@
-import { StaticConfig } from "config.js";
 import { ensureFilterIsOpen, getFilterXpath } from "platforms/kijiji/util.js";
 import { WebDriver } from "selenium-webdriver";
-import { getConfig } from "util/config.js";
+import { StaticUserConfig } from "user-config.js";
+import { getUserConfig } from "util/config.js";
 import {
   clickAllByXPath,
   clickByXPath,
@@ -12,13 +12,13 @@ import {
 export class FilterDef<V> {
   constructor(
     public id: string,
-    public getConfigValue: (c: StaticConfig) => V,
+    public getConfigValue: (c: StaticUserConfig) => V,
     public noopCondition: (v: V) => boolean,
     public func: (d: WebDriver, v: V, xpath: string) => void
   ) {}
   static fromObject<V>(obj: {
     id: string;
-    getConfigValue: (c: StaticConfig) => V;
+    getConfigValue: (c: StaticUserConfig) => V;
     noopCondition: (v: V) => boolean;
     func: (d: WebDriver, v: V, xpath: string) => void;
   }) {
@@ -40,11 +40,11 @@ type RecursiveMap<O> = {
 };
 
 export type FilterInteractionsMap = RecursiveMap<
-  StaticConfig["search"]["params"]
+  StaticUserConfig["search"]["params"]
 >;
 
 export const doFilter = async <V>(d: WebDriver, f: FilterDef<V>) => {
-  const config = await getConfig();
+  const config = await getUserConfig();
   const v = f.getConfigValue(config);
   if (f.noopCondition(v)) {
     return;

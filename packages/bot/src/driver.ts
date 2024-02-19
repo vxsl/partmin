@@ -1,5 +1,5 @@
 import { Browser, getInstalledBrowsers, install } from "@puppeteer/browsers";
-import { configDevelopment } from "config.js";
+import { devOptions } from "advanced-config.js";
 import { chromeVersion, dirs, seleniumImplicitWait } from "constants.js";
 import { Builder } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
@@ -26,10 +26,10 @@ export const buildDriver = async () => {
 
   const args: string[] = [];
   args.push("--disable-gpu", "--disable-software-rasterizer");
-  if (configDevelopment?.noSandbox) {
+  if (devOptions?.noSandbox) {
     args.push("--no-sandbox");
   }
-  if (!configDevelopment?.headed) {
+  if (!devOptions?.headed) {
     args.push(
       "--headless",
       "--start-maximized",

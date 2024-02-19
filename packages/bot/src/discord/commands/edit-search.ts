@@ -19,7 +19,7 @@ import {
 } from "discord/interactive/index.js";
 import { discordFormat, discordWarning } from "discord/util.js";
 import { Reflect, ValidationError } from "runtypes";
-import { getConfig, isDefaultValue } from "util/config.js";
+import { getUserConfig, isDefaultValue } from "util/config.js";
 import {
   accessNestedProperty,
   accessParentOfNestedProperty,
@@ -155,7 +155,7 @@ const printSearchParams = async ({
 }: {
   lastConfig?: StaticConfig;
 } = {}) => {
-  const config = await getConfig();
+  const config = await getUserConfig();
   const { min: _min, full: _full } = await recursivePrint({
     runtype: SearchParams,
     config,
@@ -402,7 +402,7 @@ const editSearch = async (commandInteraction: CommandInteraction) => {
                 log(e);
               });
 
-              const { ...config } = await getConfig();
+              const { ...config } = await getUserConfig();
               const v = castStringToRuntype(
                 field,
                 submitted.fields.getTextInputValue(ids.valueEditInput).trim()

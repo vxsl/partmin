@@ -1,6 +1,6 @@
 import { petsBlacklist, searchParamsBlacklist } from "constants.js";
 import { PlatformKey } from "types/platform.js";
-import { getConfig } from "util/config.js";
+import { getUserConfig } from "util/config.js";
 import { conditionalSpreads } from "util/data.js";
 import {
   CommuteSummary,
@@ -101,7 +101,7 @@ export const getCommuteOrigin = (l: Listing) =>
 
 export const addCommuteSummary = async (l: Listing) => {
   const origin = getCommuteOrigin(l);
-  const config = await getConfig();
+  const config = await getUserConfig();
   if (origin && config.options?.commuteDestinations?.length) {
     for (const dest of config.options?.commuteDestinations) {
       await getCommuteSummary(origin, dest).then((summ) => {
@@ -125,7 +125,7 @@ const blacklistMatch = (v: BlacklistEntry, s: string | undefined) =>
   s === undefined ? false : typeof v === "string" ? s.includes(v) : s.match(v);
 
 export const checkForBlacklist = async (l: Listing) => {
-  const config = await getConfig();
+  const config = await getUserConfig();
   const report = (v: BlacklistEntry, f: string) => `'${v}' in ${f}`;
 
   const desc = l.details.longDescription?.toLowerCase();

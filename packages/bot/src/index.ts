@@ -1,5 +1,5 @@
+import { devOptions } from "advanced-config.js";
 import cache from "cache.js";
-import { configDevelopment, initConfig, prevalidateConfig } from "config.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
 import {
@@ -20,11 +20,7 @@ import psList from "ps-list";
 import { WebDriver } from "selenium-webdriver";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
-import {
-  ifConfigChanged,
-  isConfigChanged,
-  validateConfig,
-} from "util/config.js";
+import { ifUserConfigChanged, isUserConfigChanged } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
 
@@ -36,7 +32,7 @@ let driver: WebDriver | undefined;
 export let shuttingDown = false;
 
 const logBreakIfConfigChanged = async (platform: string) => {
-  const res = await isConfigChanged();
+  const res = await isUserConfigChanged();
   if (res) {
     log(`Config change detected, aborting ${platform} retrieval loop`);
   }
@@ -45,7 +41,7 @@ const logBreakIfConfigChanged = async (platform: string) => {
 
 const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
   while (true) {
-    await ifConfigChanged(async () => {
+    await ifUserConfigChanged(async () => {
       for (const {
         callbacks: { onSearchParamsChanged },
         name: platform,
@@ -100,7 +96,7 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
       // pre-process listings before per-listing callbacks
       let listings: Listing[] = [];
       try {
-        listings = await preprocessListings(allListings);
+        listings = preprocessListings(allListings);
         if (!listings.length) {
           log(`No listings found within the search area.`);
           continue;
@@ -319,30 +315,17 @@ export const fatalError = async (e: unknown) => {
 
 (async () => {
   try {
-    const config = await initConfig();
-
-    if (config?.options?.disableGoogleMapsFeatures) {
-      log(
-        "Google Maps features are disabled. You can enable them by removing the 'options.disableGoogleMapsFeatures' config option."
-      );
-    } else {
-      await cache.googleMapsAPIKey.requireValue({
-        message: `A Google Maps API key with permissions for the Geocoding and Distance Matrix APIs is required for some partmin features. ${cache.googleMapsAPIKey.envVarInstruction}\n\nYou may disable these features by setting the 'options.disableGoogleMapsFeatures' config option.`,
-      });
-    }
-
     await initDiscord();
+
     setPresence("launching");
     reinitializeInteractiveListingMessages();
     driver = await buildDriver();
 
     setPresence("online");
-    prevalidateConfig(config);
-    await validateConfig(config);
 
     log("Starting main retrieval loop...");
 
-    if (!configDevelopment.noRetrieval) {
+    if (!devOptions.noRetrieval) {
       await retrieval(driver, [platforms.fb, platforms.kijiji]);
     } else {
       log("Skipping retrieval loop according to config option.");

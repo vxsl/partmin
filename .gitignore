@@ -10,6 +10,8 @@ todo.md
 **/.test-data
 .scratchpad.md
 config.json
+advanced-config.json
+user-config.json
 *.log
 **/.puppeteer/*
 **/nohup.out

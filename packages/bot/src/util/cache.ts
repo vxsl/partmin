@@ -7,16 +7,19 @@ import { envVarInstruction } from "util/misc.js";
 
 dotenv.load();
 
-interface CacheDefConstructorArgs {
+type StringCacheDefConstructorArgs<T> = {
   path: string;
   envVar?: string;
   label: string;
+  validate?: (v: T) => boolean | Promise<boolean>;
+} & (
+  | { common?: boolean; absolutePath?: undefined }
+  | { common?: undefined; absolutePath: true }
+);
+type CacheDefConstructorArgs<T> = StringCacheDefConstructorArgs<T> & {
   readTransform: (read: string) => NonNullable<T> | undefined;
   writeTransform: (v: T) => string;
-  validate?: (v: T) => boolean | Promise<boolean>;
-  common?: boolean;
-}
-
+};
 export class CacheDef<T> {
   envVar?: string;
   private path: string;
@@ -25,7 +28,6 @@ export class CacheDef<T> {
   protected readTransform: (read: string) => NonNullable<T> | undefined;
   protected writeTransform: (v: T) => string;
   protected validate?: (v: T) => boolean | Promise<boolean>;
-  protected common: boolean;
   constructor({
     path,
     envVar,
@@ -34,9 +36,11 @@ export class CacheDef<T> {
     writeTransform,
     validate,
     common,
-  }: CacheDefConstructorArgs) {
-    this.common = !!common;
-    this.path = `${common ? dirs.commonData : dirs.data}/${path}`;
+    absolutePath,
+  }: CacheDefConstructorArgs<T>) {
+    this.path = `${
+      absolutePath ? path : common ? dirs.commonData : dirs.data
+    }/${path}`;
     this.envVar = envVar;
     this.label = label;
     this.readTransform = readTransform;
@@ -118,9 +122,7 @@ export class CacheDef<T> {
 }
 
 export class StringCacheDef extends CacheDef<string> {
-  constructor(
-    arg: Omit<CacheDefConstructorArgs, "readTransform" | "writeTransform">
-  ) {
+  constructor(arg: StringCacheDefConstructorArgs<string>) {
     super({
       ...arg,
       readTransform: (read) => read,

@@ -1,5 +1,5 @@
+import { devOptions } from "advanced-config.js";
 import cache from "cache.js";
-import { configDevelopment } from "config.js";
 import {
   BitField,
   CategoryChannel,
@@ -14,7 +14,6 @@ import {
   Role,
   TextChannel,
 } from "discord.js";
-import { greetings } from "discord/chat.js";
 import setupCommands from "discord/commands/index.js";
 import {
   ChannelDef,
@@ -25,10 +24,9 @@ import {
   requiredPermissions,
 } from "discord/constants.js";
 import { setPresence } from "discord/presence.js";
-import { discordSend, writeStatusForAuditor } from "discord/util.js";
+import { writeStatusForAuditor } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { stdout as singleLineStdOut } from "single-line-log";
-import { getConfig } from "util/config.js";
 import { debugLog, log, logNoDiscord } from "util/log.js";
 import { waitSeconds } from "util/misc.js";
 import { RecursivePartial } from "util/type.js";
@@ -149,7 +147,7 @@ const getChannelsToBeCreated = async ({
   const alreadyExist: Partial<Record<ChannelKey, GuildChannel>> = {};
   const toCreate: Partial<Record<ChannelKey, ChannelDef>> = {};
   for (const [_key, def] of Object.entries(
-    configDevelopment.testing ? channelDefs : prodChannelDefs
+    devOptions.testing ? channelDefs : prodChannelDefs
   )) {
     const key = _key as ChannelKey;
     for (const c of actualChannels) {
@@ -336,7 +334,6 @@ export const initDiscord = async () => {
   await cache.discordAppID.requireValue({
     message: `Partmin requires a Discord app ID to run. To get this, go to the Discord Developer Portal, create a new application, and retrieve the application ID from the "General Information" section.\n\n${cache.discordAppID.envVarInstruction}`,
   });
-  const config = await getConfig();
 
   return await new Promise(async (resolve, reject) => {
     discordClient.once(Events.ClientReady, async () => {
@@ -352,9 +349,7 @@ export const initDiscord = async () => {
       await setupCommands();
       log("Server configuration complete");
       initComplete = true;
-      if (!config.botBehaviour?.suppressGreeting) {
-        discordSend(greetings[Math.floor(Math.random() * greetings.length)]);
-      }
+
       resolve(discordClient);
     });
     discordClient.once("error", reject);

@@ -1,5 +1,5 @@
+import { devOptions } from "advanced-config.js";
 import cache from "cache.js";
-import { configDevelopment } from "config.js";
 import { statusPathForAuditor } from "constants.js";
 import { ChannelType, DiscordAPIError, MessageCreateOptions } from "discord.js";
 import {
@@ -16,12 +16,9 @@ import {
 } from "discord/interactive/index.js";
 import { writeFileSync } from "fs";
 import { shuttingDown } from "index.js";
+import { DiscordFormatOptions } from "util/data.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { errToString, splitString } from "util/misc.js";
-
-type DiscordBotLoggedInStatus = "logged-in" | "logged-out";
-export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
-  writeFileSync(statusPathForAuditor, status);
 
 interface FormatOptions {
   monospace?: true;
@@ -58,6 +55,10 @@ export const discordFormat = (s: string, options?: FormatOptions) => {
   }
   return v;
 };
+
+type DiscordBotLoggedInStatus = "logged-in" | "logged-out";
+export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
+  writeFileSync(statusPathForAuditor, status);
 
 export const getTextChannel = async (c: ChannelKey) => {
   const guildInfo = await cache.channelIDs.requireValue();
@@ -127,7 +128,7 @@ export type DiscordSendOptions = {
   skipLog?: true;
   silent?: true;
   createOptions?: MessageCreateOptions;
-} & FormatOptions;
+} & DiscordFormatOptions;
 
 const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
   if (!discordIsReady()) {
@@ -141,8 +142,7 @@ const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
     return;
   }
   const k: ChannelKey =
-    options?.channel ??
-    (configDevelopment.testing ? "test-listings" : "listings");
+    options?.channel ?? (devOptions.testing ? "test-listings" : "listings");
   const c = await getTextChannel(k);
 
   const flags = channelDefs[k].msgFlags;

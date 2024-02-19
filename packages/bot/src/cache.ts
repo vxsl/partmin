@@ -1,9 +1,19 @@
-import { StaticConfig, configDevelopment, prevalidateConfig } from "config.js";
+import {
+  StaticAdvancedConfig,
+  advancedConfigPath,
+  devOptions,
+  validateAdvancedConfig,
+} from "advanced-config.js";
 import { ChannelIDs } from "discord/index.js";
 import { writeFileSync } from "fs";
 import { Listing } from "listing.js";
+import {
+  StaticUserConfig,
+  userConfigPath,
+  validateUserConfig,
+} from "user-config.js";
 import { CacheDef, StringCacheDef } from "util/cache.js";
-import { validateConfig } from "util/config.js";
+import { dynamicValidateUserConfig } from "util/config.js";
 import { CommuteSummary } from "util/geo.js";
 import { parseJSON } from "util/io.js";
 import { log } from "util/log.js";
@@ -11,34 +21,76 @@ import { log } from "util/log.js";
 const cache = {
   // ---------------------------------------
   // config
-  config: new CacheDef<StaticConfig>({
+  advancedConfig: new CacheDef<StaticAdvancedConfig>({
+    label: "advanced config",
+    path: advancedConfigPath,
+    absolutePath: true,
+    readTransform: parseJSON,
+    writeTransform: (v) => {
+      if (!devOptions.preventConfigOverwrite) {
+        log(
+          "The advanced config file is being overwritten, since 'preventConfigOverwrite' is not set."
+        );
+        writeFileSync(
+          "../../config/advanced-config.json",
+          JSON.stringify(v, null, 2)
+        );
+      } else {
+        log(
+          "WARNING: The advanced config file will not be overwritten, since 'preventConfigOverwrite' is set."
+        );
+      }
+      return JSON.stringify(v);
+    },
+    validate: (c) => {
+      validateAdvancedConfig(c);
+      return true;
+    },
+  }),
+  cachedAdvancedConfig: new CacheDef<StaticAdvancedConfig>({
+    label: "cached advanced config",
+    path: `advanced-config-cached.json`,
+    readTransform: parseJSON,
+    writeTransform: JSON.stringify,
+    validate: (c) => {
+      validateAdvancedConfig(c);
+      return true;
+    },
+  }),
+  cachedUserConfig: new CacheDef<StaticUserConfig>({
     label: "config",
-    path: `config-cached.json`,
+    path: `user-config-cached.json`,
     validate: async (c) => {
-      prevalidateConfig(c);
-      await validateConfig(c);
+      validateUserConfig(c);
+      await dynamicValidateUserConfig(c);
       return true;
     },
     readTransform: parseJSON,
     writeTransform: (v) => {
-      if (!configDevelopment.preventConfigOverwrite) {
+      if (!devOptions.preventConfigOverwrite) {
         log(
-          "WARNING: The user config file is being overwritten, since 'preventConfigOverwrite' is set."
+          "The user config file is being overwritten, since 'preventConfigOverwrite' is not set."
         );
         writeFileSync("../../config/config.json", JSON.stringify(v, null, 2));
       } else {
         log(
-          "The user config file will not be overwritten, since 'preventConfigOverwrite' is set."
+          "WARNING: The user config file will not be overwritten, since 'preventConfigOverwrite' is set."
         );
       }
       return JSON.stringify(v);
     },
   }),
-  currentSearchParams: new CacheDef<StaticConfig["search"]["params"]>({
-    path: `current-search-params.json`,
+  userConfig: new CacheDef<StaticUserConfig>({
+    absolutePath: true,
+    path: userConfigPath,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
-    label: "current search params",
+    label: "user configuration",
+    validate: async (c) => {
+      validateUserConfig(c);
+      await dynamicValidateUserConfig(c);
+      return true;
+    },
   }),
   // ---------------------------------------
   // geo

@@ -121,8 +121,5 @@ export const nonEmptyArrayOrUndefined = <T>(
 export const randomElement = <T>(arr: T[]): T =>
   arr[Math.floor(Math.random() * arr.length)]!;
 
-export const aOrAn = (word: string) =>
-  "aeiou".includes(word[0]?.toLowerCase() ?? "") ? `an ${word}` : `a ${word}`;
-
 export const envVarInstruction = (name: string) =>
   `Paste the value into a .env file at the project root like so:\n${name}=_____________`;

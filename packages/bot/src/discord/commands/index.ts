@@ -1,5 +1,5 @@
+import { devOptions } from "advanced-config.js";
 import cache from "cache.js";
-import { configDevelopment } from "config.js";
 import {
   Collection,
   CommandInteraction,
@@ -21,23 +21,23 @@ interface Command {
   execute: (interaction: CommandInteraction) => any;
 }
 
-const commands = [
-  configDevelopment.testing
-    ? {
-        data: new SlashCommandBuilder()
-          .setName("test-listing")
-          .setDescription("Sends a test listing."),
-        execute: testListing,
-      }
-    : undefined,
-  {
-    data: new SlashCommandBuilder()
-      .setName("edit-search")
-      .setDescription("Edit your apartment search parameters interactively."),
-    execute: editSearch,
-  },
-];
 const setupCommands = async () => {
+  const commands = [
+    devOptions?.testing
+      ? {
+          data: new SlashCommandBuilder()
+            .setName("test-listing")
+            .setDescription("Sends a test listing."),
+          execute: testListing,
+        }
+      : undefined,
+    {
+      data: new SlashCommandBuilder()
+        .setName("edit-search")
+        .setDescription("Edit your apartment search parameters interactively."),
+      execute: editSearch,
+    },
+  ];
   const token = await cache.botToken.requireValue();
   const appID = await cache.discordAppID.requireValue();
 

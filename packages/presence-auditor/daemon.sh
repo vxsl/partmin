@@ -14,7 +14,7 @@ cd "$script_dir" || (plog "Failed to change directory to $script_dir" && exit 1)
 on_proc_dead() {
     plog "Detected that partmin has stopped running."
     
-    config_path="$script_dir/../../config/config.json"
+    config_path="$script_dir/../../config/advanced-config.json"
     plog "Reading config file at $config_path"
     if [ -e "$config_path" ]; then
         is_test=$(jq -r '.development.testing' "$config_path")

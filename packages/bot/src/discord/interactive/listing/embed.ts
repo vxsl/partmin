@@ -3,12 +3,12 @@ import { ColorResolvable, EmbedBuilder } from "discord.js";
 import { discordFormat } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
-import { getConfig } from "util/config.js";
-import { trimAddress } from "util/data.js";
+import { getUserConfig } from "util/config.js";
 import {
   Coordinates,
   formatCommuteSummaryMD,
   getGoogleMapsLink,
+  trimAddress,
 } from "util/geo.js";
 import { notUndefined } from "util/misc.js";
 
@@ -49,7 +49,7 @@ const listingEmbed = async (l: Listing) => {
     .filter(notUndefined)
     .join("‎    ‎    ‎      ‎ ");
 
-  const config = await getConfig();
+  const config = await getUserConfig();
 
   const commuteOrigin = getCommuteOrigin(l);
   const commutes = await Promise.all(
