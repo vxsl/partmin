@@ -59,7 +59,7 @@ export const dynamicValidateUserConfig = async (c: StaticUserConfig) => {
     }
   }
 
-  const advancedConfig = await persistent.cachedAdvancedConfig.value();
+  const advancedConfig = await persistent.advancedConfig.value();
 
   const unreliable = JSON.parse(
     JSON.stringify(c.search.params.unreliableParams)

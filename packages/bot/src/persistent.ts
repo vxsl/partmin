@@ -47,16 +47,6 @@ const persistent = {
       return true;
     },
   }),
-  cachedAdvancedConfig: new PersistentDataDef<StaticAdvancedConfig>({
-    label: "cached advanced config",
-    path: `advanced-config-cached.json`,
-    readTransform: parseJSON,
-    writeTransform: JSON.stringify,
-    validate: (c) => {
-      validateAdvancedConfig(c);
-      return true;
-    },
-  }),
   cachedUserConfig: new PersistentDataDef<StaticUserConfig>({
     label: "cached user configuration",
     path: `user-config-cached.json`,
