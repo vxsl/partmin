@@ -23,8 +23,7 @@ const persistent = {
   // config
   advancedConfig: new PersistentDataDef<StaticAdvancedConfig>({
     label: "advanced config",
-    path: advancedConfigPath,
-    absolutePath: true,
+    absolutePath: advancedConfigPath,
     readTransform: parseJSON,
     writeTransform: (v) => {
       if (!devOptions.preventConfigOverwrite) {
@@ -71,8 +70,7 @@ const persistent = {
     },
   }),
   userConfig: new PersistentDataDef<StaticUserConfig>({
-    absolutePath: true,
-    path: userConfigPath,
+    absolutePath: userConfigPath,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "user configuration",

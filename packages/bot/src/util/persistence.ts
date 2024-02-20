@@ -8,13 +8,12 @@ import { envVarInstruction } from "util/string.js";
 dotenv.load();
 
 type PersistentStringDefConstructorArgs<T> = {
-  path: string;
   envVar?: string;
   label: string;
   validate?: (v: T) => boolean | Promise<boolean>;
 } & (
-  | { common?: boolean; absolutePath?: undefined }
-  | { common?: undefined; absolutePath: true }
+  | { common?: boolean; path: string; absolutePath?: undefined }
+  | { common?: undefined; path?: undefined; absolutePath: string }
 );
 type PersistentDataDefConstructorArgs<T> =
   PersistentStringDefConstructorArgs<T> & {
@@ -40,9 +39,8 @@ export class PersistentDataDef<T> {
     absolutePath,
   }: PersistentDataDefConstructorArgs<T>) {
     const dirs = getDirs();
-    this.path = `${
-      absolutePath ? path : common ? dirs.commonData : dirs.data
-    }/${path}`;
+    this.path =
+      absolutePath ?? `${common ? dirs.commonData : dirs.data}/${path}`;
     this.envVar = envVar;
     this.label = label;
     this.readTransform = readTransform;

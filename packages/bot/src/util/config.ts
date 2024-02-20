@@ -11,7 +11,8 @@ import { debugLog, log, verboseLog } from "util/log.js";
 import { discordFormat } from "util/string.js";
 
 export const getUserConfig = async () =>
-  await persistent.cachedUserConfig.requireValue();
+  (await persistent.cachedUserConfig.value()) ??
+  (await persistent.userConfig.requireValue());
 
 export const isDefaultValue = async (
   path: string | ((config: StaticUserConfig) => any),
@@ -22,6 +23,7 @@ export const isDefaultValue = async (
   let actual, expected;
   try {
     const config = await getUserConfig();
+
     const nestedConfig = options?.baseNest ? options.baseNest(config) : config;
     const nestedDefault = options?.baseNest
       ? options.baseNest(defaultUserConfigValues as unknown as StaticUserConfig)
@@ -104,8 +106,8 @@ export const dynamicValidateUserConfig = async (c: StaticUserConfig) => {
 };
 
 export const isUserConfigChanged = async () => {
-  const userFile = await getUserConfig();
-  const cached = await persistent.userConfig.value();
+  const cached = await persistent.cachedUserConfig.value();
+  const userFile = await persistent.userConfig.requireValue();
   if (!cached) {
     log("No previous configuration found.");
     return true;
@@ -118,12 +120,14 @@ export const isUserConfigChanged = async () => {
   return true;
 };
 
-export const ifUserConfigChanged = async (callback?: () => void) => {
-  const userFile = await getUserConfig();
+export const ifUserConfigIsChanged = (callback?: () => void) => {
   return isUserConfigChanged().then(async (changed) => {
-    if (changed) {
-      await (callback ? callback() : Promise.resolve());
-      persistent.userConfig.writeValue(userFile);
+    if (!changed) return;
+    if (callback) {
+      await callback();
     }
+    await persistent.userConfig
+      .requireValue()
+      .then(persistent.cachedUserConfig.writeValue);
   });
 };

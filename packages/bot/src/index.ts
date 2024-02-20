@@ -20,7 +20,7 @@ import psList from "ps-list";
 import { WebDriver } from "selenium-webdriver";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
-import { ifUserConfigChanged, isUserConfigChanged } from "util/config.js";
+import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
 
@@ -41,7 +41,7 @@ const logBreakIfConfigChanged = async (platform: string) => {
 
 const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
   while (true) {
-    await ifUserConfigChanged(async () => {
+    await ifUserConfigIsChanged(async () => {
       for (const {
         callbacks: { onSearchParamsChanged },
         name: platform,
