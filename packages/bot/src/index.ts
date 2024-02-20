@@ -1,5 +1,4 @@
 import { defineAdvancedConfig, devOptions } from "advanced-config.js";
-import { createDirsIfNotExist } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
 import {
@@ -322,7 +321,6 @@ export const fatalError = async (e: unknown) => {
 (async () => {
   try {
     await defineAdvancedConfig();
-    createDirsIfNotExist();
     await initDiscord();
     setPresence("launching");
     reinitializeInteractiveListingMessages();

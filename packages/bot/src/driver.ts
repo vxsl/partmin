@@ -1,6 +1,6 @@
 import { Browser, getInstalledBrowsers, install } from "@puppeteer/browsers";
 import { devOptions } from "advanced-config.js";
-import { chromeVersion, dirs, seleniumImplicitWait } from "constants.js";
+import { chromeVersion, getDirs, seleniumImplicitWait } from "constants.js";
 import { Builder } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import { stdout as singleLineStdOut } from "single-line-log";
@@ -10,7 +10,7 @@ const installChrome = () =>
   install({
     browser: Browser.CHROME,
     buildId: chromeVersion,
-    cacheDir: dirs.puppeteerCache,
+    cacheDir: getDirs().puppeteerCache,
     downloadProgressCallback: (downloaded, total) => {
       singleLineStdOut(
         `downloading Chrome (${downloaded}/${total})${
@@ -46,7 +46,7 @@ export const buildDriver = async () => {
   log(`launching Chrome with args: ${args.join(" ")}`);
 
   const browsers = await getInstalledBrowsers({
-    cacheDir: dirs.puppeteerCache,
+    cacheDir: getDirs().puppeteerCache,
   });
   const [b] = browsers;
   if (!b) {

@@ -3,22 +3,24 @@ import { discordGuildID } from "discord/constants.js";
 import { existsSync, mkdirSync } from "fs";
 import { PetType, StaticUserConfig } from "user-config.js";
 
-const dirPrefix = devOptions?.testing ? "test-" : "";
-const cwd = process.cwd();
-export const dirs = {
-  data: `${cwd}/.${dirPrefix}data-${discordGuildID}`,
-  commonData: `${cwd}/.${dirPrefix}data`,
-  puppeteerCache: `${cwd}/.puppeteer`,
-};
-export const createDirsIfNotExist = () => {
+export const getDirs = () => {
+  const dirPrefix = devOptions?.testing ? "test-" : "";
+  const cwd = process.cwd();
+  const dirs = {
+    data: `${cwd}/.${dirPrefix}data-${discordGuildID}`,
+    commonData: `${cwd}/.${dirPrefix}data`,
+    puppeteerCache: `${cwd}/.puppeteer`,
+  };
   for (const dir of Object.values(dirs)) {
     if (!existsSync(dir)) {
       mkdirSync(dir);
     }
   }
+  return dirs;
 };
 
-export const statusPathForAuditor = `${dirs.data}/discord-bot-status-for-auditor`;
+export const getStatusPathForAuditor = () =>
+  `${getDirs().data}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";
 export const seleniumImplicitWait = 10 * 1000;
 

@@ -1,4 +1,4 @@
-import { dirs } from "constants.js";
+import { getDirs } from "constants.js";
 import dotenv from "dotenv-mono";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { fatalError, shutdown } from "index.js";
@@ -39,6 +39,7 @@ export class PersistentDataDef<T> {
     common,
     absolutePath,
   }: PersistentDataDefConstructorArgs<T>) {
+    const dirs = getDirs();
     this.path = `${
       absolutePath ? path : common ? dirs.commonData : dirs.data
     }/${path}`;

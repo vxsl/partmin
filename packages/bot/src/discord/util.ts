@@ -1,5 +1,5 @@
 import { devOptions } from "advanced-config.js";
-import { statusPathForAuditor } from "constants.js";
+import { getStatusPathForAuditor } from "constants.js";
 import { ChannelType, DiscordAPIError, MessageCreateOptions } from "discord.js";
 import {
   ChannelKey,
@@ -26,7 +26,7 @@ import {
 
 type DiscordBotLoggedInStatus = "logged-in" | "logged-out";
 export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
-  writeFileSync(statusPathForAuditor, status);
+  writeFileSync(getStatusPathForAuditor(), status);
 
 export const getTextChannel = async (c: ChannelKey) => {
   const guildInfo = await persistent.channelIDs.requireValue();
