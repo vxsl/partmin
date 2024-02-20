@@ -1,5 +1,6 @@
 import { devOptions } from "advanced-config.js";
 import cache from "cache.js";
+import { createDirsIfNotExist, dirs } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
 import {
@@ -10,6 +11,7 @@ import { setPresence, startActivity } from "discord/presence.js";
 import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
+import { existsSync, mkdirSync } from "fs";
 import { Listing } from "listing.js";
 import {
   getListingKey,
@@ -315,6 +317,8 @@ export const fatalError = async (e: unknown) => {
 
 (async () => {
   try {
+    createDirsIfNotExist();
+
     await initDiscord();
 
     setPresence("launching");

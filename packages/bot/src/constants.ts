@@ -10,7 +10,13 @@ export const dirs = {
   commonData: `${cwd}/.${dirPrefix}data`,
   puppeteerCache: `${cwd}/.puppeteer`,
 };
-Object.values(dirs).forEach((dir) => !existsSync(dir) && mkdirSync(dir));
+export const createDirsIfNotExist = () => {
+  for (const dir of Object.values(dirs)) {
+    if (!existsSync(dir)) {
+      mkdirSync(dir);
+    }
+  }
+};
 
 export const statusPathForAuditor = `${dirs.data}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";
