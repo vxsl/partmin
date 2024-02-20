@@ -16,45 +16,13 @@ import {
 } from "discord/interactive/index.js";
 import { writeFileSync } from "fs";
 import { shuttingDown } from "index.js";
-import { DiscordFormatOptions } from "util/data.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
-import { errToString, splitString } from "util/misc.js";
-
-interface FormatOptions {
-  monospace?: true;
-  bold?: true;
-  italic?: true;
-  code?: boolean | string;
-  quote?: boolean;
-  link?: string;
-  underline?: boolean;
-}
-export const discordFormat = (s: string, options?: FormatOptions) => {
-  let v =
-    options?.code === true
-      ? `\`\`\`${s}\`\`\``
-      : options?.code
-      ? `\`\`\`${options.code}\n${s}\`\`\``
-      : options?.monospace
-      ? `\`${s}\``
-      : s;
-  if (options?.bold) {
-    v = `**${v}**`;
-  }
-  if (options?.italic) {
-    v = `*${v}*`;
-  }
-  if (options?.underline) {
-    v = `__${v}__`;
-  }
-  if (options?.quote) {
-    v = `> ${v.replace(/\n/g, "\n> ")}`;
-  }
-  if (options?.link) {
-    v = `[${v}](${options.link})`;
-  }
-  return v;
-};
+import {
+  DiscordFormatOptions,
+  discordFormat,
+  errToString,
+  splitString,
+} from "util/string.js";
 
 type DiscordBotLoggedInStatus = "logged-in" | "logged-out";
 export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>

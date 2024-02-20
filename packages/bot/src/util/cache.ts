@@ -3,7 +3,7 @@ import dotenv from "dotenv-mono";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { fatalError, shutdown } from "index.js";
 import { debugLog, log } from "util/log.js";
-import { envVarInstruction } from "util/misc.js";
+import { envVarInstruction } from "util/string.js";
 
 dotenv.load();
 

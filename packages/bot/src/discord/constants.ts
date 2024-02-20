@@ -8,9 +8,8 @@ import {
 } from "discord.js";
 import { PresenceActivityDef } from "discord/presence.js";
 import { load } from "dotenv-mono";
-import { readableSeconds } from "util/data.js";
 import { log } from "util/log.js";
-import { envVarInstruction } from "util/misc.js";
+import { envVarInstruction, readableSeconds } from "util/string.js";
 
 load();
 

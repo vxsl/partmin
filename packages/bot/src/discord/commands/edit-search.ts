@@ -1,5 +1,4 @@
 import cache from "cache.js";
-import { SearchParams, StaticConfig } from "config.js";
 import {
   ActionRowBuilder,
   ButtonStyle,
@@ -17,22 +16,23 @@ import {
   componentGroup,
   constructAndSendRichMessage,
 } from "discord/interactive/index.js";
-import { discordFormat, discordWarning } from "discord/util.js";
+import { discordWarning } from "discord/util.js";
 import { Reflect, ValidationError } from "runtypes";
+import { SearchParams, StaticUserConfig } from "user-config.js";
 import { getUserConfig, isDefaultValue } from "util/config.js";
 import {
   accessNestedProperty,
   accessParentOfNestedProperty,
-  maxEmptyLines,
   modifyNestedProperty,
-} from "util/data.js";
+} from "util/json.js";
 import { log } from "util/log.js";
-import { aOrAn, nonEmptyArrayOrError, notUndefined } from "util/misc.js";
+import { nonEmptyArrayOrError, notUndefined } from "util/misc.js";
 import {
   castStringToRuntype,
   getRecord,
   traverseRuntype,
 } from "util/runtypes.js";
+import { aOrAn, discordFormat, maxEmptyLines } from "util/string.js";
 
 const keyEmoji = "📁";
 const valueEmoji = "📄";
@@ -67,8 +67,8 @@ const recursivePrint = async ({
   lvl = 0,
 }: {
   runtype: Reflect;
-  config: StaticConfig;
-  lastConfig?: StaticConfig;
+  config: StaticUserConfig;
+  lastConfig?: StaticUserConfig;
   path: string;
   lvl?: number;
 }): Promise<{
@@ -153,7 +153,7 @@ const recursivePrint = async ({
 const printSearchParams = async ({
   lastConfig,
 }: {
-  lastConfig?: StaticConfig;
+  lastConfig?: StaticUserConfig;
 } = {}) => {
   const config = await getUserConfig();
   const { min: _min, full: _full } = await recursivePrint({
@@ -193,7 +193,7 @@ const pathPlaceholder = (path: string) =>
     : defaultEditPlaceholder;
 
 const editSearch = async (commandInteraction: CommandInteraction) => {
-  let lastConfig: StaticConfig | undefined;
+  let lastConfig: StaticUserConfig | undefined;
   let configPrint = await printSearchParams();
 
   return await constructAndSendRichMessage({
@@ -441,7 +441,7 @@ const editSearch = async (commandInteraction: CommandInteraction) => {
                   "search.params." + newEditPath,
                   v
                 );
-                await cache.config.writeValue(newConfig);
+                await cache.userConfig.writeValue(newConfig);
 
                 configPrint = await printSearchParams({ lastConfig });
                 getEmbed(0).setDescription(

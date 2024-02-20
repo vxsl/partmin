@@ -1,7 +1,7 @@
 import { petsBlacklist, searchParamsBlacklist } from "constants.js";
 import { PlatformKey } from "types/platform.js";
 import { getUserConfig } from "util/config.js";
-import { conditionalSpreads } from "util/data.js";
+import { conditionalSpreads } from "util/misc.js";
 import {
   CommuteSummary,
   Coordinates,

@@ -1,6 +1,5 @@
 import { ColorResolvable, EmbedBuilder } from "discord.js";
 
-import { discordFormat } from "discord/util.js";
 import { Listing, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
 import { getUserConfig } from "util/config.js";
@@ -11,6 +10,7 @@ import {
   trimAddress,
 } from "util/geo.js";
 import { notUndefined } from "util/misc.js";
+import { discordFormat } from "util/string.js";
 
 export const colors = {
   uninteracted: "#7289da" as ColorResolvable,

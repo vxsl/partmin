@@ -12,10 +12,10 @@ import {
   startInteractive,
 } from "discord/interactive/index.js";
 import listingEmbed, { colors } from "discord/interactive/listing/embed.js";
-import { discordFormat, getTextChannel } from "discord/util.js";
+import { getTextChannel } from "discord/util.js";
 import { Listing } from "listing.js";
 import { debugLog, log } from "util/log.js";
-import { splitString } from "util/misc.js";
+import { discordFormat, splitString } from "util/string.js";
 
 const ids = {
   img: "img",

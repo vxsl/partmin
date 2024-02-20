@@ -60,23 +60,24 @@ const getUnderlyingField = (
     : fields[k];
 
 export const throwOnUnknownKey = (
-  obj: any,
   fields: { [key: string]: RuntypeBase },
+  obj: any,
+  options: { message: string },
   path: string[] = []
 ) => {
+  let nestedFields = { ...fields };
   for (const k of path) {
-    if (!(k in fields)) {
-      throw new Error(`Unexpected config option ${path.join(".")}`);
+    if (!(k in nestedFields)) {
+      throw new Error(`${options.message}: ${path.join(".")}`);
     }
-    fields = getUnderlyingField(fields, k).fields;
+    nestedFields = getUnderlyingField(nestedFields, k).fields;
   }
-  const expectedKeys = Object.keys(fields);
   Object.keys(obj).forEach((k) => {
-    if (!expectedKeys.includes(k) || !(k in fields)) {
-      throw new Error(`Unexpected config option ${path.concat(k).join(".")}`);
+    if (!(k in nestedFields)) {
+      throw new Error(`${options.message}: ${path.concat(k).join(".")}`);
     }
-    if (getUnderlyingField(fields, k).tag === "record") {
-      throwOnUnknownKey(obj[k], fields, path.concat(k));
+    if (getUnderlyingField(nestedFields, k).tag === "record") {
+      throwOnUnknownKey(fields, obj[k], options, path.concat(k));
     }
   });
 };

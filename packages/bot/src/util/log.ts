@@ -1,6 +1,7 @@
 import { LogLevel, logLevels } from "advanced-config.js";
 import { discordSend } from "discord/util.js";
-import { errToString, isPlainObject } from "util/misc.js";
+import { isPlainObject } from "util/misc.js";
+import { errToString } from "util/string.js";
 
 const time = () => new Date().toLocaleTimeString("it-IT");
 

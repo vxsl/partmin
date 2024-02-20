@@ -1,13 +1,14 @@
 import cache from "cache.js";
-import { discordFormat, discordWarning } from "discord/util.js";
+import { discordWarning } from "discord/util.js";
 import {
   StaticUserConfig,
   defaultUserConfigValues,
   unreliabilityExplanations,
 } from "user-config.js";
-import { accessNestedProperty } from "util/data.js";
 import { isValidAddress } from "util/geo.js";
+import { accessNestedProperty } from "util/json.js";
 import { debugLog, log, verboseLog } from "util/log.js";
+import { discordFormat } from "util/string.js";
 
 export const getUserConfig = async () =>
   await cache.cachedUserConfig.requireValue();

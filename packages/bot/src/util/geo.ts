@@ -2,9 +2,9 @@ import axios from "axios";
 import cache from "cache.js";
 import haversine from "haversine";
 import { getUserConfig } from "util/config.js";
-import { abbreviateDuration, sanitizeString } from "util/data.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined } from "util/misc.js";
+import { abbreviateDuration, sanitizeString } from "util/string.js";
 
 const gMaps = "https://www.google.com/maps";
 const gMapsAPIs = "https://maps.googleapis.com/maps/api";
@@ -294,3 +294,8 @@ export const trimAddress = async (address: string): Promise<string> => {
   }
   return result;
 };
+
+const sqFtToSqMetersRatio = 0.092903;
+export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
+export const sqMetersToSqft = (m2: number) => m2 / sqFtToSqMetersRatio;
+export const acresToSqft = (a: number) => a * 43560;

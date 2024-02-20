@@ -1,21 +1,10 @@
 import { presenceActivities } from "discord/constants.js";
 import { startActivity } from "discord/presence.js";
 import { stdout as singleLineStdOut } from "single-line-log";
-import { readableSeconds } from "util/data.js";
 import { debugLog, log } from "util/log.js";
+import { readableSeconds } from "util/string.js";
 import { NonEmptyArray } from "util/type.js";
 
-export const splitString = (s: string, maxLength: number) => {
-  const regex = new RegExp(`[\\s\\S]{1,${maxLength}}`, "g");
-  const matches = s.match(regex);
-  if (!matches) {
-    return [s];
-  }
-  return matches;
-};
-
-export const errToString = (e: unknown) =>
-  e instanceof Error ? `${e.stack || `${e.name}: ${e.message}`}` : `${e}`;
 export const notUndefined = <T>(value: T | undefined): value is T =>
   value !== undefined;
 export const notNull = <T>(value: T | null): value is T => value !== null;
@@ -121,5 +110,14 @@ export const nonEmptyArrayOrUndefined = <T>(
 export const randomElement = <T>(arr: T[]): T =>
   arr[Math.floor(Math.random() * arr.length)]!;
 
-export const envVarInstruction = (name: string) =>
-  `Paste the value into a .env file at the project root like so:\n${name}=_____________`;
+export const conditionalSpreads = <T>(
+  arrs: [boolean | null | undefined | string | number, Array<T>][]
+) => {
+  const result: T[] = [];
+  for (const [condition, arr] of arrs) {
+    if (!!condition) {
+      result.push(...arr);
+    }
+  }
+  return result;
+};

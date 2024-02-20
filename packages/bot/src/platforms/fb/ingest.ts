@@ -8,16 +8,11 @@ import { PlatformKey } from "types/platform.js";
 import { PetType } from "user-config.js";
 import { getUserConfig } from "util/config.js";
 import {
-  acresToSqft,
-  findNestedJSONProperty,
-  sqMetersToSqft,
-} from "util/data.js";
-import {
   Coordinates,
-  Radius,
-  decodeMapDevelopersURL,
-  getGoogleMapsLink,
+  Radius, acresToSqft, decodeMapDevelopersURL,
+  getGoogleMapsLink, sqMetersToSqft
 } from "util/geo.js";
+import { findNestedJSONProperty } from "util/json.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined, randomWait, tryNTimes } from "util/misc.js";
 import {
