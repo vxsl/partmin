@@ -8,7 +8,6 @@ import {
 } from "discord.js";
 import { PresenceActivityDef } from "discord/presence.js";
 import { load } from "dotenv-mono";
-import { log } from "util/log.js";
 import { envVarInstruction, readableSeconds } from "util/string.js";
 
 load();
@@ -19,7 +18,7 @@ load();
 const guildIDEnvVar = "DISCORD_SERVER_ID";
 export const discordGuildID = process.env[guildIDEnvVar]!;
 if (!discordGuildID) {
-  log(
+  console.log(
     `Your Discord server is not set up. To configure it, please retrieve your server's ID:\n - open Discord\n - right-click your server in the sidebar\n - Server Settings\n - Widget \n - SERVER ID\n\n${envVarInstruction(
       guildIDEnvVar
     )}\n\nNote that partmin will create channels in this server, so make sure you have the necessary permissions to do so.`
