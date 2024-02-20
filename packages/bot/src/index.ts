@@ -1,5 +1,4 @@
-import { devOptions } from "advanced-config.js";
-import cache from "cache.js";
+import { defineAdvancedConfig, devOptions } from "advanced-config.js";
 import { createDirsIfNotExist } from "constants.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
@@ -12,6 +11,7 @@ import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import { Listing } from "listing.js";
+import persistent from "persistent.js";
 import {
   getListingKey,
   preprocessListings,
@@ -116,7 +116,7 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
       // abort if config changed:
       if (await logBreakIfConfigChanged(platform)) break;
 
-      const seen = (await cache.listings.value()) ?? [];
+      const seen = (await persistent.listings.value()) ?? [];
       const seenKeys = new Set(seen.map(getListingKey));
       const unseen = listings.filter((l) => !seenKeys.has(getListingKey(l)));
       log(
@@ -222,7 +222,7 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
         );
 
         // save listings only once all notifications have been sent
-        await cache.listings.writeValue([...seen, ...unseen]);
+        await persistent.listings.writeValue([...seen, ...unseen]);
       } catch (e) {
         if (!shuttingDown) {
           discordWarning(
@@ -306,9 +306,14 @@ export const shutdown = async () => {
 
 export const fatalError = async (e: unknown) => {
   if (discordIsReady()) {
+    log("Fatal error:");
+    log(e, { error: true });
+    console.trace();
     await discordError(e);
   } else {
-    log(e, { error: true });
+    logNoDiscord("Fatal error:");
+    logNoDiscord(e, { error: true });
+    console.trace();
   }
   await shutdown();
   process.exit(1);
@@ -316,16 +321,13 @@ export const fatalError = async (e: unknown) => {
 
 (async () => {
   try {
+    await defineAdvancedConfig();
     createDirsIfNotExist();
-
     await initDiscord();
-
     setPresence("launching");
     reinitializeInteractiveListingMessages();
     driver = await buildDriver();
-
     setPresence("online");
-
     log("Starting main retrieval loop...");
 
     if (!devOptions.noRetrieval) {

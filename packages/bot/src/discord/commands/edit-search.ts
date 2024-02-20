@@ -1,4 +1,3 @@
-import cache from "cache.js";
 import {
   ActionRowBuilder,
   ButtonStyle,
@@ -17,6 +16,7 @@ import {
   constructAndSendRichMessage,
 } from "discord/interactive/index.js";
 import { discordWarning } from "discord/util.js";
+import persistent from "persistent.js";
 import { Reflect, ValidationError } from "runtypes";
 import { SearchParams, StaticUserConfig } from "user-config.js";
 import { getUserConfig, isDefaultValue } from "util/config.js";
@@ -441,7 +441,7 @@ const editSearch = async (commandInteraction: CommandInteraction) => {
                   "search.params." + newEditPath,
                   v
                 );
-                await cache.userConfig.writeValue(newConfig);
+                await persistent.userConfig.writeValue(newConfig);
 
                 configPrint = await printSearchParams({ lastConfig });
                 getEmbed(0).setDescription(

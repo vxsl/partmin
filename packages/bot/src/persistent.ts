@@ -12,16 +12,16 @@ import {
   userConfigPath,
   validateUserConfig,
 } from "user-config.js";
-import { CacheDef, StringCacheDef } from "util/cache.js";
 import { dynamicValidateUserConfig } from "util/config.js";
 import { CommuteSummary } from "util/geo.js";
 import { parseJSON } from "util/io.js";
 import { log } from "util/log.js";
+import { PersistentDataDef, PersistentStringDef } from "util/persistence.js";
 
-const cache = {
+const persistent = {
   // ---------------------------------------
   // config
-  advancedConfig: new CacheDef<StaticAdvancedConfig>({
+  advancedConfig: new PersistentDataDef<StaticAdvancedConfig>({
     label: "advanced config",
     path: advancedConfigPath,
     absolutePath: true,
@@ -47,7 +47,7 @@ const cache = {
       return true;
     },
   }),
-  cachedAdvancedConfig: new CacheDef<StaticAdvancedConfig>({
+  cachedAdvancedConfig: new PersistentDataDef<StaticAdvancedConfig>({
     label: "cached advanced config",
     path: `advanced-config-cached.json`,
     readTransform: parseJSON,
@@ -57,8 +57,8 @@ const cache = {
       return true;
     },
   }),
-  cachedUserConfig: new CacheDef<StaticUserConfig>({
-    label: "config",
+  cachedUserConfig: new PersistentDataDef<StaticUserConfig>({
+    label: "cached user configuration",
     path: `user-config-cached.json`,
     validate: async (c) => {
       validateUserConfig(c);
@@ -80,7 +80,7 @@ const cache = {
       return JSON.stringify(v);
     },
   }),
-  userConfig: new CacheDef<StaticUserConfig>({
+  userConfig: new PersistentDataDef<StaticUserConfig>({
     absolutePath: true,
     path: userConfigPath,
     readTransform: parseJSON,
@@ -94,7 +94,7 @@ const cache = {
   }),
   // ---------------------------------------
   // geo
-  commuteSummaries: new CacheDef<
+  commuteSummaries: new PersistentDataDef<
     Record<string, Record<string, CommuteSummary>>
   >({
     path: `commute-summaries.json`,
@@ -103,21 +103,23 @@ const cache = {
     label: "commute summaries",
     common: true,
   }),
-  addressValidity: new CacheDef<{ [k: string]: boolean }>({
+  addressValidity: new PersistentDataDef<{ [k: string]: boolean }>({
     path: `address-validity.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "address validity",
     common: true,
   }),
-  approximateAddresses: new CacheDef<{ [k: string]: [string, string] }>({
+  approximateAddresses: new PersistentDataDef<{
+    [k: string]: [string, string];
+  }>({
     path: `approximate-addresses.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "address approximations",
     common: true,
   }),
-  googleMapsAPIKey: new StringCacheDef({
+  googleMapsAPIKey: new PersistentStringDef({
     path: `google-maps-api-key`,
     label: "Google Maps API key",
     envVar: "GOOGLE_MAPS_API_KEY",
@@ -126,7 +128,7 @@ const cache = {
 
   // ---------------------------------------
   // process
-  listings: new CacheDef<Listing[]>({
+  listings: new PersistentDataDef<Listing[]>({
     path: `listings.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
@@ -135,7 +137,7 @@ const cache = {
 
   // ---------------------------------------
   // kijiji
-  kijijiRSS: new StringCacheDef({
+  kijijiRSS: new PersistentStringDef({
     path: `kijiji-rss-url`,
     label: "Kijiji RSS feed URL",
     common: true,
@@ -143,19 +145,19 @@ const cache = {
 
   // ---------------------------------------
   // discord
-  discordAppID: new StringCacheDef({
+  discordAppID: new PersistentStringDef({
     path: `discord-app-id`,
     envVar: "DISCORD_APP_ID",
     label: "Discord app ID",
     common: true,
   }),
-  channelIDs: new CacheDef<ChannelIDs>({
+  channelIDs: new PersistentDataDef<ChannelIDs>({
     path: `channel-ids.json`,
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "channel IDs",
   }),
-  botToken: new StringCacheDef({
+  botToken: new PersistentStringDef({
     path: `bot-token`,
     envVar: "DISCORD_BOT_TOKEN",
     label: "bot token",
@@ -163,4 +165,4 @@ const cache = {
   }),
 };
 
-export default cache;
+export default persistent;

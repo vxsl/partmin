@@ -1,5 +1,4 @@
 import { devOptions } from "advanced-config.js";
-import cache from "cache.js";
 import {
   BitField,
   CategoryChannel,
@@ -26,6 +25,7 @@ import {
 import { setPresence } from "discord/presence.js";
 import { writeStatusForAuditor } from "discord/util.js";
 import dotenv from "dotenv-mono";
+import persistent from "persistent.js";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { debugLog, log, logNoDiscord } from "util/log.js";
 import { waitSeconds } from "util/misc.js";
@@ -66,7 +66,7 @@ const authorize = (
   isAuthorized: () => boolean | Promise<boolean>
 ) =>
   new Promise<void>(async (resolve, reject) => {
-    const appID = await cache.discordAppID.requireValue();
+    const appID = await persistent.discordAppID.requireValue();
     const inviteBase = "https://discord.com/api/oauth2/authorize";
     const inviteURL = `${inviteBase}?client_id=${appID}&permissions=${PermissionsBitField.resolve(
       requiredPermissions
@@ -280,7 +280,7 @@ const setupGuild = async (guildInfo: RecursivePartial<ChannelIDs>) => {
   let guild: Guild | undefined;
   let role: Role | undefined;
 
-  const appID = await cache.discordAppID.requireValue();
+  const appID = await persistent.discordAppID.requireValue();
 
   try {
     guild = await getGuild(discordGuildID);
@@ -331,20 +331,20 @@ const setupGuild = async (guildInfo: RecursivePartial<ChannelIDs>) => {
 };
 
 export const initDiscord = async () => {
-  await cache.discordAppID.requireValue({
-    message: `Partmin requires a Discord app ID to run. To get this, go to the Discord Developer Portal, create a new application, and retrieve the application ID from the "General Information" section.\n\n${cache.discordAppID.envVarInstruction}`,
+  await persistent.discordAppID.requireValue({
+    message: `Partmin requires a Discord app ID to run. To get this, go to the Discord Developer Portal, create a new application, and retrieve the application ID from the "General Information" section.\n\n${persistent.discordAppID.envVarInstruction}`,
   });
 
   return await new Promise(async (resolve, reject) => {
     discordClient.once(Events.ClientReady, async () => {
       writeStatusForAuditor("logged-in");
-      const guildInfo = await cache.channelIDs.value();
+      const guildInfo = await persistent.channelIDs.value();
       if (guildInfo) {
         debugLog("Cached server information found.");
         // TODO use runtypes to throw (or warn?) if guildInfo is malformed.
       }
       await setupGuild(guildInfo ?? {}).then((newGuildInfo) =>
-        cache.channelIDs.writeValue(newGuildInfo)
+        persistent.channelIDs.writeValue(newGuildInfo)
       );
       await setupCommands();
       log("Server configuration complete");
@@ -355,8 +355,8 @@ export const initDiscord = async () => {
     discordClient.once("error", reject);
 
     log("Discord client logging in...");
-    const token = await cache.botToken.requireValue({
-      message: `Partmin requires a Discord bot token to run. ${cache.botToken.envVarInstruction}`,
+    const token = await persistent.botToken.requireValue({
+      message: `Partmin requires a Discord bot token to run. ${persistent.botToken.envVarInstruction}`,
     });
     await discordClient.login(token);
   });

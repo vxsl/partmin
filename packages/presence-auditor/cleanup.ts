@@ -9,12 +9,12 @@ if (!statusPath) {
 }
 
 const botPath = "packages/bot";
-const cachePath = `${botPath}/.data`;
+const persistencePath = `${botPath}/.data`;
 
 const paths = {
-  serverID: `${cachePath}/discord-server-id`,
-  token: `${cachePath}/discord-bot-token`,
-  guildInfo: `${cachePath}/discord-guild-info.json`,
+  serverID: `${persistencePath}/discord-server-id`,
+  token: `${persistencePath}/discord-bot-token`,
+  guildInfo: `${persistencePath}/discord-guild-info.json`,
 };
 
 const values = Object.fromEntries(

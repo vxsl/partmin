@@ -1,5 +1,5 @@
-import cache from "cache.js";
 import { discordWarning } from "discord/util.js";
+import persistent from "persistent.js";
 import {
   StaticUserConfig,
   defaultUserConfigValues,
@@ -11,7 +11,7 @@ import { debugLog, log, verboseLog } from "util/log.js";
 import { discordFormat } from "util/string.js";
 
 export const getUserConfig = async () =>
-  await cache.cachedUserConfig.requireValue();
+  await persistent.cachedUserConfig.requireValue();
 
 export const isDefaultValue = async (
   path: string | ((config: StaticUserConfig) => any),
@@ -59,7 +59,7 @@ export const dynamicValidateUserConfig = async (c: StaticUserConfig) => {
     }
   }
 
-  const advancedConfig = await cache.cachedAdvancedConfig.value();
+  const advancedConfig = await persistent.cachedAdvancedConfig.value();
 
   const unreliable = JSON.parse(
     JSON.stringify(c.search.params.unreliableParams)
@@ -105,7 +105,7 @@ export const dynamicValidateUserConfig = async (c: StaticUserConfig) => {
 
 export const isUserConfigChanged = async () => {
   const userFile = await getUserConfig();
-  const cached = await cache.userConfig.value();
+  const cached = await persistent.userConfig.value();
   if (!cached) {
     log("No previous configuration found.");
     return true;
@@ -123,7 +123,7 @@ export const ifUserConfigChanged = async (callback?: () => void) => {
   return isUserConfigChanged().then(async (changed) => {
     if (changed) {
       await (callback ? callback() : Promise.resolve());
-      cache.userConfig.writeValue(userFile);
+      persistent.userConfig.writeValue(userFile);
     }
   });
 };

@@ -1,6 +1,6 @@
 import axios from "axios";
-import cache from "cache.js";
 import haversine from "haversine";
+import persistent from "persistent.js";
 import { getUserConfig } from "util/config.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined } from "util/misc.js";
@@ -10,7 +10,7 @@ const gMaps = "https://www.google.com/maps";
 const gMapsAPIs = "https://maps.googleapis.com/maps/api";
 
 const gMapsAPIKey = async () =>
-  `key=${await cache.googleMapsAPIKey.requireValue()}`;
+  `key=${await persistent.googleMapsAPIKey.requireValue()}`;
 
 export class Coordinates {
   lat: number;
@@ -141,7 +141,7 @@ export const getGoogleMapsLink = (query: string) =>
   `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
 export const approxLocationLink = async (coords: Coordinates) => {
-  const addresses = (await cache.approximateAddresses.value()) ?? {};
+  const addresses = (await persistent.approximateAddresses.value()) ?? {};
   const cacheKey = Coordinates.toString(coords, { raw: true });
   const cached = addresses?.[cacheKey];
   if (cached) {
@@ -165,7 +165,7 @@ export const approxLocationLink = async (coords: Coordinates) => {
     (comps.find((c: any) => c.types.includes("neighborhood"))?.short_name ??
       comps.find((c: any) => c.types.includes("sublocality"))?.short_name);
 
-  await cache.approximateAddresses.writeValue({
+  await persistent.approximateAddresses.writeValue({
     ...addresses,
     [cacheKey]: [displayAddr, data.results[0].formatted_address],
   });
@@ -176,7 +176,7 @@ export const approxLocationLink = async (coords: Coordinates) => {
 
 export const isValidAddress = async (address: string) => {
   let result;
-  const validities = (await cache.addressValidity.value()) ?? {};
+  const validities = (await persistent.addressValidity.value()) ?? {};
   if (address in validities) {
     debugLog(`Address found in cache: ${address}`);
     result = validities[address];
@@ -188,7 +188,7 @@ export const isValidAddress = async (address: string) => {
         )}&${await gMapsAPIKey()}`
       );
       result = !!data.results[0]?.geometry?.location;
-      await cache.addressValidity.writeValue({
+      await persistent.addressValidity.writeValue({
         ...validities,
         [address]: result,
       });
@@ -209,7 +209,7 @@ type CommuteMode = (typeof commuteModes)[number];
 export type CommuteSummary = Record<CommuteMode, string>;
 
 export const getCommuteSummary = async (origin: string, dest: string) => {
-  const summaries = (await cache.commuteSummaries.value()) ?? {};
+  const summaries = (await persistent.commuteSummaries.value()) ?? {};
   const cached = summaries[origin]?.[dest];
   let rawData: Partial<Record<CommuteMode, any>> = {};
   if (cached !== undefined) {
@@ -249,7 +249,7 @@ export const getCommuteSummary = async (origin: string, dest: string) => {
     })
   ) as CommuteSummary;
   if (!cached) {
-    await cache.commuteSummaries.writeValue({
+    await persistent.commuteSummaries.writeValue({
       ...summaries,
       [origin]: { ...summaries[origin], [dest]: result },
     });

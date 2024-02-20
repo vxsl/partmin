@@ -52,32 +52,51 @@ export const defaultAdvancedConfigValues: RecursivePartial<StaticAdvancedConfig>
     },
   } as const;
 
-let _advancedConfig: StaticAdvancedConfig | undefined;
+let advancedConfig: StaticAdvancedConfig | undefined;
 export let devOptions: NonNullable<StaticAdvancedConfig["development"]> = {};
 export let logLevels: NonNullable<StaticAdvancedConfig["logging"]> = {};
 
-let json;
-try {
-  import(advancedConfigPath).then((json) => {
-    console.log("Advanced config loaded");
-    _advancedConfig = AdvancedConfig.check(json);
-    devOptions = _advancedConfig.development ?? {};
-    logLevels = _advancedConfig.logging ?? {};
+export const defineAdvancedConfig = async () => {
+  const raw = await import(advancedConfigPath).catch(() => {
+    console.log(
+      `No advanced config found, writing default values to ${advancedConfigPath}`
+    );
+    writeFileSync(
+      advancedConfigPath,
+      JSON.stringify(defaultAdvancedConfigValues, null, 2)
+    );
+    return defaultAdvancedConfigValues;
   });
-} catch (error) {
-  console.error(error);
-  console.log(
-    `No advanced config found, writing default values to ${advancedConfigPath}`
-  );
-  writeFileSync(
-    advancedConfigPath,
-    JSON.stringify(defaultAdvancedConfigValues, null, 2)
-  );
-  json = defaultAdvancedConfigValues;
-  _advancedConfig = AdvancedConfig.check(json);
-  devOptions = _advancedConfig.development ?? {};
-  logLevels = _advancedConfig.logging ?? {};
-}
+
+  console.log("Advanced config loaded");
+  advancedConfig = AdvancedConfig.check(raw);
+  devOptions = advancedConfig.development ?? {};
+  logLevels = advancedConfig.logging ?? {};
+};
+// export const defineAdvancedConfig = async () => {
+//   let json;
+//   try {
+//     import(advancedConfigPath).then((json) => {
+//       console.log("Advanced config loaded");
+//       _advancedConfig = AdvancedConfig.check(json);
+//       devOptions = _advancedConfig.development ?? {};
+//       logLevels = _advancedConfig.logging ?? {};
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     console.log(
+//       `No advanced config found, writing default values to ${advancedConfigPath}`
+//     );
+//     writeFileSync(
+//       advancedConfigPath,
+//       JSON.stringify(defaultAdvancedConfigValues, null, 2)
+//     );
+//     json = defaultAdvancedConfigValues;
+//     _advancedConfig = AdvancedConfig.check(json);
+//     devOptions = _advancedConfig.development ?? {};
+//     logLevels = _advancedConfig.logging ?? {};
+//   }
+// };
 
 // const _advancedConfig = AdvancedConfig.check(json);
 // export const devOptions = _advancedConfig.development ?? {};

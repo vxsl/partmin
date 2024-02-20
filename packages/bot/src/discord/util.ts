@@ -1,5 +1,4 @@
 import { devOptions } from "advanced-config.js";
-import cache from "cache.js";
 import { statusPathForAuditor } from "constants.js";
 import { ChannelType, DiscordAPIError, MessageCreateOptions } from "discord.js";
 import {
@@ -16,6 +15,7 @@ import {
 } from "discord/interactive/index.js";
 import { writeFileSync } from "fs";
 import { shuttingDown } from "index.js";
+import persistent from "persistent.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import {
   DiscordFormatOptions,
@@ -29,7 +29,7 @@ export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
   writeFileSync(statusPathForAuditor, status);
 
 export const getTextChannel = async (c: ChannelKey) => {
-  const guildInfo = await cache.channelIDs.requireValue();
+  const guildInfo = await persistent.channelIDs.requireValue();
   const id = guildInfo.channelIDs[c];
   const result = await (discordClient.channels.cache.get(id) ??
     discordClient.channels.fetch(id));

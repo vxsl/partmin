@@ -1,7 +1,7 @@
-import cache from "cache.js";
 import { setPresence, startActivity } from "discord/presence.js";
 import he from "he";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
+import persistent from "persistent.js";
 import { baseURL } from "platforms/kijiji/constants.js";
 import kijiji from "platforms/kijiji/index.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
@@ -210,11 +210,11 @@ export const onSearchParamsChanged = async (driver: WebDriver) => {
     .findElement(By.xpath(`//div[@data-testid="srp-rss-feed-button"]//a`))
     .then((el) => el.getAttribute("href"));
   log(`Kijiji RSS feed: ${rss}`);
-  await cache.kijijiRSS.writeValue(rss);
+  await persistent.kijijiRSS.writeValue(rss);
 };
 
 export const main = async (): Promise<Listing[]> => {
-  const rss = await cache.kijijiRSS.requireValue();
+  const rss = await persistent.kijijiRSS.requireValue();
   log(`Parsing Kijiji RSS feed: ${rss}`);
   startActivity(kijiji.presenceActivities?.main, -1);
   return parser.parseURL(rss).then((output) =>

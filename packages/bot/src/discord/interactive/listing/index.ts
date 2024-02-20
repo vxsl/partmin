@@ -1,4 +1,3 @@
-import cache from "cache.js";
 import Discord from "discord.js";
 import {
   maxEmbedLength,
@@ -14,6 +13,7 @@ import {
 import listingEmbed, { colors } from "discord/interactive/listing/embed.js";
 import { getTextChannel } from "discord/util.js";
 import { Listing } from "listing.js";
+import persistent from "persistent.js";
 import { debugLog, log } from "util/log.js";
 import { discordFormat, splitString } from "util/string.js";
 
@@ -179,12 +179,12 @@ export const sendListing = async (
   });
 
 export const reinitializeInteractiveListingMessages = async () => {
-  const listings = await cache.listings.value();
+  const listings = await persistent.listings.value();
   if (!listings?.length) {
     return;
   }
   const listingsMap = new Map(listings.map((l) => [l.url, l]));
-  const appID = await cache.discordAppID.requireValue();
+  const appID = await persistent.discordAppID.requireValue();
   const channel = await getTextChannel("listings");
 
   let successCount = 0;

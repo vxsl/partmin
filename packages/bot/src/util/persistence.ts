@@ -7,7 +7,7 @@ import { envVarInstruction } from "util/string.js";
 
 dotenv.load();
 
-type StringCacheDefConstructorArgs<T> = {
+type PersistentStringDefConstructorArgs<T> = {
   path: string;
   envVar?: string;
   label: string;
@@ -16,11 +16,12 @@ type StringCacheDefConstructorArgs<T> = {
   | { common?: boolean; absolutePath?: undefined }
   | { common?: undefined; absolutePath: true }
 );
-type CacheDefConstructorArgs<T> = StringCacheDefConstructorArgs<T> & {
-  readTransform: (read: string) => NonNullable<T> | undefined;
-  writeTransform: (v: T) => string;
-};
-export class CacheDef<T> {
+type PersistentDataDefConstructorArgs<T> =
+  PersistentStringDefConstructorArgs<T> & {
+    readTransform: (read: string) => NonNullable<T> | undefined;
+    writeTransform: (v: T) => string;
+  };
+export class PersistentDataDef<T> {
   envVar?: string;
   private path: string;
   private loaded: T | undefined;
@@ -37,7 +38,7 @@ export class CacheDef<T> {
     validate,
     common,
     absolutePath,
-  }: CacheDefConstructorArgs<T>) {
+  }: PersistentDataDefConstructorArgs<T>) {
     this.path = `${
       absolutePath ? path : common ? dirs.commonData : dirs.data
     }/${path}`;
@@ -101,7 +102,7 @@ export class CacheDef<T> {
       return shutdown().then(() => process.exit());
     } else {
       return fatalError(
-        `\n\nNo value found: ${this.label}. ${this.envVarInstruction}\n\n`
+        `No value found: ${this.label}. ${this.envVarInstruction}`
       );
     }
   }
@@ -121,8 +122,8 @@ export class CacheDef<T> {
   }
 }
 
-export class StringCacheDef extends CacheDef<string> {
-  constructor(arg: StringCacheDefConstructorArgs<string>) {
+export class PersistentStringDef extends PersistentDataDef<string> {
+  constructor(arg: PersistentStringDefConstructorArgs<string>) {
     super({
       ...arg,
       readTransform: (read) => read,

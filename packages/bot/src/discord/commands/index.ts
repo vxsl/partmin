@@ -1,5 +1,4 @@
 import { devOptions } from "advanced-config.js";
-import cache from "cache.js";
 import {
   Collection,
   CommandInteraction,
@@ -12,6 +11,7 @@ import editSearch from "discord/commands/edit-search.js";
 import testListing from "discord/commands/test-listing.js";
 import { discordGuildID } from "discord/constants.js";
 import { discordClient } from "discord/index.js";
+import persistent from "persistent.js";
 import { log } from "util/log.js";
 import { notUndefined, tryNTimes } from "util/misc.js";
 
@@ -38,8 +38,8 @@ const setupCommands = async () => {
       execute: editSearch,
     },
   ];
-  const token = await cache.botToken.requireValue();
-  const appID = await cache.discordAppID.requireValue();
+  const token = await persistent.botToken.requireValue();
+  const appID = await persistent.discordAppID.requireValue();
 
   const rest = new REST({ timeout: 5000 }).setToken(token);
 
