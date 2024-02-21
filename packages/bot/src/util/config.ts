@@ -9,25 +9,25 @@ import { isValidAddress } from "util/geo.js";
 import { accessNestedProperty } from "util/json.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { discordFormat } from "util/string.js";
+import { RecursivePartial } from "util/type.js";
 
 export const getUserConfig = async () =>
   (await persistent.cachedUserConfig.value()) ??
   (await persistent.userConfig.requireValue());
 
-export const isDefaultValue = async (
-  path: string | ((config: StaticUserConfig) => any),
-  options?: {
-    baseNest?: (config: StaticUserConfig) => any;
-  }
-) => {
+export const isDefaultValue = <T>({
+  path,
+  values,
+  defaultValues,
+}: {
+  path: string | ((obj: T) => any);
+  values: T;
+  defaultValues: RecursivePartial<T>;
+}) => {
   let actual, expected;
   try {
-    const config = await getUserConfig();
-
-    const nestedConfig = options?.baseNest ? options.baseNest(config) : config;
-    const nestedDefault = options?.baseNest
-      ? options.baseNest(defaultUserConfigValues as unknown as StaticUserConfig)
-      : (defaultUserConfigValues as unknown as StaticUserConfig);
+    const nestedConfig = values;
+    const nestedDefault = defaultValues as unknown as T;
     if (typeof path === "string") {
       actual = accessNestedProperty(nestedConfig, path);
       expected = accessNestedProperty(nestedDefault, path);
@@ -76,7 +76,13 @@ export const dynamicValidateUserConfig = async (c: StaticUserConfig) => {
 
   for (const _k of Object.keys(c.search.params.unreliableParams)) {
     const k = _k as keyof typeof c.search.params.unreliableParams;
-    if (await isDefaultValue((c) => c.search.params.unreliableParams![k])) {
+    if (
+      await isDefaultValue({
+        values: c.search.params.unreliableParams,
+        defaultValues: defaultUserConfigValues.search?.params?.unreliableParams,
+        path: (u) => u?.[k],
+      })
+    ) {
       delete unreliable[k];
     }
   }

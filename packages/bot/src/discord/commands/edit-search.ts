@@ -17,138 +17,27 @@ import {
 } from "discord/interactive/index.js";
 import { discordWarning } from "discord/util.js";
 import persistent from "persistent.js";
-import { Reflect, ValidationError } from "runtypes";
-import { SearchParams, StaticUserConfig } from "user-config.js";
-import { getUserConfig, isDefaultValue } from "util/config.js";
+import { ValidationError } from "runtypes";
 import {
-  accessNestedProperty,
-  accessParentOfNestedProperty,
-  modifyNestedProperty,
-} from "util/json.js";
+  SearchParams,
+  StaticUserConfig,
+  defaultUserConfigValues,
+} from "user-config.js";
+import { getUserConfig } from "util/config.js";
+import { accessNestedProperty, modifyNestedProperty } from "util/json.js";
 import { log } from "util/log.js";
 import { nonEmptyArrayOrError, notUndefined } from "util/misc.js";
 import {
   castStringToRuntype,
   getRecord,
+  getRuntypeDescription,
+  recursivePrintRuntype,
   traverseRuntype,
 } from "util/runtypes.js";
-import { aOrAn, discordFormat, maxEmptyLines } from "util/string.js";
+import { discordFormat, maxEmptyLines } from "util/string.js";
 
 const keyEmoji = "📁";
 const valueEmoji = "📄";
-const definedValueEmoji = "📝";
-const newlyDefinedValueEmoji = "🆕";
-const definedDefaultValueEmoji = "⚫";
-
-const translate = (s: Reflect["tag"], options?: { useArticle?: boolean }) =>
-  s === "boolean"
-    ? "true or false"
-    : s === "string"
-    ? "text"
-    : options?.useArticle
-    ? aOrAn(s)
-    : s;
-const getTypeDescription = (
-  f: Reflect,
-  options?: { omitOptional?: boolean; useArticle?: boolean }
-) =>
-  f.tag === "optional"
-    ? `${options?.omitOptional ? "" : "optional "}${translate(
-        f.underlying.tag,
-        { useArticle: options?.useArticle }
-      )}`
-    : translate(f.tag, { useArticle: options?.useArticle });
-
-const recursivePrint = async ({
-  runtype,
-  config,
-  lastConfig,
-  path: _path,
-  lvl = 0,
-}: {
-  runtype: Reflect;
-  config: StaticUserConfig;
-  lastConfig?: StaticUserConfig;
-  path: string;
-  lvl?: number;
-}): Promise<{
-  min: string;
-  full: string;
-}> => {
-  let min = "";
-  let full = "";
-
-  const indent = !lvl ? "" : `${"  ".repeat(lvl)}`;
-
-  if (runtype.tag === "record") {
-    for (const [key, f] of Object.entries(runtype.fields)) {
-      const path = _path ? `${_path}.${key}` : key;
-      const record =
-        f.tag === "record"
-          ? f
-          : f.tag === "optional" && f.underlying.tag === "record"
-          ? f.underlying
-          : undefined;
-
-      const prefix = `${indent}- `;
-
-      if (record && Object.keys(record.fields).length > 0) {
-        const inner = await recursivePrint({
-          runtype: record,
-          config,
-          lastConfig,
-          path,
-          lvl: lvl + 1,
-        });
-        const printCategory = (contents: string) =>
-          (contents
-            ? `\n${prefix}${discordFormat(key, {
-                underline: true,
-              })}:\n${contents}`
-            : "") + "\n";
-        min += printCategory(inner.min);
-        full += printCategory(inner.full);
-      } else {
-        const lastValue = accessNestedProperty(lastConfig?.search.params, path);
-        const isPresent =
-          key in accessParentOfNestedProperty(config.search.params, path);
-        const isDefault = await isDefaultValue(path, {
-          baseNest: (c) => c.search.params,
-        });
-        const value = accessNestedProperty(config.search.params, path);
-        if (isPresent && !isDefault) {
-          const emoji =
-            !lastConfig || lastValue === value
-              ? definedValueEmoji
-              : newlyDefinedValueEmoji;
-          const definedValue =
-            `${prefix}${emoji} ` +
-            `${discordFormat(key, { bold: true })}: ${discordFormat(value, {
-              monospace: true,
-              bold: true,
-            })}` +
-            "\n";
-          min += definedValue;
-          full += definedValue;
-        } else {
-          full +=
-            prefix +
-            (isDefault
-              ? `️${definedDefaultValueEmoji} ` +
-                `${key}: ${discordFormat(value, {
-                  monospace: true,
-                })} ${discordFormat(`(default value)`)}` +
-                "\n"
-              : `${key} ${discordFormat(`(${getTypeDescription(f)})`, {
-                  italic: true,
-                })}` + "\n");
-        }
-      }
-    }
-  }
-
-  return { min, full };
-};
 
 const printSearchParams = async ({
   lastConfig,
@@ -156,10 +45,11 @@ const printSearchParams = async ({
   lastConfig?: StaticUserConfig;
 } = {}) => {
   const config = await getUserConfig();
-  const { min: _min, full: _full } = await recursivePrint({
+  const { min: _min, full: _full } = await recursivePrintRuntype({
     runtype: SearchParams,
-    config,
-    lastConfig,
+    object: config.search.params,
+    lastObject: lastConfig?.search.params,
+    defaultValues: defaultUserConfigValues.search?.params ?? {},
     path: "",
   });
   return {
@@ -364,7 +254,7 @@ const editSearch = async (commandInteraction: CommandInteraction) => {
                         .setRequired(!isOptional)
                         .setPlaceholder(
                           `enter ${[
-                            getTypeDescription(field, {
+                            getRuntypeDescription(field, {
                               omitOptional: true,
                               useArticle: true,
                             }),
@@ -441,7 +331,7 @@ const editSearch = async (commandInteraction: CommandInteraction) => {
                   "search.params." + newEditPath,
                   v
                 );
-                await persistent.userConfig.writeValue(newConfig);
+                await persistent.cachedUserConfig.writeValue(newConfig);
 
                 configPrint = await printSearchParams({ lastConfig });
                 getEmbed(0).setDescription(

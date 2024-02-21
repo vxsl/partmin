@@ -1,5 +1,11 @@
 import { Reflect } from "runtypes";
 import { RuntypeBase } from "runtypes/lib/runtype.js";
+import {
+  accessNestedProperty,
+  accessParentOfNestedProperty,
+} from "util/json.js";
+import { aOrAn, discordFormat } from "util/string.js";
+import { RecursivePartial } from "util/type.js";
 
 export const getRecord = (r: Reflect) =>
   r.tag === "record"
@@ -48,7 +54,7 @@ export const castStringToRuntype = (runtype: Reflect, value: string) => {
   return value;
 };
 
-const getUnderlyingField = (
+export const getUnderlyingField = (
   fields: { [key: string]: RuntypeBase },
   k: keyof typeof fields
 ) =>
@@ -80,4 +86,128 @@ export const throwOnUnknownKey = (
       throwOnUnknownKey(fields, obj[k], options, path.concat(k));
     }
   });
+};
+
+const translate = (s: Reflect["tag"], options?: { useArticle?: boolean }) =>
+  s === "boolean"
+    ? "true or false"
+    : s === "string"
+    ? "text"
+    : options?.useArticle
+    ? aOrAn(s)
+    : s;
+
+export const getRuntypeDescription = (
+  f: Reflect,
+  options?: { omitOptional?: boolean; useArticle?: boolean }
+) =>
+  f.tag === "optional"
+    ? `${options?.omitOptional ? "" : "optional "}${translate(
+        f.underlying.tag,
+        { useArticle: options?.useArticle }
+      )}`
+    : translate(f.tag, { useArticle: options?.useArticle });
+
+const definedValueEmoji = "📝";
+const newlyDefinedValueEmoji = "🆕";
+const definedDefaultValueEmoji = "⚫";
+
+export const recursivePrintRuntype = async <T extends Object>({
+  runtype,
+  object,
+  lastObject,
+  defaultValues,
+  path: _path,
+  lvl = 0,
+}: {
+  runtype: Reflect;
+  object: T;
+  lastObject?: T;
+  defaultValues: RecursivePartial<T>;
+  path: string;
+  lvl?: number;
+}): Promise<{
+  min: string;
+  full: string;
+}> => {
+  let min = "";
+  let full = "";
+
+  const record = getRecord(runtype);
+  if (!record) {
+    return { min, full };
+  }
+
+  const indent = !lvl ? "" : `${"  ".repeat(lvl)}`;
+
+  for (const [key, f] of Object.entries(record.fields)) {
+    const path = _path ? `${_path}.${key}` : key;
+    const prefix = `${indent}- `;
+    const nestedRecord = getRecord(f);
+
+    if (nestedRecord && Object.keys(nestedRecord.fields).length > 0) {
+      const inner = await recursivePrintRuntype({
+        runtype: nestedRecord,
+        object,
+        lastObject,
+        defaultValues,
+        path,
+        lvl: lvl + 1,
+      });
+      const printCategory = (contents: string) =>
+        (contents
+          ? `\n${prefix}${discordFormat(key, {
+              underline: true,
+            })}:\n${contents}`
+          : "") + "\n";
+      min += printCategory(inner.min);
+      full += printCategory(inner.full);
+    } else {
+      const lastValue = accessNestedProperty(lastObject, path);
+      const vals = accessParentOfNestedProperty(object, path);
+      const isPresent = key in vals;
+
+      const nestedDefaults = accessParentOfNestedProperty(defaultValues, path);
+
+      const isDefault = await import("util/config.js").then(
+        ({ isDefaultValue }) =>
+          isDefaultValue({
+            values: vals,
+            defaultValues: nestedDefaults,
+            path: key,
+          })
+      );
+
+      const value = accessNestedProperty(object, path);
+      if (isPresent && !isDefault) {
+        const emoji =
+          !lastObject || lastValue === value
+            ? definedValueEmoji
+            : newlyDefinedValueEmoji;
+        const definedValue =
+          `${prefix}${emoji} ` +
+          `${discordFormat(key, { bold: true })}: ${discordFormat(value, {
+            monospace: true,
+            bold: true,
+          })}` +
+          "\n";
+        min += definedValue;
+        full += definedValue;
+      } else {
+        full +=
+          prefix +
+          (isDefault
+            ? `️${definedDefaultValueEmoji} ` +
+              `${key}: ${discordFormat(value, {
+                monospace: true,
+              })} ${discordFormat(`(default value)`)}` +
+              "\n"
+            : `${key} ${discordFormat(`(${getRuntypeDescription(f)})`, {
+                italic: true,
+              })}` + "\n");
+      }
+    }
+  }
+
+  return { min, full };
 };
