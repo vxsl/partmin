@@ -12,6 +12,7 @@ import {
 import { getUserConfig } from "util/config.js";
 import { isWithinRadii } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
+import { asyncFilter } from "util/misc.js";
 
 dotenv.load();
 
@@ -76,8 +77,8 @@ export const processListings = async (unseenListings: Listing[]) => {
   return validResults;
 };
 
-export const preprocessListings = (listings: Listing[]) => {
-  return listings.filter(async (l) => {
+export const preprocessListings = (listings: Listing[]) =>
+  asyncFilter(listings, async (l) => {
     if (!l.details.coords) return true;
     const v = await isWithinRadii(l.details.coords);
     if (!v) {
@@ -90,4 +91,3 @@ export const preprocessListings = (listings: Listing[]) => {
     }
     return v;
   });
-};

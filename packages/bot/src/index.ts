@@ -18,7 +18,6 @@ import {
 } from "process/index.js";
 import psList from "ps-list";
 import { WebDriver } from "selenium-webdriver";
-import { stdout as singleLineStdOut } from "single-line-log";
 import { Platform, platforms } from "types/platform.js";
 import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
@@ -96,12 +95,14 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
       // pre-process listings before per-listing callbacks
       let listings: Listing[] = [];
       try {
-        listings = preprocessListings(allListings);
+        listings = await preprocessListings(allListings);
         if (!listings.length) {
-          log(`No listings found within the search area.`);
+          log(`No valid listings found after pre-processing.`);
           continue;
         }
-        debugLog(`Found ${listings.length} listings within the search area.`);
+        debugLog(
+          `Found ${listings.length} valid listings that passed pre-processing.`
+        );
       } catch (e) {
         if (!shuttingDown) {
           discordWarning(
@@ -121,7 +122,7 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
       log(
         `${unseen.length} unseen listing${
           unseen.length !== 1 ? "s" : ""
-        } out of ${listings.length}.}`
+        } out of ${listings.length}.`
       );
       if (unseen.length) {
         verboseLog(unseen.map((l) => l.url).join(", "));
@@ -186,7 +187,7 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
           activity?.update(i + 1);
           if (!l) return;
 
-          singleLineStdOut(
+          log(
             `Sending Discord notification for listing (${i + 1}/${
               validListings.length
             }): ${l.url}`
