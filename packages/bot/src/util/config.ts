@@ -132,8 +132,8 @@ export const ifUserConfigIsChanged = (callback?: () => void) => {
     if (callback) {
       await callback();
     }
-    await persistent.userConfig
-      .requireValue()
-      .then(persistent.cachedUserConfig.writeValue);
+    await persistent.cachedUserConfig.writeValue(
+      await persistent.userConfig.requireValue()
+    );
   });
 };
