@@ -1,0 +1,17 @@
+{
+  "botBehaviour": {
+    "suppressGreeting": false,
+    "suppressUnreliableParamsWarning": false
+  },
+  "development": {
+    "headed": false,
+    "testing": false,
+    "noSandbox": false,
+    "noRetrieval": false,
+    "preventConfigOverwrite": false
+  },
+  "logging": {
+    "debug": false,
+    "verbose": false
+  }
+}
