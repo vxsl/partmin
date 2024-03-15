@@ -9,8 +9,11 @@ import { PetType } from "user-config.js";
 import { getUserConfig } from "util/config.js";
 import {
   Coordinates,
-  Radius, acresToSqft, decodeMapDevelopersURL,
-  getGoogleMapsLink, sqMetersToSqft
+  Radius,
+  acresToSqft,
+  decodeMapDevelopersURL,
+  getGoogleMapsLink,
+  sqMetersToSqft,
 } from "util/geo.js";
 import { findNestedJSONProperty } from "util/json.js";
 import { debugLog, log, verboseLog } from "util/log.js";
@@ -44,26 +47,36 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   let url = getListingURL(l.id);
   debugLog(`visiting listing: ${url}`);
 
-  await fbGet(driver, url);
+  let info: any;
 
-  const info = await driver
-    .findElements(
-      By.xpath(`//script[contains(text(), "marketplace_product_details_page")]`)
-    )
-    .then((els) => els[0])
-    .then((el) => el?.getAttribute("innerHTML"))
-    .then(
-      (html) =>
-        findNestedJSONProperty(html ?? "", "marketplace_product_details_page")
-          ?.target
-    );
+  for (let i = 0; i < 3; i++) {
+    await fbGet(driver, url);
+
+    info = await driver
+      .findElements(
+        By.xpath(
+          `//script[contains(text(), "marketplace_product_details_page")]`
+        )
+      )
+      .then((els) => els[0])
+      .then((el) => el?.getAttribute("innerHTML"))
+      .then(
+        (html) =>
+          findNestedJSONProperty(html ?? "", "marketplace_product_details_page")
+            ?.target
+      );
+
+    if (info) {
+      break;
+    }
+  }
 
   if (!info) {
     discordSend(
       `Warning: couldn't retrieve info for the following Marketplace listing: ${url}.\nThe retrieval method may have changed.`,
       { bold: true }
     );
-    // TODO do something else.
+    // TODO try something else.
 
     // // if there's a <span> with text "See more", click it:
     // await driver
