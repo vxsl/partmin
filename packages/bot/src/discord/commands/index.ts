@@ -7,13 +7,16 @@ import {
   Routes,
   SlashCommandBuilder,
 } from "discord.js";
-import editSearch from "discord/commands/edit-search.js";
+import getEditCommand from "discord/commands/edit-search.js";
 import testListing from "discord/commands/test-listing.js";
 import { discordGuildID } from "discord/constants.js";
 import { discordClient } from "discord/index.js";
 import persistent from "persistent.js";
+import { SearchParams } from "user-config.js";
+import { getUserConfig } from "util/config.js";
 import { log } from "util/log.js";
 import { notUndefined, tryNTimes } from "util/misc.js";
+import { defaultConfigValues } from "./../../config";
 
 interface Command {
   name: string;
@@ -35,7 +38,18 @@ const setupCommands = async () => {
       data: new SlashCommandBuilder()
         .setName("edit-search")
         .setDescription("Edit your apartment search parameters interactively."),
-      execute: editSearch,
+      execute: getEditCommand({
+        getObject: getUserConfig,
+        writeObject: persistent.userConfig.writeValue,
+        nestPath: "search.params",
+        runtype: SearchParams,
+        defaultValues: defaultConfigValues,
+        strings: {
+          editModal: `Edit search parameter`,
+          changeNotification: "⚙️ Search parameters updated",
+          print: "Your search",
+        },
+      }),
     },
   ];
   const token = await persistent.botToken.requireValue();

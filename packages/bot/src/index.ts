@@ -1,6 +1,7 @@
 import { defineAdvancedConfig, devOptions } from "advanced-config.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
+import { discordInitRoutine } from "discord/init-routine.js";
 import {
   reinitializeInteractiveListingMessages,
   sendListing,
@@ -322,6 +323,7 @@ export const fatalError = async (e: unknown) => {
   try {
     await defineAdvancedConfig();
     await initDiscord();
+    await discordInitRoutine();
     setPresence("launching");
     reinitializeInteractiveListingMessages();
     driver = await buildDriver();

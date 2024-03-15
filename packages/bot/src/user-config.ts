@@ -166,3 +166,8 @@ export const validateUserConfig = (c: StaticUserConfig) => {
     }
   });
 };
+
+// export const initUserConfig = async () => {
+//   const userFile = (await persistent.userConfig.value()) ?? {};
+//   persistent.cachedUserConfig.writeValue(userFile);
+// };
