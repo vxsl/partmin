@@ -1,7 +1,7 @@
 import { ActivityType, PresenceData } from "discord.js";
 import { presences } from "discord/constants.js";
 import { getDiscordClient } from "discord/index.js";
-import { log } from "util/log.js";
+import { debugLog, log } from "util/log.js";
 import { randomElement } from "util/misc.js";
 
 type ActivityProgress = {
@@ -135,7 +135,7 @@ export class PresenceActivity {
     const now = Date.now();
     if (this.lastSetAt && now - this.lastSetAt < presenceRateLimit) {
       if (!options?.suppressRateLimitWarning) {
-        log(
+        debugLog(
           `Refusing to update presence for activity, only updating activity every ${
             presenceRateLimit / 1000
           } seconds`

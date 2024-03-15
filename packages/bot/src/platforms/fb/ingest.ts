@@ -32,7 +32,7 @@ const getListingURL = (id: string) => `https://fb.com/marketplace/item/${id}`;
 class MarketplaceRadiusError extends Error {
   constructor(url: string) {
     super(
-      `Warning: Marketplace refused to load the following page correctly: <${url}>.\n\nTrying again later.`
+      `Warning: Marketplace refused to load the following page correctly: <${url}>.\nTrying again later.`
     );
     this.name = "MarketplaceRadiusError";
   }
@@ -323,22 +323,7 @@ export const visitMarketplace = async (driver: WebDriver, radius: Radius) => {
     return state === "complete";
   });
 
-  await elementShouldExist("xpath", fbListingXpath, driver);
-
-  // ensure facebook didn't ignore our requested radius:
-  // TODO ensure lat and lon as well?
-  const urlRadius = await driver
-    .getCurrentUrl()
-    .then((url) => url.match(/radius=([^&]+)/)?.[1])
-    .then((r) => parseFloat(r ?? "0"));
-  if (urlRadius === undefined) {
-    throw new Error("Could not find radius in url");
-  }
-  const minRadius = radius.diam * 0.9;
-  const maxRadius = radius.diam * 1.1;
-  if (urlRadius < minRadius || urlRadius > maxRadius) {
-    throw new MarketplaceRadiusError(url);
-  }
+  return url;
 };
 
 export const getListings = async (driver: WebDriver): Promise<Listing[]> => {
@@ -415,54 +400,98 @@ export const main = async (driver: WebDriver) => {
 
   const activity = startActivity(fb.presenceActivities?.main, radii.length);
 
-  for (let i = 0; i < radii.length; i++) {
-    const r = radii[i];
-    if (!r) {
-      continue; // I don't know why TypeScript doesn't know that r is not undefined here.
-    }
-    const rLabel = `radius ${i + 1}/${radii.length}`;
-    log(
-      `visiting fb marketplace [${rLabel}]: ${Radius.toString(r, {
-        truncate: true,
-      })}`
-    );
+  const failedRadiiIndices: number[] = [];
 
-    activity?.update(i);
-
-    try {
-      await tryNTimes(3, () => visitMarketplace(driver, r));
-    } catch (e) {
-      if (e instanceof MarketplaceRadiusError) {
-        // TODO only send this error to the user if it persists over time
-        discordSend(e.message, { italic: true });
-        log(
-          `Skipping ${rLabel} this time because Facebook refused to load the correct radius.`
-        );
-        continue;
-      } else {
-        throw e;
+  for (let secondAttempt = 0; secondAttempt < 2; secondAttempt++) {
+    const arr = secondAttempt ? failedRadiiIndices.map((i) => radii[i]) : radii;
+    for (let i = 0; i < arr.length; i++) {
+      const _i = secondAttempt ? failedRadiiIndices[i] ?? i : i;
+      const r = arr[i];
+      if (!r) {
+        continue; // I don't know why TypeScript doesn't know that r is not undefined here.
       }
-    }
+      const rLabel = `radius ${_i + 1}/${radii.length}`;
+      log(
+        `visiting fb marketplace [${rLabel}${
+          secondAttempt ? " (once more since it failed last time)" : ""
+        }]: ${Radius.toString(r, {
+          truncate: true,
+        })}`
+      );
 
-    debugLog("Parsing listings...");
-    await withDOMChangesBlocked(driver, async () => {
-      await getListings(driver).then((arr) => {
-        verboseLog(
-          `found the following listings in ${rLabel}: ${arr
-            ?.map((l) => l.id)
-            .join(", ")}`
+      activity?.update(i);
+
+      try {
+        await tryNTimes(3, async () => {
+          const url = await visitMarketplace(driver, r);
+
+          await withDOMChangesBlocked(driver, async () => {
+            await elementShouldExist("xpath", fbListingXpath, driver);
+
+            verboseLog(
+              "Ensuring facebook didn't override the specified radius..."
+            );
+            await driver
+              .findElement(By.xpath(`//span[contains(., 'kilomet')]`))
+              .then((el) => el.getText())
+              .then((text) => text.match(/(\d+\.?\d*)\s?kilomet/)?.[1])
+              .then((_r) => {
+                if (_r === undefined) {
+                  throw new Error("Could not validate radius in page");
+                }
+                const actualRadius = parseFloat(_r);
+                const minAcceptable = r.diam * 0.9;
+                const maxAcceptable = r.diam * 1.1;
+                if (
+                  actualRadius < minAcceptable ||
+                  actualRadius > maxAcceptable
+                ) {
+                  log(
+                    `Facebook loaded results for ${actualRadius} km radius instead of ${r.diam} km radius.`
+                  );
+                  throw new MarketplaceRadiusError(url);
+                } else {
+                  log(
+                    `Facebook successfully loaded results for ${actualRadius} km radius.`
+                  );
+                }
+              });
+
+            debugLog("Parsing listings...");
+            await getListings(driver).then((arr) => {
+              verboseLog(
+                `found the following listings in ${rLabel}: ${arr
+                  ?.map((l) => l.id)
+                  .join(", ")}`
+              );
+              listings.push(...arr);
+            });
+          });
+        });
+        log(
+          `found ${
+            listings.length - listingCount
+          } listings in ${rLabel} (${Radius.toString(r, { truncate: true })})`
         );
-        listings.push(...arr);
-      });
-    });
-    log(
-      `found ${
-        listings.length - listingCount
-      } listings in ${rLabel} (${Radius.toString(r, { truncate: true })})`
-    );
-    listingCount = listings.length;
-    if (i < radii.length - 1) {
-      await randomWait({ short: true, suppressProgressLog: true });
+        listingCount = listings.length;
+        if (i < arr.length - 1) {
+          await randomWait({ short: true, suppressProgressLog: true });
+        }
+      } catch (e) {
+        if (e instanceof MarketplaceRadiusError) {
+          if (secondAttempt) {
+            discordSend(e.message, { italic: true });
+            log(
+              `Skipping ${rLabel} this time because Facebook refused to load the correct radius.`
+            );
+          } else {
+            failedRadiiIndices.push(i);
+          }
+          continue;
+        } else {
+          throw e;
+        }
+      }
     }
   }
   return listings;
