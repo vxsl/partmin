@@ -9,7 +9,7 @@ import { discordSend } from "discord/util.js";
 import persistent from "persistent.js";
 import {
   City,
-  Radius,
+  Circle,
   constructMapDevelopersURL,
   decodeMapDevelopersURL,
   identifyCity,
@@ -25,7 +25,7 @@ export const setSearchAreas = async ({
   commandInteraction?: CommandInteraction;
 }) => {
   let mapDevelopersURL: string | undefined;
-  let radii: Radius[] = [];
+  let radii: Circle[] = [];
 
   while (!radii.length || mapDevelopersURL === undefined) {
     mapDevelopersURL = await promptForString({

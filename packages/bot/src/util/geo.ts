@@ -49,29 +49,29 @@ export class Coordinates {
     return options?.raw ? `${lat},${lon}` : `(${lat}, ${lon})`;
   }
 }
-export class Radius {
+export class Circle {
   coords: Coordinates;
-  diam: number;
+  radius: number;
 
-  constructor(lat: number, lon: number, diam: number) {
+  constructor(lat: number, lon: number, radius: number) {
     this.coords = new Coordinates(lat, lon);
-    this.diam = diam;
+    this.radius = radius;
   }
 
   static build({
     lat,
     lon,
-    diam,
+    radius,
   }: {
     lat: number | undefined;
     lon: number | undefined;
-    diam: number | undefined;
-  }): Radius | undefined {
-    if (lat !== undefined && lon !== undefined && diam !== undefined) {
-      return new Radius(lat, lon, diam);
+    radius: number | undefined;
+  }): Circle | undefined {
+    if (lat !== undefined && lon !== undefined && radius !== undefined) {
+      return new Circle(lat, lon, radius);
     }
     log(
-      `Error building radius: ${Object.entries({ lat, lon, diam })
+      `Error building radius: ${Object.entries({ lat, lon, radius })
         .filter(([, v]) => v === undefined)
         .map(([k]) => k)
         .join(", ")} undefined`
@@ -84,15 +84,15 @@ export class Radius {
   get lon() {
     return this.coords.lon;
   }
-  static toString(r: Radius, options?: { truncate?: boolean }) {
+  static toString(r: Circle, options?: { truncate?: boolean }) {
     return `${Coordinates.toString(r.coords, {
       raw: true,
       truncate: options?.truncate,
-    })},${options?.truncate ? r.diam.toFixed(3) : r.diam}`;
+    })},${options?.truncate ? r.radius.toFixed(3) : r.radius}`;
   }
 }
 
-export const decodeMapDevelopersURL = (url: string): Radius[] => {
+export const decodeMapDevelopersURL = (url: string): Circle[] => {
   const circlesParam = url.match(/circles=([^&]*)/)?.[1];
   if (!circlesParam) {
     throw new Error("Error parsing mapDevelopersURL");
@@ -105,10 +105,10 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
       if (radius === undefined || lat === undefined || lon === undefined) {
         throw new Error(`Error parsing circle data: ${circle}`);
       }
-      return Radius.build({
+      return Circle.build({
         lat: parseFloat(lat),
         lon: parseFloat(lon),
-        diam: parseFloat(radius) / 1000,
+        radius: parseFloat(radius) / 1000,
       });
     })
     .filter(notUndefined);
@@ -130,19 +130,19 @@ export const isWithinRadii = async (coords: Coordinates) => {
         : "the configured radius"
     }:`
   );
-  verboseLog(radii.map((r) => Radius.toString(r)).join("\n"));
+  verboseLog(radii.map((r) => Circle.toString(r)).join("\n"));
   const success = radii.find(
     (radius) =>
       haversine(
         { latitude: radius.lat, longitude: radius.lon },
         { latitude: coords.lat, longitude: coords.lon },
         { unit: "km" }
-      ) <= radius.diam
+      ) <= radius.radius
   );
   verboseLog(
     `${Coordinates.toString(coords)} is ${
       success
-        ? `within ${Radius.toString(success)}`
+        ? `within ${Circle.toString(success)}`
         : `not within ${
             radii.length > 1
               ? `any of the ${radii.length} radii`

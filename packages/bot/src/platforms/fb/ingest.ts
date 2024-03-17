@@ -9,7 +9,7 @@ import { PetType } from "user-config.js";
 import { getUserConfig } from "util/config.js";
 import {
   Coordinates,
-  Radius,
+  Circle,
   acresToSqft,
   decodeMapDevelopersURL,
   getGoogleMapsLink,
@@ -279,14 +279,14 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   }
 };
 
-export const visitMarketplace = async (driver: WebDriver, radius: Radius) => {
+export const visitMarketplace = async (driver: WebDriver, radius: Circle) => {
   const config = await getUserConfig();
   const vals = {
     // location:
     latitude: radius.lat,
     longitude: radius.lon,
     radius:
-      radius.diam +
+      radius.radius +
       Math.random() * 0.00000001 +
       Math.random() * 0.0000001 +
       Math.random() * 0.000001 +
@@ -414,7 +414,7 @@ export const main = async (driver: WebDriver) => {
       log(
         `visiting fb marketplace [${rLabel}${
           secondAttempt ? " (once more since it failed last time)" : ""
-        }]: ${Radius.toString(r, {
+        }]: ${Circle.toString(r, {
           truncate: true,
         })}`
       );
@@ -440,14 +440,14 @@ export const main = async (driver: WebDriver) => {
                   throw new Error("Could not validate radius in page");
                 }
                 const actualRadius = parseFloat(_r);
-                const minAcceptable = r.diam * 0.9;
-                const maxAcceptable = r.diam * 1.1;
+                const minAcceptable = r.radius * 0.9;
+                const maxAcceptable = r.radius * 1.1;
                 if (
                   actualRadius < minAcceptable ||
                   actualRadius > maxAcceptable
                 ) {
                   log(
-                    `Facebook loaded results for ${actualRadius} km radius instead of ${r.diam} km radius.`
+                    `Facebook loaded results for ${actualRadius} km radius instead of ${r.radius} km radius.`
                   );
                   throw new MarketplaceRadiusError(url);
                 } else {
@@ -471,7 +471,7 @@ export const main = async (driver: WebDriver) => {
         log(
           `found ${
             listings.length - listingCount
-          } listings in ${rLabel} (${Radius.toString(r, { truncate: true })})`
+          } listings in ${rLabel} (${Circle.toString(r, { truncate: true })})`
         );
         listingCount = listings.length;
         if (i < arr.length - 1) {
