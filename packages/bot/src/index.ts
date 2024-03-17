@@ -6,7 +6,7 @@ import {
   sendListing,
 } from "discord/interactive/listing/index.js";
 import { setPresence, startActivity } from "discord/presence.js";
-import { discordError, discordWarning } from "discord/util.js";
+import { discordError, discordSend, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import { Listing } from "listing.js";
@@ -328,6 +328,15 @@ export const fatalError = async (e: unknown) => {
     driver = await buildDriver();
     setPresence("online");
     log("Starting main retrieval loop...");
+
+    const advancedConfig = await persistent.advancedConfig.requireValue();
+    if (!advancedConfig.botBehaviour?.suppressGreeting) {
+      await discordSend(
+        discordFormat(
+          `🚀 Starting up retrieval loop. Check my activity status anytime to see what I'm doing.`
+        )
+      );
+    }
 
     if (!devOptions.noRetrieval) {
       await retrieval(driver, [platforms.fb, platforms.kijiji]);
