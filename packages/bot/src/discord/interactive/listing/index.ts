@@ -209,7 +209,7 @@ export const reinitializeInteractiveListingMessages = async () => {
 
       const l = listingsMap.get(url);
       if (!l) {
-        debugLog(
+        verboseLog(
           `Failed to reinitialize message ${message.id}: no cached listing`
         );
         return;

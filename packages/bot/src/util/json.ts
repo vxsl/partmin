@@ -18,7 +18,13 @@ export const modifyNestedProperty = (
   result[last] = value;
 };
 
-export const accessNestedProperty = (obj: any, _path: string | string[]) => {
+export const accessNestedProperty = (
+  obj: any,
+  _path: string | string[] | undefined
+) => {
+  if (_path === undefined) {
+    return obj;
+  }
   let result = obj;
   const path = Array.isArray(_path)
     ? _path

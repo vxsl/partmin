@@ -24,11 +24,10 @@ import {
   notUndefined,
   throwError,
 } from "util/misc.js";
-import { NonEmptyArray } from "util/type.js";
 
 const collectorAliveTime = 24 * 3600000;
 
-type ComponentOrder = NonEmptyArray<NonEmptyArray<string>>;
+type ComponentOrder = Array<Array<string>>;
 type ComponentContextHelpers = {
   getEmbed: (index: number) => EmbedBuilder;
   getButton: (customId: string) => ButtonBuilder;
@@ -39,7 +38,7 @@ type ImmutableState<S extends CustomState> = {
   state: S;
   componentOrder: ComponentOrder;
 };
-type ComponentContext<S extends CustomState> = ImmutableState<S> &
+export type ComponentContext<S extends CustomState> = ImmutableState<S> &
   ComponentContextHelpers & {
     componentInteraction: MessageComponentInteraction;
     apply: () => Promise<InteractionResponse | void>;
@@ -196,13 +195,8 @@ export const startInteractive = ({
 
   // ___________________________________________________________________________
   // dynamic stuff:
-  let componentOrder = nonEmptyArrayOrError(
-    // TODO don't error?
-    message.components.map((row) =>
-      nonEmptyArrayOrError(
-        row.components.map((c) => c.customId).filter(notNull)
-      )
-    )
+  let componentOrder = message.components.map((row) =>
+    row.components.map((c) => c.customId).filter(notNull)
   );
   let components: ActionRowBuilder<Builder>[] = getComponents({
     order: componentOrder,

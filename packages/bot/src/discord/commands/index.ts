@@ -1,4 +1,8 @@
-import { devOptions } from "advanced-config.js";
+import {
+  AdvancedConfig,
+  defaultAdvancedConfigValues,
+  devOptions,
+} from "advanced-config.js";
 import {
   Collection,
   CommandInteraction,
@@ -7,13 +11,17 @@ import {
   Routes,
   SlashCommandBuilder,
 } from "discord.js";
-import editSearch from "discord/commands/edit-search.js";
+import getInteractiveEditCommand from "discord/commands/interactive-edit.js";
 import testListing from "discord/commands/test-listing.js";
 import { discordGuildID } from "discord/constants.js";
 import { discordClient } from "discord/index.js";
+import { setLocation, setSearchAreas } from "discord/init-routine.js";
 import persistent from "persistent.js";
+import { SearchParams, defaultUserConfigValues } from "user-config.js";
+import { identifyCity } from "util/geo.js";
 import { log } from "util/log.js";
 import { notUndefined, tryNTimes } from "util/misc.js";
+import { discordFormat } from "util/string.js";
 
 interface Command {
   name: string;
@@ -35,7 +43,19 @@ const setupCommands = async () => {
       data: new SlashCommandBuilder()
         .setName("edit-search")
         .setDescription("Edit your apartment search parameters interactively."),
-      execute: editSearch,
+      execute: getInteractiveEditCommand({
+        getObject: () => persistent.userConfig.requireValue(),
+        writeObject: (v) => persistent.userConfig.writeValue(v),
+        nestPath: "search.params",
+        runtype: SearchParams,
+        defaultValues: defaultUserConfigValues,
+        strings: {
+          editModal: `Edit search parameter`,
+          changeNotification: "⚙️ Search parameters updated",
+          title: "Your search",
+        },
+      }),
+    },
     },
   ];
   const token = await persistent.botToken.requireValue();
