@@ -165,4 +165,8 @@ export const validateUserConfig = (c: StaticUserConfig) => {
       throw new Error(`Invalid blacklistRegex in config: ${r}`);
     }
   });
+
+  if (c.search.params.price.min > c.search.params.price.max) {
+    throw new Error("min price is greater than max price");
+  }
 };
