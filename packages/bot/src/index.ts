@@ -1,6 +1,7 @@
 import { defineAdvancedConfig, devOptions } from "advanced-config.js";
 import { presenceActivities } from "discord/constants.js";
 import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
+import { discordInitRoutine } from "discord/init-routine.js";
 import {
   reinitializeInteractiveListingMessages,
   sendListing,
@@ -22,6 +23,7 @@ import { Platform, platforms } from "types/platform.js";
 import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
 import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
+import { discordFormat } from "util/string.js";
 
 process.title = "partmin-bot";
 
@@ -323,6 +325,7 @@ export const fatalError = async (e: unknown) => {
   try {
     await defineAdvancedConfig();
     await initDiscord();
+    await discordInitRoutine();
     setPresence("launching");
     reinitializeInteractiveListingMessages();
     driver = await buildDriver();

@@ -34,12 +34,13 @@ export const aOrAn = (word: string) =>
   "aeiou".includes(word[0]?.toLowerCase() ?? "") ? `an ${word}` : `a ${word}`;
 
 export interface DiscordFormatOptions {
-  monospace?: true;
-  bold?: true;
-  italic?: true;
+  monospace?: boolean;
+  bold?: boolean;
+  italic?: boolean;
   code?: boolean | string;
   quote?: boolean;
   link?: string;
+  avoidLinkPreviews?: boolean;
   underline?: boolean;
 }
 export const discordFormat = (s: string, options?: DiscordFormatOptions) => {
@@ -51,6 +52,11 @@ export const discordFormat = (s: string, options?: DiscordFormatOptions) => {
       : options?.monospace
       ? `\`${s}\``
       : s;
+  if (options?.link) {
+    v = `[${v}](${
+      options.avoidLinkPreviews ? `<${options.link}>` : options.link
+    })`;
+  }
   if (options?.bold) {
     v = `**${v}**`;
   }
@@ -62,9 +68,6 @@ export const discordFormat = (s: string, options?: DiscordFormatOptions) => {
   }
   if (options?.quote) {
     v = `> ${v.replace(/\n/g, "\n> ")}`;
-  }
-  if (options?.link) {
-    v = `[${v}](${options.link})`;
   }
   return v;
 };

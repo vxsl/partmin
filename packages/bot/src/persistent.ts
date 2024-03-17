@@ -1,11 +1,9 @@
 import {
   StaticAdvancedConfig,
   advancedConfigPath,
-  devOptions,
   validateAdvancedConfig,
 } from "advanced-config.js";
 import { ChannelIDs } from "discord/index.js";
-import { writeFileSync } from "fs";
 import { Listing } from "listing.js";
 import {
   StaticUserConfig,
@@ -13,9 +11,8 @@ import {
   validateUserConfig,
 } from "user-config.js";
 import { dynamicValidateUserConfig } from "util/config.js";
-import { CommuteSummary } from "util/geo.js";
+import { City, CommuteSummary } from "util/geo.js";
 import { parseJSON } from "util/io.js";
-import { log } from "util/log.js";
 import { PersistentDataDef, PersistentStringDef } from "util/persistence.js";
 
 const persistent = {
@@ -78,6 +75,21 @@ const persistent = {
     readTransform: parseJSON,
     writeTransform: JSON.stringify,
     label: "address approximations",
+    common: true,
+  }),
+  cities: new PersistentDataDef<{
+    [k: string]: City;
+  }>({
+    path: `cities.json`,
+    readTransform: parseJSON,
+    writeTransform: (v) => {
+      const result: Record<string, City> = {};
+      for (const [k, c] of Object.entries(v)) {
+        result[k.toLowerCase()] = c as City;
+      }
+      return JSON.stringify(result);
+    },
+    label: "cities",
     common: true,
   }),
   googleMapsAPIKey: new PersistentStringDef({

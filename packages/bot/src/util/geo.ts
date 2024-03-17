@@ -12,6 +12,16 @@ const gMapsAPIs = "https://maps.googleapis.com/maps/api";
 const gMapsAPIKey = async () =>
   `key=${await persistent.googleMapsAPIKey.requireValue()}`;
 
+export type City = {
+  city: string;
+  region: string;
+  regionShort: string;
+  country: string;
+  lat: number;
+  lon: number;
+  link: string;
+};
+
 export class Coordinates {
   lat: number;
   lon: number;
@@ -102,6 +112,12 @@ export const decodeMapDevelopersURL = (url: string): Radius[] => {
       });
     })
     .filter(notUndefined);
+};
+
+export const constructMapDevelopersURL = (coords: Coordinates) => {
+  return `https://www.mapdevelopers.com/draw-circle-tool.php?circles=${encodeURIComponent(
+    `[[1000,${coords.lat},${coords.lon},"#AAAAAA","#000000",0.4]]`
+  )}`;
 };
 
 export const isWithinRadii = async (coords: Coordinates) => {
@@ -282,10 +298,10 @@ export const formatCommuteSummaryMD = (
 export const trimAddress = async (address: string): Promise<string> => {
   const config = await getUserConfig();
   const city = sanitizeString(config.search.location.city);
-  const prov = sanitizeString(config.search.location.region);
+  const region = sanitizeString(config.search.location.region);
   const cityIndex = sanitizeString(address).lastIndexOf(city);
-  const provIndex = sanitizeString(address).lastIndexOf(prov);
-  if (cityIndex === 0 || provIndex <= cityIndex) {
+  const regionIndex = sanitizeString(address).lastIndexOf(region);
+  if (cityIndex === 0 || regionIndex <= cityIndex) {
     return address;
   }
   const result = address.substring(0, cityIndex).trim();
@@ -299,3 +315,55 @@ const sqFtToSqMetersRatio = 0.092903;
 export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
 export const sqMetersToSqft = (m2: number) => m2 / sqFtToSqMetersRatio;
 export const acresToSqft = (a: number) => a * 43560;
+
+export const identifyCity = async (city: string) => {
+  const cities = (await persistent.cities.value()) ?? {};
+  const cached = cities?.[city];
+  if (cached) {
+    return cached;
+  }
+
+  const { data } = await axios.get(
+    `${gMapsAPIs}/geocode/json?address=${city}&${await gMapsAPIKey()}`
+  );
+  const result = data?.results[0]?.address_components;
+  const cityComponent = result?.find((c: any) =>
+    c?.types?.includes("locality")
+  );
+  const regionComponent = result?.find((c: any) =>
+    c?.types?.includes("administrative_area_level_1")
+  );
+  const countryComponent = result?.find((c: any) =>
+    c?.types.includes("country")
+  );
+  const cityStr = cityComponent?.long_name;
+  const regionStr = regionComponent?.long_name;
+  const regionShortStr = regionComponent?.short_name;
+  const countryStr = countryComponent?.long_name;
+  const addressStr = data?.results[0]?.formatted_address;
+  const lat = data?.results[0]?.geometry?.location?.lat;
+  const lon = data?.results[0]?.geometry?.location?.lng;
+  if (
+    typeof cityStr !== "string" ||
+    typeof regionStr !== "string" ||
+    typeof regionShortStr !== "string" ||
+    typeof countryStr !== "string" ||
+    typeof addressStr !== "string" ||
+    typeof lat !== "number" ||
+    typeof lon !== "number"
+  ) {
+    throw new Error(`Error inferring geo data from city name: ${city}`);
+  }
+
+  const c: City = {
+    city: cityStr,
+    region: regionStr,
+    regionShort: regionShortStr,
+    country: countryStr,
+    lat,
+    lon,
+    link: getGoogleMapsLink(addressStr),
+  };
+  await persistent.cities.writeValue({ ...cities, [city]: c });
+  return c;
+};

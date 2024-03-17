@@ -65,7 +65,7 @@ export const SearchParams = RuntypeRecord({
   unreliableParams: Optional(UnreliableParams),
 });
 
-const Location = RuntypeRecord({
+export const Location = RuntypeRecord({
   city: String,
   region: String,
   mapDevelopersURL: String,

@@ -78,6 +78,32 @@ const setupCommands = async () => {
         },
       }),
     },
+    {
+      data: new SlashCommandBuilder()
+        .setName("set-location")
+        .setDescription("Set the desired location for your apartment search."),
+      execute: (commandInteraction: CommandInteraction) =>
+        setLocation({ commandInteraction }),
+    },
+    {
+      data: new SlashCommandBuilder()
+        .setName("set-search-areas")
+        .setDescription("Set the desired location for your apartment search."),
+      execute: async (commandInteraction: CommandInteraction) => {
+        const userConfig = await persistent.userConfig.requireValue();
+        const citiesCache = (await persistent.cities.value()) ?? {};
+        const city =
+          citiesCache[userConfig.search.location?.city] ??
+          (await identifyCity(userConfig.search.location?.city).catch((e) => {
+            log(`Error identifying city from user config file: ${e}`);
+            return undefined;
+          }));
+        if (city) {
+          await setSearchAreas({ city, commandInteraction });
+        } else {
+          await setLocation({ commandInteraction });
+        }
+      },
     },
   ];
   const token = await persistent.botToken.requireValue();
