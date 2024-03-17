@@ -56,6 +56,28 @@ const setupCommands = async () => {
         },
       }),
     },
+    {
+      data: new SlashCommandBuilder()
+        .setName("edit-advanced-config")
+        .setDescription(
+          "Edit advanced config interactively. Do not use unless you know what you're doing."
+        ),
+      execute: getInteractiveEditCommand({
+        getObject: () => persistent.advancedConfig.requireValue(),
+        writeObject: (v) => persistent.advancedConfig.writeValue(v),
+        runtype: AdvancedConfig,
+        defaultValues: defaultAdvancedConfigValues,
+        strings: {
+          editModal: `Edit advanced config parameter`,
+          changeNotification: "⚙️ Advanced config updated",
+          title: "Advanced configuration",
+          description: discordFormat(
+            "⚠️🚨 Do not modify unless you know what you're doing.",
+            { bold: true, italic: true }
+          ),
+        },
+      }),
+    },
     },
   ];
   const token = await persistent.botToken.requireValue();
