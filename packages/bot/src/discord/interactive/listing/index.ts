@@ -5,7 +5,7 @@ import {
   maxMessagesToFetchAtOnce,
 } from "discord/constants.js";
 import {
-  SendEmbedOptions,
+  RichSendOptions,
   componentGroup,
   constructAndSendRichMessage,
   startInteractive,
@@ -14,7 +14,7 @@ import listingEmbed, { colors } from "discord/interactive/listing/embed.js";
 import { getTextChannel } from "discord/util.js";
 import { Listing } from "listing.js";
 import persistent from "persistent.js";
-import { debugLog, log } from "util/log.js";
+import { debugLog, log, verboseLog } from "util/log.js";
 import { discordFormat, splitString } from "util/string.js";
 
 const ids = {
@@ -169,7 +169,7 @@ const getListingButtons = (l: Listing) => ({
 
 export const sendListing = async (
   l: Listing,
-  options?: Pick<SendEmbedOptions, "channel" | "customSendFn">
+  options?: Pick<RichSendOptions, "channel" | "customSendFn">
 ) =>
   constructAndSendRichMessage({
     ...options,

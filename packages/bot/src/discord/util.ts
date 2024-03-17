@@ -10,7 +10,7 @@ import {
 } from "discord/constants.js";
 import { discordClient, discordIsReady } from "discord/index.js";
 import {
-  SendEmbedOptions,
+  RichSendOptions,
   constructAndSendRichMessage,
 } from "discord/interactive/index.js";
 import { writeFileSync } from "fs";
@@ -70,8 +70,8 @@ export const discordWarning = (
     error,
     ...options
   }: { monospace?: boolean; error?: boolean } & Omit<
-    SendEmbedOptions,
-    "embeds"
+    RichSendOptions,
+    "embeds" | "content"
   > = {}
 ) => {
   logNoDiscord(`Sending Discord ${error ? "error" : "warning"} embed:`);

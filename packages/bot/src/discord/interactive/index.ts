@@ -281,34 +281,48 @@ export const startInteractive = ({
 
 // __________________________________________________________________________________________
 // function used to construct and send an interactive message:
-export type SendEmbedOptions = {
+export type RichSendOptions = {
   customSendFn?: <T extends BaseMessageOptions>(o: T) => Promise<Message>;
   channel?: ChannelKey;
-  embeds: (Omit<APIEmbed, "color"> & {
-    color?: string | number;
-  })[];
   componentGroupDefs?: ComponentGroupDefs;
   initComponentOrder?: ComponentOrder;
-};
+} & (
+  | {
+      embeds: (Omit<APIEmbed, "color"> & {
+        color?: string | number;
+      })[];
+      content?: undefined;
+    }
+  | {
+      embeds?: undefined;
+      content: NonNullable<BaseMessageOptions["content"]>;
+    }
+);
 export const constructAndSendRichMessage = async ({
+  content,
   embeds: _embeds,
   componentGroupDefs,
   channel,
   initComponentOrder,
   customSendFn,
-}: SendEmbedOptions) => {
+}: RichSendOptions) => {
   if (!discordIsReady()) {
     debugLog(
-      `Discord client not ready, skipping embed${
-        _embeds.length > 1 ? "s" : ""
-      } send: "${_embeds.map((e) => e.title).join(", ")}"`,
+      `Discord client not ready, skipping ${
+        _embeds
+          ? `embed${_embeds.length > 1 ? "s" : ""} send: "${_embeds
+              .map((e) => e.title)
+              .join(", ")}"`
+          : `rich message send: ${content}`
+      }`,
       { skipDiscord: true }
     );
     return;
   }
 
   const payload = {
-    embeds: _embeds.map((e) => ({
+    content,
+    embeds: _embeds?.map((e) => ({
       ...e,
       color:
         e.color === undefined
