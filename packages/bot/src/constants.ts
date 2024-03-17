@@ -20,7 +20,7 @@ export const getDirs = () => {
 };
 
 export const getStatusPathForAuditor = () =>
-  `${getDirs().data}/discord-bot-status-for-auditor`;
+  `${getDirs().commonData}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";
 export const seleniumImplicitWait = 10 * 1000;
 
