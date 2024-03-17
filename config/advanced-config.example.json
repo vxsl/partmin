@@ -7,8 +7,7 @@
     "headed": false,
     "testing": false,
     "noSandbox": false,
-    "noRetrieval": false,
-    "preventConfigOverwrite": false
+    "noRetrieval": false
   },
   "logging": {
     "debug": false,

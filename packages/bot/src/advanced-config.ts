@@ -22,7 +22,6 @@ const Development = RuntypeRecord({
   testing: Optional(Boolean),
   noSandbox: Optional(Boolean),
   noRetrieval: Optional(Boolean),
-  preventConfigOverwrite: Optional(Boolean),
 });
 
 export const AdvancedConfig = RuntypeRecord({
@@ -44,7 +43,6 @@ export const defaultAdvancedConfigValues: RecursivePartial<StaticAdvancedConfig>
       testing: false,
       noSandbox: false,
       noRetrieval: false,
-      preventConfigOverwrite: false,
     },
     logging: {
       debug: false,

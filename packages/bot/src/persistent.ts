@@ -25,22 +25,7 @@ const persistent = {
     label: "advanced config",
     absolutePath: advancedConfigPath,
     readTransform: parseJSON,
-    writeTransform: (v) => {
-      if (!devOptions.preventConfigOverwrite) {
-        log(
-          "The advanced config file is being overwritten, since 'preventConfigOverwrite' is not set."
-        );
-        writeFileSync(
-          "../../config/advanced-config.json",
-          JSON.stringify(v, null, 2)
-        );
-      } else {
-        log(
-          "WARNING: The advanced config file will not be overwritten, since 'preventConfigOverwrite' is set."
-        );
-      }
-      return JSON.stringify(v);
-    },
+    writeTransform: (v) => JSON.stringify(v, null, 2),
     validate: (c) => {
       validateAdvancedConfig(c);
       return true;
@@ -55,24 +40,12 @@ const persistent = {
       return true;
     },
     readTransform: parseJSON,
-    writeTransform: (v) => {
-      if (!devOptions.preventConfigOverwrite) {
-        log(
-          "The user config file is being overwritten, since 'preventConfigOverwrite' is not set."
-        );
-        writeFileSync("../../config/config.json", JSON.stringify(v, null, 2));
-      } else {
-        log(
-          "WARNING: The user config file will not be overwritten, since 'preventConfigOverwrite' is set."
-        );
-      }
-      return JSON.stringify(v);
-    },
+    writeTransform: (v) => JSON.stringify(v, null, 2),
   }),
   userConfig: new PersistentDataDef<StaticUserConfig>({
     absolutePath: userConfigPath,
     readTransform: parseJSON,
-    writeTransform: JSON.stringify,
+    writeTransform: (v) => JSON.stringify(v, null, 2),
     label: "user configuration",
     validate: async (c) => {
       validateUserConfig(c);
