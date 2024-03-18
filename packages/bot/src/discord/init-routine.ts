@@ -163,7 +163,30 @@ const checkSearchParams = async () => {
   await checkPrice();
   // TODO write an interactive routine for the rest of the parameters.
 
+  await editSearchParams({ alwaysShowDefaultValues: true });
+  await promptForSubmit({
+    prompt:
+      `Refine your search parameters with the above tool.` +
+      "\n\n" +
+      discordFormat(
+        `When you're ready to start searching, click the ${stringPromptLabels.true} button below.`,
+        {
+          bold: true,
+        }
+      ) +
+      "\n" +
+      discordFormat(
+        `You can edit search parameters at any time by typing ${discordFormat(
+          `/${searchParamsCommandName}`,
+          { monospace: true }
+        )} in the chat.`,
+        {
+          italic: true,
+        }
+      ),
+  });
 };
+
 export const discordInitRoutine = async () => {
   const advancedConfig = await persistent.advancedConfig.requireValue();
   if (!advancedConfig.botBehaviour?.suppressGreeting) {

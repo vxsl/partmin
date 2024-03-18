@@ -17,12 +17,12 @@ import {
   setLocation,
 } from "discord/commands/location.js";
 import testListing from "discord/commands/test-listing.js";
-import getInteractiveEditCommand from "discord/commands/util/interactive-edit.js";
+import { interactiveEdit } from "discord/commands/util/interactive-edit.js";
 import { promptForBoolean } from "discord/commands/util/interactive-simple.js";
 import { discordGuildID } from "discord/constants.js";
 import { discordClient } from "discord/index.js";
+import { editSearchParams } from "discord/init-routine.js";
 import persistent from "persistent.js";
-import { SearchParams, defaultUserConfigValues } from "user-config.js";
 import { identifyCity } from "util/geo.js";
 import { log } from "util/log.js";
 import { notUndefined, tryNTimes } from "util/misc.js";
@@ -33,6 +33,8 @@ interface Command {
   description: string;
   execute: (interaction: CommandInteraction) => any;
 }
+
+export const searchParamsCommandName = "search-parameters";
 
 const setupCommands = async () => {
   const commands = [
@@ -46,20 +48,10 @@ const setupCommands = async () => {
       : undefined,
     {
       data: new SlashCommandBuilder()
-        .setName("search-parameters")
+        .setName(searchParamsCommandName)
         .setDescription("📄 View and edit your search parameters."),
-      execute: getInteractiveEditCommand({
-        getObject: () => persistent.userConfig.requireValue(),
-        writeObject: (v) => persistent.userConfig.writeValue(v),
-        nestPath: "search.params",
-        runtype: SearchParams,
-        defaultValues: defaultUserConfigValues,
-        strings: {
-          editModal: `Edit search parameter`,
-          changeNotification: "⚙️ Search parameters updated",
-          title: "Your search",
-        },
-      }),
+      execute: (commandInteraction: CommandInteraction) =>
+        editSearchParams({ commandInteraction }),
     },
     {
       data: new SlashCommandBuilder()
@@ -67,21 +59,23 @@ const setupCommands = async () => {
         .setDescription(
           "📄 View and edit advanced config. Avoid this unless you know what you're doing."
         ),
-      execute: getInteractiveEditCommand({
-        getObject: () => persistent.advancedConfig.requireValue(),
-        writeObject: (v) => persistent.advancedConfig.writeValue(v),
-        runtype: AdvancedConfig,
-        defaultValues: defaultAdvancedConfigValues,
-        strings: {
-          editModal: `Edit advanced config parameter`,
-          changeNotification: "⚙️ Advanced config updated",
-          title: "Advanced configuration",
-          description: discordFormat(
-            "⚠️🚨 Do not modify unless you know what you're doing.",
-            { bold: true, italic: true }
-          ),
-        },
-      }),
+      execute: (commandInteraction: CommandInteraction) =>
+        interactiveEdit({
+          commandInteraction,
+          getObject: () => persistent.advancedConfig.requireValue(),
+          writeObject: (v) => persistent.advancedConfig.writeValue(v),
+          runtype: AdvancedConfig,
+          defaultValues: defaultAdvancedConfigValues,
+          strings: {
+            editModal: `Edit advanced config parameter`,
+            changeNotification: "⚙️ Advanced config updated",
+            title: "Advanced configuration",
+            description: discordFormat(
+              "⚠️🚨 Do not modify unless you know what you're doing.",
+              { bold: true, italic: true }
+            ),
+          },
+        }),
     },
     {
       data: new SlashCommandBuilder()
