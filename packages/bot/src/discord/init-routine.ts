@@ -279,21 +279,19 @@ export const setLocation = async ({
       break;
     }
 
-    const commuteDestinations =
-      (await persistent.googleMapsAPIKey.value()) &&
-      (await promptForBoolean({
-        commandInteraction,
-        prompt:
-          discordFormat("Would you like to provide any commute destinations?", {
-            bold: true,
-          }) +
-          "\n" +
-          "A commute summary will be generated for each new listing. These destinations can be set/modified later.",
-      }))
-        ? await getCommuteDestinations({
-            commandInteraction,
-          })
-        : [];
+    const commuteDestinations = (await promptForBoolean({
+      commandInteraction,
+      prompt:
+        discordFormat("Would you like to provide any commute destinations?", {
+          bold: true,
+        }) +
+        "\n" +
+        "A commute summary will be generated for each new listing. These destinations can be set/modified later.",
+    }))
+      ? await getCommuteDestinations({
+          commandInteraction,
+        })
+      : [];
     if (commuteDestinations === interactiveMessageCancel) {
       break;
     }

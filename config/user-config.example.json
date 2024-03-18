@@ -1,6 +1,5 @@
 {
   "options": {
-    "disableGoogleMapsFeatures": true,
     "commuteDestinations": [
       "Gare Centrale"
     ]

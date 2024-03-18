@@ -36,7 +36,6 @@ export const unreliabilityExplanations: Record<
 };
 
 const Options = RuntypeRecord({
-  disableGoogleMapsFeatures: Optional(Boolean),
   commuteDestinations: Optional(Array(String)),
 });
 const PetParams = RuntypeRecord({
@@ -85,7 +84,6 @@ export type StaticUserConfig = Static<typeof UserConfig>;
 
 export const defaultUserConfigValues: RecursivePartial<StaticUserConfig> = {
   options: {
-    disableGoogleMapsFeatures: false,
     commuteDestinations: [],
   },
   search: {

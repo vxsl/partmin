@@ -9,7 +9,6 @@ import {
   ensureLocationLink,
   isValid,
 } from "listing.js";
-import { getUserConfig } from "util/config.js";
 import { isWithinRadii } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
 import { asyncFilter } from "util/misc.js";
@@ -24,7 +23,6 @@ export const processListings = async (unseenListings: Listing[]) => {
     presenceActivities.processing,
     unseenListings.length
   );
-  const config = await getUserConfig();
   const [validResults, invalidResults] = await unseenListings.reduce<
     Promise<[Listing[], Listing[]]>
   >(async (promises, l, i) => {
@@ -33,10 +31,8 @@ export const processListings = async (unseenListings: Listing[]) => {
     checkForBlacklist(l);
     if (isValid(l)) {
       valid.push(l);
-      if (!config.options?.disableGoogleMapsFeatures) {
-        await ensureLocationLink(l);
-        await addCommuteSummary(l);
-      }
+      await ensureLocationLink(l);
+      await addCommuteSummary(l);
     } else {
       invalid.push(l);
     }

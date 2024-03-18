@@ -51,13 +51,11 @@ export const dynamicValidateUserConfig = async (c: StaticUserConfig) => {
   debugLog("Validating user config:");
   debugLog(JSON.stringify(c));
 
-  if (!c.options?.disableGoogleMapsFeatures) {
-    for (const address of c.options?.commuteDestinations ?? []) {
-      if (!(await isValidAddress(address))) {
-        throw new Error(
-          `Invalid address provided to config.options.commuteDestinations: ${address}`
-        );
-      }
+  for (const address of c.options?.commuteDestinations ?? []) {
+    if (!(await isValidAddress(address))) {
+      throw new Error(
+        `Invalid address provided to config.options.commuteDestinations: ${address}`
+      );
     }
   }
 
