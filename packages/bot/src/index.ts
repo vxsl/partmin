@@ -18,7 +18,7 @@ import {
   sendListing,
 } from "discord/interactive/listing/index.js";
 import { setPresence, startActivity } from "discord/presence.js";
-import { discordError, discordWarning } from "discord/util.js";
+import { discordError, discordSend, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import { Listing } from "listing.js";
@@ -344,6 +344,19 @@ export const fatalError = async (e: unknown) => {
     log("Starting main retrieval loop...");
 
     const advancedConfig = await persistent.advancedConfig.requireValue();
+
+    if (devOptions.noRetrieval) {
+      log("Skipping retrieval loop according to config option.");
+      await discordSend(
+        `Doing nothing because advanced config option ${discordFormat(
+          "development.noRetrieval",
+          { monospace: true }
+        )} is set.`
+      );
+      await new Promise(() => {});
+      return;
+    }
+
     if (!advancedConfig.botBehaviour?.suppressGreeting) {
       await constructAndSendRichMessage({
         embeds: [
@@ -367,13 +380,7 @@ export const fatalError = async (e: unknown) => {
         ],
       });
     }
-
-    if (!devOptions.noRetrieval) {
-      await retrieval(driver, [platforms.fb, platforms.kijiji]);
-    } else {
-      log("Skipping retrieval loop according to config option.");
-      await new Promise(() => {});
-    }
+    await retrieval(driver, [platforms.fb, platforms.kijiji]);
   } catch (e) {
     if (shuttingDown) {
       log("Caught error during shutdown:");
