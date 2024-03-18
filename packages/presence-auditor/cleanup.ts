@@ -36,7 +36,7 @@ const log = (s: string) => console.log(`${prefix} ${s}`);
 const error = (s: string) => console.error(`${prefix} ${s}`);
 
 const crashMessage =
-  "Partmin has gone offline for an unknown reason. Please check the logs for more information.";
+  "partmin has gone offline for an unknown reason. Please check the logs for more information.";
 
 (() => {
   log("Bot is no longer running - clearing presence.");

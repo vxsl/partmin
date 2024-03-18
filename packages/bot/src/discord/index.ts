@@ -290,7 +290,7 @@ const setupGuild = async (guildInfo: RecursivePartial<ChannelIDs>) => {
   if (guild && role) {
     if (!permsMatch(role)) {
       await authorize(
-        "Partmin's required permissions have changed. Please reauthorize the bot",
+        "partmin's required permissions have changed. Please reauthorize the bot",
         () => permsMatch(role!, { silent: true })
       );
     }
@@ -332,7 +332,7 @@ const setupGuild = async (guildInfo: RecursivePartial<ChannelIDs>) => {
 
 export const initDiscord = async () => {
   await persistent.discordAppID.requireValue({
-    message: `Partmin requires a Discord app ID to run. To get this, go to the Discord Developer Portal, create a new application, and retrieve the application ID from the "General Information" section.\n\n${persistent.discordAppID.envVarInstruction}`,
+    message: `partmin requires a Discord app ID to run. To get this, go to the Discord Developer Portal, create a new application, and retrieve the application ID from the "General Information" section.\n\n${persistent.discordAppID.envVarInstruction}`,
   });
 
   return await new Promise(async (resolve, reject) => {
@@ -356,7 +356,7 @@ export const initDiscord = async () => {
 
     log("Discord client logging in...");
     const token = await persistent.botToken.requireValue({
-      message: `Partmin requires a Discord bot token to run. ${persistent.botToken.envVarInstruction}`,
+      message: `partmin requires a Discord bot token to run. ${persistent.botToken.envVarInstruction}`,
     });
     await discordClient.login(token);
   });
