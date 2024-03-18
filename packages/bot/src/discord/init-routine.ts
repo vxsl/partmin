@@ -1,11 +1,18 @@
+import { CommandInteraction } from "discord.js";
+import { searchParamsCommandName } from "discord/commands/index.js";
 import { setLocation } from "discord/commands/location.js";
+import { interactiveEdit } from "discord/commands/util/interactive-edit.js";
 import {
+  promptForBoolean,
+  promptForRequiredNumber,
   promptForString,
+  promptForSubmit,
   stringPromptLabels,
 } from "discord/commands/util/interactive-simple.js";
 import { discordSend } from "discord/util.js";
 import persistent from "persistent.js";
 import { ValidationError } from "runtypes";
+import { SearchParams, defaultUserConfigValues } from "user-config.js";
 import { gmapsAPIKeyIsValid } from "util/geo.js";
 import { discordFormat } from "util/string.js";
 
@@ -73,6 +80,90 @@ const checkLocation = async () => {
   }
 };
 
+const checkPrice = async () => {
+  const userConfig = await persistent.userConfig.requireValue();
+  const params = userConfig.search?.params ?? {};
+  if (params.price?.min === undefined || params.price?.max === undefined) {
+    const max = await promptForRequiredNumber({
+      name: "Maximum rent price",
+      required: true,
+      prompt: discordFormat(
+        `Please specify the ${discordFormat("maximum", {
+          underline: true,
+        })} rent price for your search by clicking the ${
+          stringPromptLabels.edit
+        } button below.`,
+        { bold: true }
+      ),
+    });
+
+    const min =
+      (await promptForBoolean({
+        prompt:
+          discordFormat("Would you like to specify a minimum rent price?", {
+            bold: true,
+          }) +
+          "\n" +
+          "Sometimes this can help filter out irrelevant listings.",
+      })) === true
+        ? await promptForRequiredNumber({
+            name: "Minimum rent price",
+            required: true,
+            prompt: discordFormat(
+              `Please specify the ${discordFormat("minimum", {
+                underline: true,
+              })} rent price for your search by clicking the ${
+                stringPromptLabels.edit
+              } button below.`,
+              { bold: true }
+            ),
+          })
+        : 0;
+
+    await persistent.userConfig.writeValue({
+      ...defaultUserConfigValues,
+      ...userConfig,
+      search: {
+        ...userConfig.search,
+        params: {
+          ...(defaultUserConfigValues.search?.params ?? {}),
+          ...params,
+          price: {
+            min: min.valueOf(),
+            max: max.valueOf(),
+          },
+        },
+      },
+    });
+  }
+};
+
+export const editSearchParams = ({
+  commandInteraction,
+  ...rest
+}: {
+  commandInteraction?: CommandInteraction;
+} & Partial<Parameters<typeof interactiveEdit>[0]> = {}) =>
+  interactiveEdit({
+    commandInteraction,
+    getObject: () => persistent.userConfig.requireValue(),
+    writeObject: (v) => persistent.userConfig.writeValue(v),
+    nestPath: "search.params",
+    runtype: SearchParams,
+    defaultValues: defaultUserConfigValues,
+    strings: {
+      editModal: `Edit search parameter`,
+      changeNotification: "⚙️ Search parameters updated",
+      title: "Your search",
+    },
+    ...rest,
+  });
+
+const checkSearchParams = async () => {
+  await checkPrice();
+  // TODO write an interactive routine for the rest of the parameters.
+
+};
 export const discordInitRoutine = async () => {
   const advancedConfig = await persistent.advancedConfig.requireValue();
   if (!advancedConfig.botBehaviour?.suppressGreeting) {
@@ -85,4 +176,5 @@ export const discordInitRoutine = async () => {
       throw e;
     }
   });
+  await checkSearchParams();
 };

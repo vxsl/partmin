@@ -12,6 +12,7 @@ import {
   constructAndSendRichMessage,
 } from "discord/interactive/index.js";
 import { stringModal } from "discord/interactive/modal.js";
+import { discordSend } from "discord/util.js";
 import { log } from "util/log.js";
 import { discordFormat } from "util/string.js";
 
@@ -41,12 +42,16 @@ export const promptForString = ({
   commandInteraction,
   doneButton,
   hideValue,
+  required,
+  requiredMessage,
 }: {
   commandInteraction?: CommandInteraction;
   prompt?: string;
   name: string;
   doneButton?: boolean;
   hideValue?: boolean;
+  required?: boolean;
+  requiredMessage?: string;
 }): Promise<string | InteractiveMessageCancel | InteractiveMessageDone> => {
   const prompt =
     customPrompt ??
@@ -108,7 +113,14 @@ export const promptForString = ({
             [ids.cancel]: {
               style: ButtonStyle.Danger,
               label: stringPromptLabels.cancel,
-              mutate: ({ componentInteraction, state, getEmbed }) => {
+              mutate: async ({ componentInteraction, state, getEmbed }) => {
+                if (required) {
+                  await discordSend(
+                    requiredMessage ?? `"${name}" is required to proceed.`
+                  );
+                  return null;
+                }
+
                 resolve(interactiveMessageCancel);
 
                 getEmbed(0)
@@ -162,6 +174,45 @@ export const promptForString = ({
       },
     }).catch(reject)
   );
+};
+
+export const promptForRequiredString = async (
+  args: Parameters<typeof promptForString>[0]
+) => {
+  while (true) {
+    const s = (await promptForString({ ...args, required: true })) as string; // TODO no cast
+    if (s.trim() === "") {
+      await discordSend("The value you provided is empty. Please try again.");
+      continue;
+    }
+    return s;
+  }
+};
+
+export const promptForNumber = async (
+  args: Parameters<typeof promptForString>[0]
+) => {
+  while (true) {
+    const s = await promptForString(args);
+    if (s === interactiveMessageCancel || s === interactiveMessageDone) {
+      return s;
+    }
+
+    const n = Number(s);
+    if (isNaN(n)) {
+      await discordSend(
+        "The value you provided doesn't appear to be a number. Please try again."
+      );
+      continue;
+    }
+    return n;
+  }
+};
+
+export const promptForRequiredNumber = async (
+  args: Parameters<typeof promptForNumber>[0]
+) => {
+  return (await promptForNumber({ ...args, required: true })) as Number;
 };
 
 export const promptForBoolean = ({
@@ -248,3 +299,55 @@ export const promptForBoolean = ({
       },
     }).catch(reject);
   });
+
+export const promptForSubmit = ({
+  commandInteraction,
+  prompt,
+}: {
+  commandInteraction?: CommandInteraction;
+  prompt: string;
+}): Promise<true> =>
+  new Promise((resolve, reject) =>
+    constructAndSendRichMessage({
+      ...(commandInteraction && {
+        customSendFn: (o) =>
+          commandInteraction.reply({ ...o, fetchReply: true }).catch((e) => {
+            log(e);
+            return commandInteraction.followUp({ ...o, fetchReply: true });
+          }),
+      }),
+      embeds: [{ description: prompt, color: primaryColor }],
+      initComponentOrder: [[ids.false, ids.true, ids.cancel]],
+      componentGroupDefs: {
+        edit: componentGroup({
+          initState: () => ({}),
+          buttons: {
+            [ids.true]: {
+              label: stringPromptLabels.true,
+              mutate: ({ componentInteraction, state, getEmbed }) => {
+                resolve(true);
+
+                getEmbed(0)
+                  .setDescription(
+                    discordFormat(prompt.replace(/\*/g, ""), {
+                      quote: true,
+                      italic: true,
+                    }) +
+                      "\n\n" +
+                      discordFormat(
+                        `${userMention(
+                          componentInteraction.user.id
+                        )} finished the operation.`,
+                        { bold: true }
+                      )
+                  )
+                  .setColor(secondaryColor);
+
+                return { state, componentOrder: [] };
+              },
+            },
+          },
+        }),
+      },
+    }).catch(reject)
+  );
