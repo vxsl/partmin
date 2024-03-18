@@ -9,6 +9,7 @@ import {
 } from "discord/index.js";
 import {
   discordInitRoutine,
+  getCommuteDestinationsSummary,
   getSearchLocationSummary,
 } from "discord/init-routine.js";
 import { constructAndSendRichMessage } from "discord/interactive/index.js";
@@ -347,15 +348,19 @@ export const fatalError = async (e: unknown) => {
       await constructAndSendRichMessage({
         embeds: [
           {
-            title: "🚀  Started up!",
+            title: "🚀  Let's go!",
             description: discordFormat(
-              `Beginning retrieval. Check ${
+              `${
                 discordClient.user?.id
-                  ? `${userMention(discordClient.user.id)}'s`
-                  : "my"
-              } activity status to see what it's doing at any given moment.` +
+                  ? userMention(discordClient.user.id)
+                  : "partmin"
+              } will now continuously send notifications to this channel about new listings that match your search. You can see what it's doing at any given moment by checking its activity status.` +
                 "\n\n" +
-                (await getSearchLocationSummary())
+                discordFormat(await getSearchLocationSummary(), {
+                  bold: true,
+                }) +
+                "\n\n" +
+                (await getCommuteDestinationsSummary())
             ),
             color: successColor,
           },

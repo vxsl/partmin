@@ -8,8 +8,6 @@ import {
   promptForString,
   stringPromptLabels,
 } from "discord/commands/interactive-simple.js";
-import { successColor } from "discord/constants.js";
-import { constructAndSendRichMessage } from "discord/interactive/index.js";
 import { discordSend } from "discord/util.js";
 import persistent from "persistent.js";
 import {
@@ -223,26 +221,33 @@ export const getSearchLocationSummary = async () => {
     userConfig.search.location.mapDevelopersURL
   );
   const loc = userConfig.search.location;
-  const dests = userConfig.options?.commuteDestinations ?? [];
   const city = await identifyCity(loc.city);
 
-  return (
-    discordFormat(
-      `You specified ${discordFormat(
-        `${circles.length} ${circles.length === 1 ? "radius" : "radii"}`,
-        { link: loc.mapDevelopersURL }
-      )} in ${discordFormat(`${city.city}, ${city.regionShort}`, {
-        link: city.link,
-      })}`,
-      { bold: true }
-    ) +
-    (!dests.length
-      ? "."
-      : `, along with ${dests.length} commute destination${
-          dests.length === 1 ? "" : "s"
-        }:\n${dests
-          .map((d) => `- ${discordFormat(d, { link: getGoogleMapsLink(d) })}`)
-          .join("\n")}`)
+  return `The search area is currently set to ${discordFormat(
+    `${circles.length} ${circles.length === 1 ? "radius" : "radii"}`,
+    { link: loc.mapDevelopersURL }
+  )} in ${discordFormat(`${city.city}, ${city.regionShort}`, {
+    link: city.link,
+  })}.`;
+};
+
+export const getCommuteDestinationsSummary = async () => {
+  const userConfig = await persistent.userConfig.requireValue();
+  const dests = userConfig.options?.commuteDestinations ?? [];
+
+  if (!dests.length) {
+    return discordFormat(
+      "No commute destinations set. A commute summary will not be generated for new listings.",
+      { italic: true }
+    );
+  }
+
+  return discordFormat(
+    `${dests.length} commute destination${
+      dests.length === 1 ? " has" : "s have"
+    } been configured:\n${dests
+      .map((d) => `- ${discordFormat(d, { link: getGoogleMapsLink(d) })}`)
+      .join("\n")}`
   );
 };
 
@@ -312,16 +317,6 @@ export const setLocation = async ({
     });
     userConfig = await persistent.userConfig.requireValue();
 
-    await constructAndSendRichMessage({
-      embeds: [
-        {
-          title: "🗺️  Search location set!",
-          description: await getSearchLocationSummary(),
-          color: successColor,
-        },
-      ],
-    });
-
     break;
   }
   return null;
@@ -333,22 +328,21 @@ export const discordInitRoutine = async () => {
     await discordSend(`🖐 Hi! I'm online.`);
   }
 
-  const userConfig = await persistent.userConfig.value();
-
-  const locationIsSet = () => {
+  const locationIsSet = async () => {
+    const userConfig = await persistent.userConfig.value();
     const location = userConfig?.search.location;
     return (
       location && location.city && location.region && location.mapDevelopersURL
     );
   };
 
-  if (!locationIsSet()) {
+  if (!(await locationIsSet())) {
     await discordSend(
       "It looks like you haven't set your search location yet."
     );
     while (true) {
       await setLocation();
-      if (locationIsSet()) {
+      if (await locationIsSet()) {
         break;
       }
       await discordSend(

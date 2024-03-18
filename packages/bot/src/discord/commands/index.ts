@@ -12,10 +12,15 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import getInteractiveEditCommand from "discord/commands/interactive-edit.js";
+import { promptForBoolean } from "discord/commands/interactive-simple.js";
 import testListing from "discord/commands/test-listing.js";
 import { discordGuildID } from "discord/constants.js";
 import { discordClient } from "discord/index.js";
-import { setLocation } from "discord/init-routine.js";
+import {
+  getCommuteDestinationsSummary,
+  getSearchLocationSummary,
+  setLocation,
+} from "discord/init-routine.js";
 import persistent from "persistent.js";
 import { SearchParams, defaultUserConfigValues } from "user-config.js";
 import { identifyCity } from "util/geo.js";
@@ -41,8 +46,8 @@ const setupCommands = async () => {
       : undefined,
     {
       data: new SlashCommandBuilder()
-        .setName("edit-search")
-        .setDescription("Edit your apartment search parameters interactively."),
+        .setName("search-parameters")
+        .setDescription("📄 View and edit your search parameters."),
       execute: getInteractiveEditCommand({
         getObject: () => persistent.userConfig.requireValue(),
         writeObject: (v) => persistent.userConfig.writeValue(v),
@@ -60,7 +65,7 @@ const setupCommands = async () => {
       data: new SlashCommandBuilder()
         .setName("edit-advanced-config")
         .setDescription(
-          "Edit advanced config interactively. Do not use unless you know what you're doing."
+          "📄 View and edit advanced config. Avoid this unless you know what you're doing."
         ),
       execute: getInteractiveEditCommand({
         getObject: () => persistent.advancedConfig.requireValue(),
@@ -80,15 +85,17 @@ const setupCommands = async () => {
     },
     {
       data: new SlashCommandBuilder()
-        .setName("set-location")
-        .setDescription("Set the desired location for your apartment search."),
+        .setName("location")
+        .setDescription(
+          "📌 Set the desired location for your apartment search."
+        ),
       execute: (commandInteraction: CommandInteraction) =>
         setLocation({ commandInteraction }),
     },
     {
       data: new SlashCommandBuilder()
-        .setName("set-search-areas")
-        .setDescription("Set the desired location for your apartment search."),
+        .setName("search-areas")
+        .setDescription("📌 Specify search radii."),
       execute: async (commandInteraction: CommandInteraction) => {
         const userConfig = await persistent.userConfig.requireValue();
         const city = await identifyCity(userConfig.search.location?.city).catch(
@@ -97,15 +104,28 @@ const setupCommands = async () => {
             return undefined;
           }
         );
-        await setLocation({ commandInteraction, skipCityPrompt: !!city });
+        if (city) {
+          const shouldContinue =
+            (await promptForBoolean({
+              commandInteraction,
+              prompt:
+                (await getSearchLocationSummary()) +
+                discordFormat("\nWould you like to specify new search radii?", {
+                  bold: true,
+                }),
+            })) === true;
+          if (shouldContinue) {
+            await setLocation({ commandInteraction, skipCityPrompt: true });
+          }
+          return;
+        }
+        await setLocation({ commandInteraction });
       },
     },
     {
       data: new SlashCommandBuilder()
-        .setName("set-commute-destinations")
-        .setDescription(
-          "Set the commute destinations for your apartment search."
-        ),
+        .setName("commute-destinations")
+        .setDescription("📌 Define commute destinations."),
       execute: async (commandInteraction: CommandInteraction) => {
         const userConfig = await persistent.userConfig.requireValue();
         const city = await identifyCity(userConfig.search.location?.city).catch(
@@ -114,12 +134,29 @@ const setupCommands = async () => {
             return undefined;
           }
         );
-        await setLocation({
-          commandInteraction,
-          skipCityPrompt: !!city,
-          skipSearchAreasPrompt:
-            userConfig.search.location?.mapDevelopersURL !== undefined,
-        });
+
+        if (city && userConfig.search.location.mapDevelopersURL) {
+          const shouldContinue =
+            (await promptForBoolean({
+              commandInteraction,
+              prompt:
+                (await getCommuteDestinationsSummary()) +
+                discordFormat(
+                  "\nWould you like to specify new commute destinations?",
+                  { bold: true }
+                ),
+            })) === true;
+          if (shouldContinue) {
+            await setLocation({
+              commandInteraction,
+              skipCityPrompt: true,
+              skipSearchAreasPrompt: true,
+            });
+          }
+          return;
+        }
+
+        await setLocation({ commandInteraction });
       },
     },
   ];
