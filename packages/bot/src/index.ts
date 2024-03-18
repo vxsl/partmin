@@ -32,7 +32,13 @@ import psList from "ps-list";
 import { WebDriver } from "selenium-webdriver";
 import { Platform, platforms } from "types/platform.js";
 import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
-import { debugLog, log, logNoDiscord, verboseLog } from "util/log.js";
+import {
+  debugLog,
+  debugLogNoDiscord,
+  log,
+  logNoDiscord,
+  verboseLog,
+} from "util/log.js";
 import { randomWait, tryNTimes, waitSeconds } from "util/misc.js";
 import { discordFormat } from "util/string.js";
 
@@ -251,9 +257,9 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
 };
 
 const shutdownWebdriver = async () => {
-  logNoDiscord("Closing the browser...");
+  debugLogNoDiscord("Closing the browser...");
   if (!driver) {
-    logNoDiscord("The browser is already closed.");
+    debugLogNoDiscord("The browser is already closed.");
     return;
   }
   await driver
@@ -262,20 +268,20 @@ const shutdownWebdriver = async () => {
     .then(async (handles) => {
       for (const handle of handles || []) {
         await driver?.switchTo().window(handle);
-        logNoDiscord("Closing window:");
-        logNoDiscord(handle);
-        logNoDiscord(`(url ${await driver?.getCurrentUrl()})`);
+        debugLogNoDiscord("Closing window:");
+        debugLogNoDiscord(handle);
+        debugLogNoDiscord(`(url ${await driver?.getCurrentUrl()})`);
         await driver?.close();
-        logNoDiscord("Closed window");
+        debugLogNoDiscord("Closed window");
       }
     })
     .catch((e) => {
-      logNoDiscord("Error closing windows:", e);
+      debugLogNoDiscord("Error closing windows:", e);
     })
     .then(async () => {
-      logNoDiscord("Closing the browser...");
+      debugLogNoDiscord("Closing the browser...");
       await driver?.quit();
-      logNoDiscord("Closed the browser.");
+      debugLogNoDiscord("Closed the browser.");
     })
     .catch();
 };

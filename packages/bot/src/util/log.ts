@@ -49,3 +49,8 @@ export const logNoDiscord = (
   v: any,
   options?: Omit<LogOptions, "skipDiscord">
 ) => log(v, { ...(options ?? {}), skipDiscord: true });
+
+export const debugLogNoDiscord = (
+  v: any,
+  options?: Omit<LogOptions, "skipDiscord">
+) => log(v, { ...(options ?? {}), skipDiscord: true, level: "debug" });
