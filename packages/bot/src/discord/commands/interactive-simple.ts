@@ -97,7 +97,7 @@ export const promptForString = ({
                               monospace: true,
                             })}`
                       }`,
-                      { italic: true }
+                      { bold: true }
                     )
                   )
                   .setColor(secondaryColor);
@@ -113,16 +113,16 @@ export const promptForString = ({
 
                 getEmbed(0)
                   .setDescription(
-                    discordFormat(`${prompt}`, {
+                    discordFormat(prompt.replace(/\*/g, ""), {
                       quote: true,
                       italic: true,
                     }) +
-                      "\n" +
+                      "\n\n" +
                       discordFormat(
                         `${userMention(
                           componentInteraction.user.id
                         )} cancelled the operation.`,
-                        { italic: true }
+                        { bold: true }
                       )
                   )
                   .setColor(secondaryColor);
@@ -139,16 +139,16 @@ export const promptForString = ({
 
                   getEmbed(0)
                     .setDescription(
-                      discordFormat(`${prompt}`, {
+                      discordFormat(prompt.replace(/\*/g, ""), {
                         quote: true,
                         italic: true,
                       }) +
-                        "\n" +
+                        "\n\n" +
                         discordFormat(
                           `${userMention(
                             componentInteraction.user.id
                           )} finished the operation.`,
-                          { italic: true }
+                          { bold: true }
                         )
                     )
                     .setColor(secondaryColor);
@@ -179,13 +179,16 @@ export const promptForBoolean = ({
 
         getEmbed(0)
           .setDescription(
-            discordFormat(prompt, { quote: true, italic: true }) +
-              "\n" +
+            discordFormat(prompt.replace(/\*/g, ""), {
+              quote: true,
+              italic: true,
+            }) +
+              "\n\n" +
               discordFormat(
                 `${userMention(componentInteraction.user.id)} answered "${
                   stringPromptLabels[key]
                 }"`,
-                { italic: true }
+                { bold: true }
               )
           )
           .setColor(secondaryColor);
@@ -223,16 +226,16 @@ export const promptForBoolean = ({
 
                 getEmbed(0)
                   .setDescription(
-                    discordFormat(`${prompt}`, {
+                    discordFormat(prompt.replace(/\*/g, ""), {
                       quote: true,
                       italic: true,
                     }) +
-                      "\n" +
+                      "\n\n" +
                       discordFormat(
                         `${userMention(
                           componentInteraction.user.id
                         )} cancelled the operation.`,
-                        { italic: true }
+                        { bold: true }
                       )
                   )
                   .setColor(secondaryColor);

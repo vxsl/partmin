@@ -104,22 +104,22 @@ const setupCommands = async () => {
             return undefined;
           }
         );
-        if (city) {
-          const shouldContinue =
-            (await promptForBoolean({
-              commandInteraction,
-              prompt:
-                (await getSearchLocationSummary()) +
-                discordFormat("\nWould you like to specify new search radii?", {
-                  bold: true,
-                }),
-            })) === true;
-          if (shouldContinue) {
-            await setLocation({ commandInteraction, skipCityPrompt: true });
-          }
+        if (
+          (await promptForBoolean({
+            commandInteraction,
+            prompt:
+              (await getSearchLocationSummary()) +
+              discordFormat("\nWould you like to specify new search radii?", {
+                bold: true,
+              }),
+          })) !== true
+        ) {
           return;
         }
-        await setLocation({ commandInteraction });
+        await setLocation({
+          commandInteraction,
+          ...(city && { skipCityPrompt: true }),
+        });
       },
     },
     {
@@ -135,28 +135,29 @@ const setupCommands = async () => {
           }
         );
 
-        if (city && userConfig.search.location.mapDevelopersURL) {
-          const shouldContinue =
-            (await promptForBoolean({
-              commandInteraction,
-              prompt:
-                (await getCommuteDestinationsSummary()) +
-                discordFormat(
-                  "\nWould you like to specify new commute destinations?",
-                  { bold: true }
-                ),
-            })) === true;
-          if (shouldContinue) {
-            await setLocation({
-              commandInteraction,
-              skipCityPrompt: true,
-              skipSearchAreasPrompt: true,
-            });
-          }
+        if (
+          (await promptForBoolean({
+            commandInteraction,
+            prompt:
+              (await getCommuteDestinationsSummary()) +
+              "\n" +
+              discordFormat(
+                "Would you like to specify new commute destinations?",
+                { bold: true }
+              ),
+          })) !== true
+        ) {
           return;
         }
 
-        await setLocation({ commandInteraction });
+        await setLocation({
+          commandInteraction,
+          ...(city &&
+            userConfig.search.location.mapDevelopersURL && {
+              skipCityPrompt: true,
+              skipSearchAreasPrompt: true,
+            }),
+        });
       },
     },
   ];
