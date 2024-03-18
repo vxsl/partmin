@@ -390,3 +390,14 @@ export const identifyCity = async (
   await persistent.cities.writeValue({ ...cities, [city]: c });
   return c;
 };
+
+export const gmapsAPIKeyIsValid = async (key: string) => {
+  try {
+    const { data } = await axios.get(
+      `${gMapsAPIs}/geocode/json?address=Toronto&key=${key}`
+    );
+    return data.status === "OK";
+  } catch (e) {
+    return false;
+  }
+};

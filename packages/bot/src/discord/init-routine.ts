@@ -16,6 +16,7 @@ import {
   constructMapDevelopersURL,
   decodeMapDevelopersURL,
   getGoogleMapsLink,
+  gmapsAPIKeyIsValid,
   identifyAddress,
   identifyCity,
 } from "util/geo.js";
@@ -328,6 +329,43 @@ export const discordInitRoutine = async () => {
     await discordSend(`🖐 Hi! I'm online.`);
   }
 
+  const gmapsAPIKey = await persistent.googleMapsAPIKey.value();
+  if (!gmapsAPIKey || !(await gmapsAPIKeyIsValid(gmapsAPIKey))) {
+    while (true) {
+      const key = await promptForString({
+        hideValue: true,
+        name: "Google Maps API key",
+        prompt: `${discordFormat(
+          (gmapsAPIKey
+            ? discordFormat("Invalid Google Maps API key detected.", {
+                italic: true,
+              }) + "\n\n"
+            : "") +
+            `A valid Google Maps API key with permissions for the Geocoding and Distance Matrix APIs is required.`,
+          { bold: true }
+        )}\n\nNote that the free tier of the Google Maps API has usage limits, but if you're using partmin for personal use, you're unlikely to exceed these limits.\n\nPlease obtain your API key from the ${discordFormat(
+          "Google Cloud Console",
+          { link: "https://console.cloud.google.com/" }
+        )}, and enter the value with the ${
+          stringPromptLabels.edit
+        } button below.`,
+      });
+      if (typeof key !== "string") {
+        await discordSend(`A Google Maps API is required.`);
+        continue;
+      }
+      const isValid = await gmapsAPIKeyIsValid(key);
+      if (isValid) {
+        await persistent.googleMapsAPIKey.writeValue(key);
+        await discordSend("Google Maps API key set successfully.");
+        break;
+      }
+      await discordSend(
+        "The API key you provided doesn't appear to be valid. Please try again."
+      );
+    }
+  }
+
   const locationIsSet = async () => {
     const userConfig = await persistent.userConfig.value();
     const location = userConfig?.search.location;
@@ -350,14 +388,4 @@ export const discordInitRoutine = async () => {
       );
     }
   }
-
-  // if (config?.options?.disableGoogleMapsFeatures) {
-  //   log(
-  //     "Google Maps features are disabled. You can enable them by removing the 'options.disableGoogleMapsFeatures' config option."
-  //   );
-  // } else {
-  //   await cache.googleMapsAPIKey.requireValue({
-  //     message: `A Google Maps API key with permissions for the Geocoding and Distance Matrix APIs is required for some partmin features. ${cache.googleMapsAPIKey.envVarInstruction}\n\nYou may disable these features by setting the 'options.disableGoogleMapsFeatures' config option.`,
-  //   });
-  // }
 };

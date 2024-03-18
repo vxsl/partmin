@@ -40,18 +40,18 @@ export const promptForString = ({
   prompt: customPrompt,
   commandInteraction,
   doneButton,
+  hideValue,
 }: {
   commandInteraction?: CommandInteraction;
   prompt?: string;
   name: string;
   doneButton?: boolean;
+  hideValue?: boolean;
 }): Promise<string | InteractiveMessageCancel | InteractiveMessageDone> => {
   const prompt =
     customPrompt ??
     discordFormat(
-      `Use the ${
-        stringPromptLabels.edit
-      } button below to set the desired ${name.toLowerCase()}.`,
+      `Use the ${stringPromptLabels.edit} button below to set the desired "${name}".`,
       { bold: true }
     );
   return new Promise((resolve, reject) =>
@@ -90,12 +90,13 @@ export const promptForString = ({
                     discordFormat(
                       `${userMention(
                         submitted.user.id
-                      )} provided a value for "${name.toLowerCase()}": ${discordFormat(
-                        `${value}`,
-                        {
-                          monospace: true,
-                        }
-                      )}`,
+                      )} provided a value for "${name}"${
+                        hideValue
+                          ? "."
+                          : `: ${discordFormat(`${value}`, {
+                              monospace: true,
+                            })}`
+                      }`,
                       { italic: true }
                     )
                   )
