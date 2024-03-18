@@ -246,7 +246,7 @@ export const getCommuteSummary = async (origin: string, dest: string) => {
   let rawData: Partial<Record<CommuteMode, any>> = {};
   if (cached !== undefined) {
     debugLog(`Commute summary found in cache: ${origin} -> ${dest}`);
-    rawData = cached;
+    return cached;
   } else {
     try {
       await Promise.all(
@@ -280,12 +280,10 @@ export const getCommuteSummary = async (origin: string, dest: string) => {
       ];
     })
   ) as CommuteSummary;
-  if (!cached) {
-    await persistent.commuteSummaries.writeValue({
-      ...summaries,
-      [origin]: { ...summaries[origin], [dest]: result },
-    });
-  }
+  await persistent.commuteSummaries.writeValue({
+    ...summaries,
+    [origin]: { ...summaries[origin], [dest]: result },
+  });
 
   debugLog(`Commute summary computed: ${origin} -> ${dest}`);
   debugLog(result);
