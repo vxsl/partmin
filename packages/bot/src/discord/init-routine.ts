@@ -39,7 +39,7 @@ const checkGoogleMapsAPIKey = async () => {
         } button below.`,
       });
       if (typeof key !== "string") {
-        await discordSend(`A Google Maps API is required.`);
+        await discordSend(`A Google Maps API key is required.`);
         continue;
       }
       const isValid = await gmapsAPIKeyIsValid(key);
