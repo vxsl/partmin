@@ -356,7 +356,8 @@ export const initDiscord = async () => {
 
     log("Discord client logging in...");
     const token = await persistent.botToken.requireValue({
-      message: `partmin requires a Discord bot token to run. ${persistent.botToken.envVarInstruction}`,
+      message: `partmin requires a Discord bot token to run. You can generate a new token by navigating to the "Bot" section of your application in the Discord Developer Portal and selecting "Reset Token".\n\n
+       ${persistent.botToken.envVarInstruction}`,
     });
     await discordClient.login(token);
   });
