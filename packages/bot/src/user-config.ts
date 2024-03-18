@@ -24,7 +24,6 @@ export const unreliabilityExplanations: Record<
   keyof Static<typeof UnreliableParams>,
   string
 > = {
-  // TODO ensure functionality matches these descriptions:
   minAreaSqFt:
     "This will exclude listings that specify a square footage less than the configured value. Posters often report the area of their listing using the wrong units.",
   requireOutdoorSpace:
@@ -108,38 +107,6 @@ export const defaultUserConfigValues: RecursivePartial<StaticUserConfig> = {
     blacklistRegex: [],
   },
 } as const;
-
-// process.argv.slice(2).forEach((arg) => {
-//   const [_key, value] = arg.split("=");
-//   if (_key && value) {
-//     const key = _key.split("--")[1];
-//     const path = key?.split(".") ?? [];
-//     let obj: any = _config;
-//     for (let i = 0; i < path.length - 1; i++) {
-//       const p = path[i];
-//       if (p === undefined) break;
-//       obj = obj[p];
-//     }
-//     const lastKey = path[path.length - 1];
-//     if (lastKey === undefined) {
-//       console.error("Unexpected config key", key);
-//       return;
-//     }
-//     let v;
-//     if (value === "true" || value === "false") {
-//       v = value === "true";
-//     } else if (!isNaN(Number(value))) {
-//       v = Number(value);
-//     } else {
-//       v = value;
-//     }
-
-//     console.log(
-//       `Overriding config value ${key}: ${v} (original value ${obj[lastKey]})`
-//     );
-//     obj[lastKey] = v;
-//   }
-// });
 
 export const validateUserConfig = (c: StaticUserConfig) => {
   try {

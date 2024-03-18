@@ -67,70 +67,43 @@ export const defineAdvancedConfig = async () => {
   });
 
   console.log("Advanced config loaded");
+
+  process.argv.slice(2).forEach((arg) => {
+    const [_key, value] = arg.split("=");
+    if (_key && value) {
+      const key = _key.split("--")[1];
+      const path = key?.split(".") ?? [];
+      let obj: any = raw;
+      for (let i = 0; i < path.length - 1; i++) {
+        const p = path[i];
+        if (p === undefined) break;
+        obj = obj[p];
+      }
+      const lastKey = path[path.length - 1];
+      if (lastKey === undefined) {
+        console.error("Unexpected advanced config key", key);
+        return;
+      }
+      let v;
+      if (value === "true" || value === "false") {
+        v = value === "true";
+      } else if (!isNaN(Number(value))) {
+        v = Number(value);
+      } else {
+        v = value;
+      }
+
+      console.log(
+        `Overriding advanced config value ${key}: ${v} (original value ${obj[lastKey]})`
+      );
+      obj[lastKey] = v;
+    }
+  });
+
   advancedConfig = AdvancedConfig.check(raw);
   devOptions = advancedConfig.development ?? {};
   logLevels = advancedConfig.logging ?? {};
 };
-// export const defineAdvancedConfig = async () => {
-//   let json;
-//   try {
-//     import(advancedConfigPath).then((json) => {
-//       console.log("Advanced config loaded");
-//       _advancedConfig = AdvancedConfig.check(json);
-//       devOptions = _advancedConfig.development ?? {};
-//       logLevels = _advancedConfig.logging ?? {};
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     console.log(
-//       `No advanced config found, writing default values to ${advancedConfigPath}`
-//     );
-//     writeFileSync(
-//       advancedConfigPath,
-//       JSON.stringify(defaultAdvancedConfigValues, null, 2)
-//     );
-//     json = defaultAdvancedConfigValues;
-//     _advancedConfig = AdvancedConfig.check(json);
-//     devOptions = _advancedConfig.development ?? {};
-//     logLevels = _advancedConfig.logging ?? {};
-//   }
-// };
-
-// const _advancedConfig = AdvancedConfig.check(json);
-// export const devOptions = _advancedConfig.development ?? {};
-// export const logLevels = _advancedConfig.logging ?? {};
-
-// process.argv.slice(2).forEach((arg) => {
-//   const [_key, value] = arg.split("=");
-//   if (_key && value) {
-//     const key = _key.split("--")[1];
-//     const path = key?.split(".") ?? [];
-//     let obj: any = _config;
-//     for (let i = 0; i < path.length - 1; i++) {
-//       const p = path[i];
-//       if (p === undefined) break;
-//       obj = obj[p];
-//     }
-//     const lastKey = path[path.length - 1];
-//     if (lastKey === undefined) {
-//       console.error("Unexpected config key", key);
-//       return;
-//     }
-//     let v;
-//     if (value === "true" || value === "false") {
-//       v = value === "true";
-//     } else if (!isNaN(Number(value))) {
-//       v = Number(value);
-//     } else {
-//       v = value;
-//     }
-
-//     console.log(
-//       `Overriding config value ${key}: ${v} (original value ${obj[lastKey]})`
-//     );
-//     obj[lastKey] = v;
-//   }
-// });
 
 export const validateAdvancedConfig = (c: StaticAdvancedConfig) => {
   try {
