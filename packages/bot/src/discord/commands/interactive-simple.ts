@@ -1,9 +1,11 @@
 import {
+  ButtonStyle,
   CommandInteraction,
   TextInputBuilder,
   TextInputStyle,
   userMention,
 } from "discord.js";
+import { primaryColor, secondaryColor } from "discord/constants.js";
 import {
   ComponentContext,
   componentGroup,
@@ -17,25 +19,41 @@ const ids = {
   edit: "edit",
   true: "true",
   false: "false",
+  cancel: "cancel",
+  done: "done",
 };
-const emojis: { [key in keyof typeof ids]: string } = {
+export const stringPromptLabels: { [key in keyof typeof ids]: string } = {
   edit: "✏️",
   true: "✅",
   false: "❌",
+  cancel: "Cancel",
+  done: "Done",
 };
+
+export const interactiveMessageCancel = Symbol("cancel");
+export type InteractiveMessageCancel = typeof interactiveMessageCancel;
+export const interactiveMessageDone = Symbol("done");
+export type InteractiveMessageDone = typeof interactiveMessageDone;
 
 export const promptForString = ({
   name,
   prompt: customPrompt,
   commandInteraction,
+  doneButton,
 }: {
   commandInteraction?: CommandInteraction;
   prompt?: string;
   name: string;
-}): Promise<string> => {
+  doneButton?: boolean;
+}): Promise<string | InteractiveMessageCancel | InteractiveMessageDone> => {
   const prompt =
     customPrompt ??
-    `Use the button below to set the desired ${name.toLowerCase()}`;
+    discordFormat(
+      `Use the ${
+        stringPromptLabels.edit
+      } button below to set the desired ${name.toLowerCase()}.`,
+      { bold: true }
+    );
   return new Promise((resolve, reject) =>
     constructAndSendRichMessage({
       ...(commandInteraction && {
@@ -45,15 +63,17 @@ export const promptForString = ({
             return commandInteraction.followUp({ ...o, fetchReply: true });
           }),
       }),
-      content: discordFormat(`${prompt}:`, { bold: !prompt.includes("\n") }),
-      initComponentOrder: [[ids.edit]],
+      embeds: [{ description: prompt, color: primaryColor }],
+      initComponentOrder: [
+        [ids.edit, ids.cancel, ...(doneButton ? [ids.done] : [])],
+      ],
       componentGroupDefs: {
         edit: componentGroup<{}>({
           initState: () => ({}),
           buttons: {
             [ids.edit]: {
-              label: emojis.edit,
-              mutate: async ({ componentInteraction, state }) => {
+              label: stringPromptLabels.edit,
+              mutate: async ({ componentInteraction, state, getEmbed }) => {
                 const { submitted, value } = await stringModal({
                   textInputBuilder: new TextInputBuilder()
                     .setLabel(name)
@@ -65,13 +85,8 @@ export const promptForString = ({
 
                 resolve(value);
 
-                await componentInteraction.message.edit({
-                  content:
-                    discordFormat(`${prompt}`, {
-                      quote: true,
-                      italic: true,
-                    }) +
-                    "\n" +
+                getEmbed(0)
+                  .setDescription(
                     discordFormat(
                       `${userMention(
                         submitted.user.id
@@ -81,12 +96,66 @@ export const promptForString = ({
                           monospace: true,
                         }
                       )}`,
-                      { bold: true }
-                    ),
-                });
+                      { italic: true }
+                    )
+                  )
+                  .setColor(secondaryColor);
+
                 return { state, componentOrder: [] };
               },
             },
+            [ids.cancel]: {
+              style: ButtonStyle.Danger,
+              label: stringPromptLabels.cancel,
+              mutate: ({ componentInteraction, state, getEmbed }) => {
+                resolve(interactiveMessageCancel);
+
+                getEmbed(0)
+                  .setDescription(
+                    discordFormat(`${prompt}`, {
+                      quote: true,
+                      italic: true,
+                    }) +
+                      "\n" +
+                      discordFormat(
+                        `${userMention(
+                          componentInteraction.user.id
+                        )} cancelled the operation.`,
+                        { italic: true }
+                      )
+                  )
+                  .setColor(secondaryColor);
+
+                return { state, componentOrder: [] };
+              },
+            },
+            ...(doneButton && {
+              [ids.done]: {
+                style: ButtonStyle.Primary,
+                label: stringPromptLabels.done,
+                mutate: ({ componentInteraction, state, getEmbed }) => {
+                  resolve(interactiveMessageDone);
+
+                  getEmbed(0)
+                    .setDescription(
+                      discordFormat(`${prompt}`, {
+                        quote: true,
+                        italic: true,
+                      }) +
+                        "\n" +
+                        discordFormat(
+                          `${userMention(
+                            componentInteraction.user.id
+                          )} finished the operation.`,
+                          { italic: true }
+                        )
+                    )
+                    .setColor(secondaryColor);
+
+                  return { state, componentOrder: [] };
+                },
+              },
+            }),
           },
         }),
       },
@@ -100,27 +169,26 @@ export const promptForBoolean = ({
 }: {
   commandInteraction?: CommandInteraction;
   prompt: string;
-}): Promise<boolean> =>
+}): Promise<boolean | InteractiveMessageCancel> =>
   new Promise((resolve, reject) => {
     const getCallback =
       (key: "false" | "true") =>
-      async ({ componentInteraction }: ComponentContext<any>) => {
+      async ({ componentInteraction, getEmbed }: ComponentContext<any>) => {
         resolve(key === "true");
-        await componentInteraction.message.edit({
-          content:
-            discordFormat(`${prompt}`, {
-              quote: true,
-              italic: true,
-            }) +
-            "\n" +
-            discordFormat(
-              `${userMention(componentInteraction.user.id)} answered "${
-                emojis[key]
-              }"
-                      `,
-              { bold: true }
-            ),
-        });
+
+        getEmbed(0)
+          .setDescription(
+            discordFormat(prompt, { quote: true, italic: true }) +
+              "\n" +
+              discordFormat(
+                `${userMention(componentInteraction.user.id)} answered "${
+                  stringPromptLabels[key]
+                }"`,
+                { italic: true }
+              )
+          )
+          .setColor(secondaryColor);
+
         return { state: {}, componentOrder: [] };
       };
 
@@ -132,19 +200,44 @@ export const promptForBoolean = ({
             return commandInteraction.followUp({ ...o, fetchReply: true });
           }),
       }),
-      content: discordFormat(prompt, { bold: true }),
-      initComponentOrder: [[ids.false, ids.true]],
+      embeds: [{ description: prompt, color: primaryColor }],
+      initComponentOrder: [[ids.false, ids.true, ids.cancel]],
       componentGroupDefs: {
         edit: componentGroup({
           initState: () => ({}),
           buttons: {
             [ids.false]: {
-              label: emojis.false,
+              label: stringPromptLabels.false,
               mutate: getCallback("false"),
             },
             [ids.true]: {
-              label: emojis.true,
+              label: stringPromptLabels.true,
               mutate: getCallback("true"),
+            },
+            [ids.cancel]: {
+              style: ButtonStyle.Danger,
+              label: stringPromptLabels.cancel,
+              mutate: ({ componentInteraction, state, getEmbed }) => {
+                resolve(interactiveMessageCancel);
+
+                getEmbed(0)
+                  .setDescription(
+                    discordFormat(`${prompt}`, {
+                      quote: true,
+                      italic: true,
+                    }) +
+                      "\n" +
+                      discordFormat(
+                        `${userMention(
+                          componentInteraction.user.id
+                        )} cancelled the operation.`,
+                        { italic: true }
+                      )
+                  )
+                  .setColor(secondaryColor);
+
+                return { state, componentOrder: [] };
+              },
             },
           },
         }),

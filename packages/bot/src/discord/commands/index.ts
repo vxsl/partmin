@@ -15,7 +15,7 @@ import getInteractiveEditCommand from "discord/commands/interactive-edit.js";
 import testListing from "discord/commands/test-listing.js";
 import { discordGuildID } from "discord/constants.js";
 import { discordClient } from "discord/index.js";
-import { setLocation, setSearchAreas } from "discord/init-routine.js";
+import { setLocation } from "discord/init-routine.js";
 import persistent from "persistent.js";
 import { SearchParams, defaultUserConfigValues } from "user-config.js";
 import { identifyCity } from "util/geo.js";
@@ -91,18 +91,35 @@ const setupCommands = async () => {
         .setDescription("Set the desired location for your apartment search."),
       execute: async (commandInteraction: CommandInteraction) => {
         const userConfig = await persistent.userConfig.requireValue();
-        const citiesCache = (await persistent.cities.value()) ?? {};
-        const city =
-          citiesCache[userConfig.search.location?.city] ??
-          (await identifyCity(userConfig.search.location?.city).catch((e) => {
+        const city = await identifyCity(userConfig.search.location?.city).catch(
+          (e) => {
             log(`Error identifying city from user config file: ${e}`);
             return undefined;
-          }));
-        if (city) {
-          await setSearchAreas({ city, commandInteraction });
-        } else {
-          await setLocation({ commandInteraction });
-        }
+          }
+        );
+        await setLocation({ commandInteraction, skipCityPrompt: !!city });
+      },
+    },
+    {
+      data: new SlashCommandBuilder()
+        .setName("set-commute-destinations")
+        .setDescription(
+          "Set the commute destinations for your apartment search."
+        ),
+      execute: async (commandInteraction: CommandInteraction) => {
+        const userConfig = await persistent.userConfig.requireValue();
+        const city = await identifyCity(userConfig.search.location?.city).catch(
+          (e) => {
+            log(`Error identifying city from user config file: ${e}`);
+            return undefined;
+          }
+        );
+        await setLocation({
+          commandInteraction,
+          skipCityPrompt: !!city,
+          skipSearchAreasPrompt:
+            userConfig.search.location?.mapDevelopersURL !== undefined,
+        });
       },
     },
   ];

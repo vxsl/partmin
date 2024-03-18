@@ -190,6 +190,22 @@ export const approxLocationLink = async (coords: Coordinates) => {
   return { text: displayAddr, url: getGoogleMapsLink(query) };
 };
 
+export const identifyAddress = async (address: string) => {
+  const { data } = await axios.get(
+    `${gMapsAPIs}/geocode/json?address=${encodeURIComponent(
+      address
+    )}&${await gMapsAPIKey()}`
+  );
+  if (data.status !== "OK") {
+    return undefined;
+  }
+  const result = data.results?.[0]?.formatted_address;
+  if (typeof result !== "string") {
+    return undefined;
+  }
+  return result;
+};
+
 export const isValidAddress = async (address: string) => {
   let result;
   const validities = (await persistent.addressValidity.value()) ?? {};
@@ -316,16 +332,23 @@ export const sqftToSqMeters = (s2: number) => s2 * sqFtToSqMetersRatio;
 export const sqMetersToSqft = (m2: number) => m2 / sqFtToSqMetersRatio;
 export const acresToSqft = (a: number) => a * 43560;
 
-export const identifyCity = async (city: string) => {
+export const identifyCity = async (
+  city: string,
+  options?: { cacheOnly?: boolean }
+) => {
   const cities = (await persistent.cities.value()) ?? {};
   const cached = cities?.[city];
   if (cached) {
     return cached;
   }
+  if (options?.cacheOnly) {
+    throw new Error(`City not found in cache: ${city}`);
+  }
 
   const { data } = await axios.get(
-    `${gMapsAPIs}/geocode/json?address=${city}&${await gMapsAPIKey()}`
+    `${gMapsAPIs}/geocode/json?address=${city}&${await gMapsAPIKey()}&components=country:CA|types:locality`
   );
+
   const result = data?.results[0]?.address_components;
   const cityComponent = result?.find((c: any) =>
     c?.types?.includes("locality")

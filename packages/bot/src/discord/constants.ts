@@ -37,6 +37,8 @@ export const warningColor = "#ebb734";
 export const errorColor = "#732f2f";
 export const successColor = "#4a874a";
 export const editColor = "#2f4a73";
+export const primaryColor = "#2f73a8";
+export const secondaryColor = "#383838";
 
 // ------------------------------------------------------------
 // channels

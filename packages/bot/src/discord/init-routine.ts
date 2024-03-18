@@ -1,33 +1,173 @@
 import { CommandInteraction } from "discord.js";
 import {
+  InteractiveMessageCancel,
+  InteractiveMessageDone,
+  interactiveMessageCancel,
+  interactiveMessageDone,
   promptForBoolean,
   promptForString,
+  stringPromptLabels,
 } from "discord/commands/interactive-simple.js";
 import { successColor } from "discord/constants.js";
 import { constructAndSendRichMessage } from "discord/interactive/index.js";
 import { discordSend } from "discord/util.js";
 import persistent from "persistent.js";
 import {
-  City,
   Circle,
+  City,
   constructMapDevelopersURL,
   decodeMapDevelopersURL,
+  getGoogleMapsLink,
+  identifyAddress,
   identifyCity,
 } from "util/geo.js";
 import { log } from "util/log.js";
 import { discordFormat } from "util/string.js";
 
-export const setSearchAreas = async ({
+const getCity = async ({
+  commandInteraction,
+  skipPrompt,
+}: {
+  commandInteraction?: CommandInteraction;
+  skipPrompt?: boolean;
+}) => {
+  if (skipPrompt) {
+    const userConfig = await persistent.userConfig.requireValue();
+    const cached = await identifyCity(`${userConfig.search.location.city}`, {
+      cacheOnly: true,
+    }).catch(() => undefined);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  while (true) {
+    const cityInput = await promptForString({
+      commandInteraction,
+      name: "City",
+    });
+    if (
+      cityInput === interactiveMessageCancel ||
+      cityInput === interactiveMessageDone
+    ) {
+      return interactiveMessageCancel;
+    }
+
+    try {
+      const city = await identifyCity(cityInput);
+
+      if (
+        !(await promptForBoolean({
+          commandInteraction,
+          prompt: discordFormat(
+            `Is ${discordFormat(`${city.city}, ${city.region}`, {
+              link: city.link,
+              avoidLinkPreviews: true,
+            })} correct?`,
+            { bold: true }
+          ),
+        }))
+      ) {
+        continue;
+      }
+
+      if (city.country !== "Canada") {
+        await discordSend(
+          "Sorry, only Canadian cities are supported at this time."
+        );
+        continue;
+      }
+
+      return city;
+    } catch (e) {
+      log(`Error setting location: ${e}`);
+      discordSend(
+        `"${cityInput}" doesn't appear to be a valid city. Please try again.`
+      );
+      continue;
+    }
+  }
+};
+
+const getCommuteDestinations = async ({
+  commandInteraction,
+}: {
+  commandInteraction?: CommandInteraction;
+}) => {
+  let results: string[] = [];
+
+  while (true) {
+    const s = await promptForString({
+      commandInteraction,
+      doneButton: true,
+      name: "Commute destination",
+      prompt: discordFormat(
+        `Please specify a commute destination by clicking the ${stringPromptLabels.edit} button below.`,
+        { bold: true }
+      ),
+    });
+
+    if (s === interactiveMessageCancel) {
+      return interactiveMessageCancel;
+    }
+    if (s === interactiveMessageDone) {
+      return results;
+    }
+
+    const v = await identifyAddress(s);
+
+    if (v === undefined) {
+      await discordSend(
+        "The commute destination you provided doesn't appear to be valid. Please try again."
+      );
+      continue;
+    }
+
+    if (
+      !(await promptForBoolean({
+        commandInteraction,
+        prompt: discordFormat(
+          `Is ${discordFormat(`${v}`, {
+            link: getGoogleMapsLink(v),
+            avoidLinkPreviews: true,
+          })} correct?`,
+          { bold: true }
+        ),
+      }))
+    ) {
+      continue;
+    }
+
+    results.push(v);
+  }
+};
+
+const getSearchAreas = async ({
   city,
   commandInteraction,
+  skipPrompt,
 }: {
   city: City;
   commandInteraction?: CommandInteraction;
+  skipPrompt?: boolean;
 }) => {
-  let mapDevelopersURL: string | undefined;
-  let radii: Circle[] = [];
+  if (skipPrompt) {
+    const userConfig = await persistent.userConfig.requireValue();
+    return {
+      circles: decodeMapDevelopersURL(
+        userConfig.search.location.mapDevelopersURL
+      ),
+      mapDevelopersURL: userConfig.search.location.mapDevelopersURL,
+    };
+  }
+  let mapDevelopersURL:
+    | string
+    | InteractiveMessageCancel
+    | InteractiveMessageDone
+    | undefined;
+  let results: Circle[] = [];
 
-  while (!radii.length || mapDevelopersURL === undefined) {
+  while (true) {
     mapDevelopersURL = await promptForString({
       commandInteraction,
       name: "Search areas",
@@ -45,12 +185,19 @@ export const setSearchAreas = async ({
         }) +
         "\n" +
         discordFormat(
-          "When you're done, copy the resulting URL, click the button below, and paste it"
+          `When you're done, copy the resulting URL, click the ${stringPromptLabels.edit} button below, and paste it.`
         ),
     });
 
+    if (
+      mapDevelopersURL === interactiveMessageCancel ||
+      mapDevelopersURL === interactiveMessageDone
+    ) {
+      return interactiveMessageCancel;
+    }
+
     try {
-      radii = decodeMapDevelopersURL(mapDevelopersURL ?? "");
+      results = decodeMapDevelopersURL(mapDevelopersURL ?? "");
     } catch (e) {
       log(`Error decoding map developers URL: ${e}`);
       await discordSend(
@@ -59,85 +206,123 @@ export const setSearchAreas = async ({
       continue;
     }
 
-    if (!radii.length) {
-      await discordSend(
-        "You didn't specify any search areas. Please try again."
-      );
-    }
-  }
-
-  const userConfig = await persistent.userConfig.requireValue();
-
-  await persistent.userConfig.writeValue({
-    ...userConfig,
-    search: {
-      ...userConfig.search,
-      location: {
-        city: city.city.toLowerCase(),
-        region: city.regionShort,
+    if (results.length) {
+      return {
         mapDevelopersURL,
-      },
-    },
-  });
+        circles: results,
+      };
+    }
 
-  await constructAndSendRichMessage({
-    embeds: [
-      {
-        title: "🗺️  Search location set!",
-        description: discordFormat(
-          `You specified ${discordFormat(
-            `${radii.length} ${radii.length === 1 ? "radius" : "radii"}`,
-            { link: mapDevelopersURL }
-          )} in ${discordFormat(`${city.city}, ${city.regionShort}`, {
-            link: city.link,
-          })}.`,
-          { bold: true }
-        ),
-        color: successColor,
-      },
-    ],
-  });
+    await discordSend("You didn't specify any search areas. Please try again.");
+  }
+};
+
+export const getSearchLocationSummary = async () => {
+  const userConfig = await persistent.userConfig.requireValue();
+  const circles = decodeMapDevelopersURL(
+    userConfig.search.location.mapDevelopersURL
+  );
+  const loc = userConfig.search.location;
+  const dests = userConfig.options?.commuteDestinations ?? [];
+  const city = await identifyCity(loc.city);
+
+  return (
+    discordFormat(
+      `You specified ${discordFormat(
+        `${circles.length} ${circles.length === 1 ? "radius" : "radii"}`,
+        { link: loc.mapDevelopersURL }
+      )} in ${discordFormat(`${city.city}, ${city.regionShort}`, {
+        link: city.link,
+      })}`,
+      { bold: true }
+    ) +
+    (!dests.length
+      ? "."
+      : `, along with ${dests.length} commute destination${
+          dests.length === 1 ? "" : "s"
+        }:\n${dests
+          .map((d) => `- ${discordFormat(d, { link: getGoogleMapsLink(d) })}`)
+          .join("\n")}`)
+  );
 };
 
 export const setLocation = async ({
   commandInteraction,
+  skipCityPrompt,
+  skipSearchAreasPrompt,
 }: {
   commandInteraction?: CommandInteraction;
+  skipCityPrompt?: boolean;
+  skipSearchAreasPrompt?: boolean;
 } = {}) => {
   while (true) {
-    const cityInput = await promptForString({
+    const city = await getCity({
       commandInteraction,
-      name: "City",
+      skipPrompt: skipCityPrompt,
+    });
+    if (city === interactiveMessageCancel) {
+      break;
+    }
+
+    const searchAreas = await getSearchAreas({
+      city,
+      commandInteraction,
+      skipPrompt: skipSearchAreasPrompt,
+    });
+    if (searchAreas === interactiveMessageCancel) {
+      break;
+    }
+
+    const commuteDestinations =
+      (await persistent.googleMapsAPIKey.value()) &&
+      (await promptForBoolean({
+        commandInteraction,
+        prompt:
+          discordFormat("Would you like to provide any commute destinations?", {
+            bold: true,
+          }) +
+          "\n" +
+          "A commute summary will be generated for each new listing. These destinations can be set/modified later.",
+      }))
+        ? await getCommuteDestinations({
+            commandInteraction,
+          })
+        : [];
+    if (commuteDestinations === interactiveMessageCancel) {
+      break;
+    }
+
+    const { mapDevelopersURL } = searchAreas;
+
+    let userConfig = await persistent.userConfig.requireValue();
+    await persistent.userConfig.writeValue({
+      ...userConfig,
+      search: {
+        ...userConfig.search,
+        location: {
+          city: city.city.toLowerCase(),
+          region: city.regionShort,
+          mapDevelopersURL,
+        },
+      },
+      options: {
+        ...userConfig.options,
+        commuteDestinations,
+      },
+    });
+    userConfig = await persistent.userConfig.requireValue();
+
+    await constructAndSendRichMessage({
+      embeds: [
+        {
+          title: "🗺️  Search location set!",
+          description: await getSearchLocationSummary(),
+          color: successColor,
+        },
+      ],
     });
 
-    try {
-      const city = await identifyCity(cityInput);
-
-      const bool = await promptForBoolean({
-        commandInteraction,
-        prompt: `Is ${discordFormat(`${city.city}, ${city.region}`, {
-          link: city.link,
-          avoidLinkPreviews: true,
-        })} correct?`,
-      });
-      if (bool) {
-        if (city.country !== "Canada") {
-          await discordSend(
-            "Sorry, only Canadian cities are supported at this time."
-          );
-          continue;
-        }
-
-        await setSearchAreas({ city, commandInteraction });
-        break;
-      }
-    } catch (e) {
-      log(`Error setting location: ${e}`);
-      discordSend(
-        `"${cityInput}" doesn't appear to be a valid city. Please try again.`
-      );
-      continue;
-    }
+    break;
   }
   return null;
 };
@@ -149,18 +334,27 @@ export const discordInitRoutine = async () => {
   }
 
   const userConfig = await persistent.userConfig.value();
-  const location = userConfig?.search.location;
 
-  if (
-    !location ||
-    !location?.city ||
-    !location?.region ||
-    !location?.mapDevelopersURL
-  ) {
+  const locationIsSet = () => {
+    const location = userConfig?.search.location;
+    return (
+      location && location.city && location.region && location.mapDevelopersURL
+    );
+  };
+
+  if (!locationIsSet()) {
     await discordSend(
       "It looks like you haven't set your search location yet."
     );
-    await setLocation();
+    while (true) {
+      await setLocation();
+      if (locationIsSet()) {
+        break;
+      }
+      await discordSend(
+        "partmin can't run without a search location. Please set your search location to continue."
+      );
+    }
   }
 
   // if (config?.options?.disableGoogleMapsFeatures) {
