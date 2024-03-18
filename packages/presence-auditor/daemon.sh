@@ -14,19 +14,7 @@ cd "$script_dir" || (plog "Failed to change directory to $script_dir" && exit 1)
 on_proc_dead() {
     plog "Detected that partmin has stopped running."
     
-    config_path="$script_dir/../../config/advanced-config.json"
-    plog "Reading config file at $config_path"
-    if [ -e "$config_path" ]; then
-        is_test=$(jq -r '.development.testing' "$config_path")
-        signal_path="$script_dir/../bot/."
-        if [ "$is_test" = "true" ]; then
-            signal_path="${signal_path}test-"
-        fi
-        signal_path="${signal_path}data/discord-bot-status-for-auditor"
-    else
-        plog "Failed to read config file at $config_path"
-        exit 1
-    fi
+    signal_path="$script_dir/../bot/.data/discord-bot-status-for-auditor"
     
     if [ -e "$signal_path" ]; then
         bot_status=$(cat "$signal_path")

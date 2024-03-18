@@ -9,6 +9,7 @@ export const getDirs = () => {
   const dirs = {
     data: `${cwd}/.${dirPrefix}data-${discordGuildID}`,
     commonData: `${cwd}/.${dirPrefix}data`,
+    commonDataProd: `${cwd}/.data`,
     puppeteerCache: `${cwd}/.puppeteer`,
   };
   for (const dir of Object.values(dirs)) {
@@ -20,7 +21,7 @@ export const getDirs = () => {
 };
 
 export const getStatusPathForAuditor = () =>
-  `${getDirs().commonData}/discord-bot-status-for-auditor`;
+  `${getDirs().commonDataProd}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";
 export const seleniumImplicitWait = 10 * 1000;
 
