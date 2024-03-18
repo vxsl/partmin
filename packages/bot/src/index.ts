@@ -1,13 +1,23 @@
 import { defineAdvancedConfig, devOptions } from "advanced-config.js";
-import { presenceActivities } from "discord/constants.js";
-import { discordIsReady, initDiscord, shutdownDiscord } from "discord/index.js";
-import { discordInitRoutine } from "discord/init-routine.js";
+import { userMention } from "discord.js";
+import { presenceActivities, successColor } from "discord/constants.js";
+import {
+  discordClient,
+  discordIsReady,
+  initDiscord,
+  shutdownDiscord,
+} from "discord/index.js";
+import {
+  discordInitRoutine,
+  getSearchLocationSummary,
+} from "discord/init-routine.js";
+import { constructAndSendRichMessage } from "discord/interactive/index.js";
 import {
   reinitializeInteractiveListingMessages,
   sendListing,
 } from "discord/interactive/listing/index.js";
 import { setPresence, startActivity } from "discord/presence.js";
-import { discordError, discordSend, discordWarning } from "discord/util.js";
+import { discordError, discordWarning } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import { Listing } from "listing.js";
@@ -334,11 +344,23 @@ export const fatalError = async (e: unknown) => {
 
     const advancedConfig = await persistent.advancedConfig.requireValue();
     if (!advancedConfig.botBehaviour?.suppressGreeting) {
-      await discordSend(
-        discordFormat(
-          `🚀 Starting up retrieval loop. Check my activity status anytime to see what I'm doing.`
-        )
-      );
+      await constructAndSendRichMessage({
+        embeds: [
+          {
+            title: "🚀  Started up!",
+            description: discordFormat(
+              `Beginning retrieval. Check ${
+                discordClient.user?.id
+                  ? `${userMention(discordClient.user.id)}'s`
+                  : "my"
+              } activity status to see what it's doing at any given moment.` +
+                "\n\n" +
+                (await getSearchLocationSummary())
+            ),
+            color: successColor,
+          },
+        ],
+      });
     }
 
     if (!devOptions.noRetrieval) {
