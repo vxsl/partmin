@@ -10,6 +10,7 @@ import {
 } from "discord/commands/util/interactive-simple.js";
 import { discordSend } from "discord/util.js";
 import persistent from "persistent.js";
+import { StaticUserConfig } from "user-config.js";
 import {
   Circle,
   City,
@@ -17,7 +18,7 @@ import {
   decodeMapDevelopersURL,
   getGoogleMapsLink,
   identifyAddress,
-  identifyCity
+  identifyCity,
 } from "util/geo.js";
 import { log } from "util/log.js";
 import { discordFormat } from "util/string.js";
@@ -43,6 +44,10 @@ const getCity = async ({
     const cityInput = await promptForString({
       commandInteraction,
       name: "City",
+      prompt: discordFormat(
+        `Please specify a city by clicking the ${stringPromptLabels.edit} button below.`,
+        { bold: true }
+      ),
     });
     if (
       cityInput === interactiveMessageCancel ||
@@ -55,7 +60,7 @@ const getCity = async ({
       const city = await identifyCity(cityInput);
 
       if (
-        !(await promptForBoolean({
+        (await promptForBoolean({
           commandInteraction,
           prompt: discordFormat(
             `Is ${discordFormat(`${city.city}, ${city.region}`, {
@@ -64,7 +69,7 @@ const getCity = async ({
             })} correct?`,
             { bold: true }
           ),
-        }))
+        })) !== true
       ) {
         continue;
       }
@@ -122,7 +127,7 @@ const getCommuteDestinations = async ({
     }
 
     if (
-      !(await promptForBoolean({
+      (await promptForBoolean({
         commandInteraction,
         prompt: discordFormat(
           `Is ${discordFormat(`${v}`, {
@@ -131,7 +136,7 @@ const getCommuteDestinations = async ({
           })} correct?`,
           { bold: true }
         ),
-      }))
+      })) !== true
     ) {
       continue;
     }
@@ -278,39 +283,44 @@ export const setLocation = async ({
       break;
     }
 
-    const commuteDestinations = (await promptForBoolean({
-      commandInteraction,
-      prompt:
-        discordFormat("Would you like to provide any commute destinations?", {
-          bold: true,
-        }) +
-        "\n" +
-        "A commute summary will be generated for each new listing. These destinations can be set/modified later.",
-    }))
-      ? await getCommuteDestinations({
-          commandInteraction,
-        })
-      : [];
+    const commuteDestinations =
+      (await promptForBoolean({
+        commandInteraction,
+        prompt:
+          discordFormat("Would you like to provide any commute destinations?", {
+            bold: true,
+          }) +
+          "\n" +
+          "A commute summary will be generated for each new listing. These destinations can be set/modified later.",
+      })) === true
+        ? await getCommuteDestinations({
+            commandInteraction,
+          })
+        : [];
     if (commuteDestinations === interactiveMessageCancel) {
       break;
     }
 
     const { mapDevelopersURL } = searchAreas;
 
-    let userConfig = await persistent.userConfig.requireValue();
-    await persistent.userConfig.writeValue({
-      ...userConfig,
-      search: {
-        ...userConfig.search,
-        location: {
-          city: city.city.toLowerCase(),
-          region: city.regionShort,
-          mapDevelopersURL,
-          commuteDestinations,
+    let userConfig =
+      (await persistent.userConfig.value()) ??
+      ({} as unknown as StaticUserConfig);
+    await persistent.userConfig.writeValue(
+      {
+        ...userConfig,
+        search: {
+          ...(userConfig.search ?? {}),
+          location: {
+            city: city.city.toLowerCase(),
+            region: city.regionShort,
+            mapDevelopersURL,
+            commuteDestinations,
+          },
         },
       },
-    });
-    userConfig = await persistent.userConfig.requireValue();
+      { skipValidate: true }
+    );
 
     break;
   }

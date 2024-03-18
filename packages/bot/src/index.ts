@@ -372,7 +372,7 @@ export const fatalError = async (e: unknown) => {
                 discordFormat(await getSearchLocationSummary(), {
                   bold: true,
                 }) +
-                "\n\n" +
+                "\n" +
                 (await getCommuteDestinationsSummary())
             ),
             color: successColor,

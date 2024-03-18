@@ -80,9 +80,6 @@ export type StaticUserConfig = Static<typeof UserConfig>;
 
 export const defaultUserConfigValues: RecursivePartial<StaticUserConfig> = {
   search: {
-    location: {
-      commuteDestinations: [],
-    },
     params: {
       pets: {
         cat: false,

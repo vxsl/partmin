@@ -5,6 +5,7 @@ import {
 } from "discord/commands/util/interactive-simple.js";
 import { discordSend } from "discord/util.js";
 import persistent from "persistent.js";
+import { ValidationError } from "runtypes";
 import { gmapsAPIKeyIsValid } from "util/geo.js";
 import { discordFormat } from "util/string.js";
 
@@ -79,5 +80,9 @@ export const discordInitRoutine = async () => {
   }
 
   await checkGoogleMapsAPIKey();
-  await checkLocation();
+  await checkLocation().catch((e) => {
+    if (!(e instanceof ValidationError)) {
+      throw e;
+    }
+  });
 };
