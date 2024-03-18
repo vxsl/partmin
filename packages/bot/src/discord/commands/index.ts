@@ -11,16 +11,16 @@ import {
   Routes,
   SlashCommandBuilder,
 } from "discord.js";
-import getInteractiveEditCommand from "discord/commands/interactive-edit.js";
-import { promptForBoolean } from "discord/commands/interactive-simple.js";
-import testListing from "discord/commands/test-listing.js";
-import { discordGuildID } from "discord/constants.js";
-import { discordClient } from "discord/index.js";
 import {
   getCommuteDestinationsSummary,
   getSearchLocationSummary,
   setLocation,
-} from "discord/init-routine.js";
+} from "discord/commands/location.js";
+import testListing from "discord/commands/test-listing.js";
+import getInteractiveEditCommand from "discord/commands/util/interactive-edit.js";
+import { promptForBoolean } from "discord/commands/util/interactive-simple.js";
+import { discordGuildID } from "discord/constants.js";
+import { discordClient } from "discord/index.js";
 import persistent from "persistent.js";
 import { SearchParams, defaultUserConfigValues } from "user-config.js";
 import { identifyCity } from "util/geo.js";

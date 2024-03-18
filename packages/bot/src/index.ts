@@ -1,5 +1,9 @@
 import { defineAdvancedConfig, devOptions } from "advanced-config.js";
 import { userMention } from "discord.js";
+import {
+  getCommuteDestinationsSummary,
+  getSearchLocationSummary,
+} from "discord/commands/location.js";
 import { presenceActivities, successColor } from "discord/constants.js";
 import {
   discordClient,
@@ -7,11 +11,7 @@ import {
   initDiscord,
   shutdownDiscord,
 } from "discord/index.js";
-import {
-  discordInitRoutine,
-  getCommuteDestinationsSummary,
-  getSearchLocationSummary,
-} from "discord/init-routine.js";
+import { discordInitRoutine } from "discord/init-routine.js";
 import { constructAndSendRichMessage } from "discord/interactive/index.js";
 import {
   reinitializeInteractiveListingMessages,
