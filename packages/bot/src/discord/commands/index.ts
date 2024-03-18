@@ -55,7 +55,7 @@ const setupCommands = async () => {
     },
     {
       data: new SlashCommandBuilder()
-        .setName("edit-advanced-config")
+        .setName("advanced-config")
         .setDescription(
           "📄 View and edit advanced config. Avoid this unless you know what you're doing."
         ),
@@ -80,16 +80,14 @@ const setupCommands = async () => {
     {
       data: new SlashCommandBuilder()
         .setName("location")
-        .setDescription(
-          "📌 Set the desired location for your apartment search."
-        ),
+        .setDescription("📌 What city do you want to live in?"),
       execute: (commandInteraction: CommandInteraction) =>
         setLocation({ commandInteraction }),
     },
     {
       data: new SlashCommandBuilder()
         .setName("search-areas")
-        .setDescription("📌 Specify search radii."),
+        .setDescription("📌 Specify granular search radii within your city."),
       execute: async (commandInteraction: CommandInteraction) => {
         const userConfig = await persistent.userConfig.requireValue();
         const city = await identifyCity(userConfig.search.location?.city).catch(
