@@ -1,14 +1,13 @@
 import { petsBlacklist, searchParamsBlacklist } from "constants.js";
 import { PlatformKey } from "types/platform.js";
 import { getUserConfig } from "util/config.js";
-import { conditionalSpreads } from "util/misc.js";
 import {
   CommuteSummary,
   Coordinates,
   approxLocationLink,
   getCommuteSummary,
 } from "util/geo.js";
-import { notUndefined } from "util/misc.js";
+import { conditionalSpreads, notUndefined } from "util/misc.js";
 
 type InvalidReason =
   | "blacklisted"
@@ -102,8 +101,8 @@ export const getCommuteOrigin = (l: Listing) =>
 export const addCommuteSummary = async (l: Listing) => {
   const origin = getCommuteOrigin(l);
   const config = await getUserConfig();
-  if (origin && config.options?.commuteDestinations?.length) {
-    for (const dest of config.options?.commuteDestinations) {
+  if (origin && config.search.location?.commuteDestinations?.length) {
+    for (const dest of config.search.location?.commuteDestinations) {
       await getCommuteSummary(origin, dest).then((summ) => {
         if (summ) {
           l.computed = {

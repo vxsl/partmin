@@ -174,7 +174,7 @@ export const promptForBoolean = ({
   new Promise((resolve, reject) => {
     const getCallback =
       (key: "false" | "true") =>
-      async ({ componentInteraction, getEmbed }: ComponentContext<any>) => {
+      ({ componentInteraction, getEmbed }: ComponentContext<any>) => {
         resolve(key === "true");
 
         getEmbed(0)

@@ -234,7 +234,7 @@ export const getSearchLocationSummary = async () => {
 
 export const getCommuteDestinationsSummary = async () => {
   const userConfig = await persistent.userConfig.requireValue();
-  const dests = userConfig.options?.commuteDestinations ?? [];
+  const dests = userConfig.search.location?.commuteDestinations ?? [];
 
   if (!dests.length) {
     return discordFormat(
@@ -307,11 +307,8 @@ export const setLocation = async ({
           city: city.city.toLowerCase(),
           region: city.regionShort,
           mapDevelopersURL,
+          commuteDestinations,
         },
-      },
-      options: {
-        ...userConfig.options,
-        commuteDestinations,
       },
     });
     userConfig = await persistent.userConfig.requireValue();

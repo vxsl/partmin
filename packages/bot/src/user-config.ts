@@ -35,9 +35,6 @@ export const unreliabilityExplanations: Record<
     "This will exclude listings that don't explicitly allow your type(s) of pet defined in `search.params.pets`. Posters often don't bother to fill out the pets field, even if their listing does allow pets.",
 };
 
-const Options = RuntypeRecord({
-  commuteDestinations: Optional(Array(String)),
-});
 const PetParams = RuntypeRecord({
   cat: Optional(Boolean),
   dog: Optional(Boolean),
@@ -68,10 +65,10 @@ export const Location = RuntypeRecord({
   city: String,
   region: String,
   mapDevelopersURL: String,
+  commuteDestinations: Optional(Array(String)),
 });
 
 export const UserConfig = RuntypeRecord({
-  options: Optional(Options),
   search: RuntypeRecord({
     params: SearchParams,
     location: Location,
@@ -83,10 +80,10 @@ export const UserConfig = RuntypeRecord({
 export type StaticUserConfig = Static<typeof UserConfig>;
 
 export const defaultUserConfigValues: RecursivePartial<StaticUserConfig> = {
-  options: {
-    commuteDestinations: [],
-  },
   search: {
+    location: {
+      commuteDestinations: [],
+    },
     params: {
       pets: {
         cat: false,

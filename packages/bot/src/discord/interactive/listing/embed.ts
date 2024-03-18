@@ -53,7 +53,7 @@ const listingEmbed = async (l: Listing) => {
 
   const commuteOrigin = getCommuteOrigin(l);
   const commutes = await Promise.all(
-    (config.options?.commuteDestinations ?? []).map(async (d) => {
+    (config.search.location?.commuteDestinations ?? []).map(async (d) => {
       const summ = l.computed?.commuteDestinations?.[d];
       if (!summ || !commuteOrigin) {
         return "";

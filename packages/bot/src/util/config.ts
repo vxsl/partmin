@@ -51,7 +51,7 @@ export const dynamicValidateUserConfig = async (c: StaticUserConfig) => {
   debugLog("Validating user config:");
   debugLog(JSON.stringify(c));
 
-  for (const address of c.options?.commuteDestinations ?? []) {
+  for (const address of c.search.location?.commuteDestinations ?? []) {
     if (!(await isValidAddress(address))) {
       throw new Error(
         `Invalid address provided to config.options.commuteDestinations: ${address}`
