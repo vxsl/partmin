@@ -55,16 +55,18 @@ export let devOptions: NonNullable<StaticAdvancedConfig["development"]> = {};
 export let logLevels: NonNullable<StaticAdvancedConfig["logging"]> = {};
 
 export const defineAdvancedConfig = async () => {
-  const raw = await import(advancedConfigPath).catch(() => {
-    console.log(
-      `No advanced config found, writing default values to ${advancedConfigPath}`
-    );
-    writeFileSync(
-      advancedConfigPath,
-      JSON.stringify(defaultAdvancedConfigValues, null, 2)
-    );
-    return defaultAdvancedConfigValues;
-  });
+  const raw = await import(advancedConfigPath)
+    .then((o) => o.default)
+    .catch(() => {
+      console.log(
+        `No advanced config found, writing default values to ${advancedConfigPath}`
+      );
+      writeFileSync(
+        advancedConfigPath,
+        JSON.stringify(defaultAdvancedConfigValues, null, 2)
+      );
+      return defaultAdvancedConfigValues;
+    });
 
   console.log("Advanced config loaded");
 
@@ -94,7 +96,7 @@ export const defineAdvancedConfig = async () => {
       }
 
       console.log(
-        `Overriding advanced config value ${key}: ${v} (original value ${obj[lastKey]})`
+        `Overwriting advanced config value ${key}: ${v} (original value ${obj[lastKey]})`
       );
       obj[lastKey] = v;
     }
@@ -103,6 +105,8 @@ export const defineAdvancedConfig = async () => {
   advancedConfig = AdvancedConfig.check(raw);
   devOptions = advancedConfig.development ?? {};
   logLevels = advancedConfig.logging ?? {};
+
+  return advancedConfig;
 };
 
 export const validateAdvancedConfig = (c: StaticAdvancedConfig) => {

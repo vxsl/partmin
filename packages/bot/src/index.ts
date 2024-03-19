@@ -340,7 +340,9 @@ export const fatalError = async (e: unknown) => {
 
 (async () => {
   try {
-    await defineAdvancedConfig();
+    await defineAdvancedConfig().then((c) =>
+      persistent.advancedConfig.writeValue(c)
+    );
     await initDiscord();
     await discordInitRoutine();
     setPresence("launching");
