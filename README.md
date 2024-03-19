@@ -1,4 +1,4 @@
-## `@partmin` - automating the tedium of your apartment hunt.
+## `@partmin` - automating the tedium of your apartment hunt
 
 #### This project is a self-hosted Discord bot that aggregates property rental listings from multiple platforms, sending interactive notifications about new listings that match your criteria.
 
@@ -27,9 +27,12 @@
   - omit basements, sublets, or swaps
   - blacklist specific phrases _(regular expressions supported!)_
 
-- tweak your search on-the-fly with [slash commands](#discord-commands)
 - check on the bot's activity by viewing its status:
+
   - <img src="https://github.com/vxsl/partmin/assets/53827672/22f015f5-ca76-49d4-ba34-d4c91b5ef5e2" width="250">
+
+- tweak your search on-the-fly with [slash commands](#discord-commands):
+  - <img src="https://github.com/vxsl/partmin/assets/53827672/a7b9b3f0-d775-42ef-b0d3-b3462df7d244" width="650">
 
 ---
 
