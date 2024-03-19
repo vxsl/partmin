@@ -105,27 +105,27 @@ export const defaultUserConfigValues: RecursivePartial<StaticUserConfig> = {
   },
 } as const;
 
-export const validateUserConfig = (c: StaticUserConfig) => {
+export const validateUserConfig = (c: any) => {
   try {
-    UserConfig.check(c);
+    const validated = UserConfig.check(c);
+
+    throwOnUnknownKey(UserConfig.fields, c, {
+      message: "Unexpected config option",
+    });
+
+    validated.search.blacklistRegex?.forEach((r) => {
+      try {
+        new RegExp(r);
+      } catch (e) {
+        throw new Error(`Invalid blacklistRegex in config: ${r}`);
+      }
+    });
+
+    if (validated.search.params.price.min > validated.search.params.price.max) {
+      throw new Error("min price is greater than max price");
+    }
   } catch (e) {
     console.error("Invalid config.");
     throw e;
-  }
-
-  throwOnUnknownKey(UserConfig.fields, c, {
-    message: "Unexpected config option",
-  });
-
-  c.search.blacklistRegex?.forEach((r) => {
-    try {
-      new RegExp(r);
-    } catch (e) {
-      throw new Error(`Invalid blacklistRegex in config: ${r}`);
-    }
-  });
-
-  if (c.search.params.price.min > c.search.params.price.max) {
-    throw new Error("min price is greater than max price");
   }
 };

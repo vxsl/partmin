@@ -18,7 +18,12 @@ import {
   sendListing,
 } from "discord/interactive/listing/index.js";
 import { setPresence, startActivity } from "discord/presence.js";
-import { discordError, discordSend, discordWarning } from "discord/util.js";
+import {
+  clearChannel,
+  discordError,
+  discordSend,
+  discordWarning,
+} from "discord/util.js";
 import dotenv from "dotenv-mono";
 import { buildDriver } from "driver.js";
 import { Listing } from "listing.js";
@@ -342,6 +347,7 @@ export const fatalError = async (e: unknown) => {
   try {
     await defineAdvancedConfig();
     await initDiscord();
+    await clearChannel("listings");
     await discordInitRoutine();
     setPresence("launching");
     reinitializeInteractiveListingMessages();

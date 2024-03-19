@@ -9,11 +9,18 @@ import {
   promptForSubmit,
   stringPromptLabels,
 } from "discord/commands/util/interactive-simple.js";
+import { warningColor } from "discord/constants.js";
+import { constructAndSendRichMessage } from "discord/interactive/index.js";
 import { discordSend } from "discord/util.js";
 import persistent from "persistent.js";
 import { ValidationError } from "runtypes";
-import { SearchParams, defaultUserConfigValues } from "user-config.js";
+import {
+  SearchParams,
+  defaultUserConfigValues,
+  validateUserConfig,
+} from "user-config.js";
 import { gmapsAPIKeyIsValid } from "util/geo.js";
+import { log } from "util/log.js";
 import { discordFormat } from "util/string.js";
 
 const checkGoogleMapsAPIKey = async () => {
@@ -160,31 +167,71 @@ export const editSearchParams = ({
   });
 
 const checkSearchParams = async () => {
-  await checkPrice();
-  // TODO write an interactive routine for the rest of the parameters.
+  const advancedConfig = await persistent.advancedConfig.value();
 
-  await editSearchParams({ alwaysShowDefaultValues: true });
-  await promptForSubmit({
-    prompt:
-      `Refine your search parameters with the above tool.` +
-      "\n\n" +
-      discordFormat(
-        `When you're ready to start searching, click the ${stringPromptLabels.true} button below.`,
-        {
-          bold: true,
+  while (true) {
+    let isValid = false;
+    try {
+      const userConfig = await persistent.userConfig.value();
+      await validateUserConfig(userConfig);
+      isValid = true;
+    } catch (e) {
+      if (!(e instanceof ValidationError)) {
+        throw e;
+      }
+      log(
+        "Invalid user config detected, prompting for edit before proceeding."
+      );
+      await constructAndSendRichMessage({
+        embeds: [
+          {
+            title: "Invalid configuration",
+            description:
+              "Your configuration is invalid. Please update your search parameters before proceeding." +
+              "\n" +
+              discordFormat(e.message, { code: true }),
+            color: warningColor,
+          },
+        ],
+      });
+    }
+
+    if (!isValid || !advancedConfig?.botBehaviour?.suppressGreeting) {
+      await checkPrice();
+      await editSearchParams({ alwaysShowDefaultValues: true });
+      await promptForSubmit({
+        prompt:
+          `Refine your search parameters with the above tool.` +
+          "\n\n" +
+          discordFormat(
+            `When you're ready to start searching, click the ${stringPromptLabels.true} button below.`,
+            {
+              bold: true,
+            }
+          ) +
+          "\n" +
+          discordFormat(
+            `You can edit search parameters at any time by typing ${discordFormat(
+              `/${searchParamsCommandName}`,
+              { monospace: true }
+            )} in the chat.`,
+            {
+              italic: true,
+            }
+          ),
+      });
+
+      try {
+        await validateUserConfig(await persistent.userConfig.requireValue());
+        break;
+      } catch (e) {
+        if (!(e instanceof ValidationError)) {
+          throw e;
         }
-      ) +
-      "\n" +
-      discordFormat(
-        `You can edit search parameters at any time by typing ${discordFormat(
-          `/${searchParamsCommandName}`,
-          { monospace: true }
-        )} in the chat.`,
-        {
-          italic: true,
-        }
-      ),
-  });
+        log("Configuration still invalid after edit, prompting again.");
+      }
+    }
+  }
 };
 
 export const discordInitRoutine = async () => {
@@ -194,10 +241,6 @@ export const discordInitRoutine = async () => {
   }
 
   await checkGoogleMapsAPIKey();
-  await checkLocation().catch((e) => {
-    if (!(e instanceof ValidationError)) {
-      throw e;
-    }
-  });
+  await checkLocation();
   await checkSearchParams();
 };
