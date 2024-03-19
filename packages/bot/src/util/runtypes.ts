@@ -51,6 +51,9 @@ export const castStringToRuntype = (runtype: Reflect, value: string) => {
       return false;
     }
   }
+  if (value === "") {
+    return undefined;
+  }
   return value;
 };
 
