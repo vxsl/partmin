@@ -4,8 +4,8 @@
 
 #### **Listings are retrieved from the following platforms:**
 
-- [Kijiji](https://www.kijiji.ca/)
 - [Facebook Marketplace](https://www.facebook.com/marketplace)
+- ~~[Kijiji](https://www.kijiji.ca/)~~ _**⚠️ Kijiji has removed their RSS feature, so this platform is currently disabled.**_
 - ~~[Craiglist](https://montreal.craigslist.org/)~~ _(coming soon!)_
 
 ![demo](https://github.com/vxsl/partmin/assets/53827672/bae4c2f9-675a-4329-8f4a-8d85afd74948)

@@ -388,7 +388,10 @@ export const fatalError = async (e: unknown) => {
         ],
       });
     }
-    await retrieval(driver, [platforms.fb, platforms.kijiji]);
+    await retrieval(driver, [
+      platforms.fb,
+      //  platforms.kijiji
+    ]);
   } catch (e) {
     if (shuttingDown) {
       log("Caught error during shutdown:");
