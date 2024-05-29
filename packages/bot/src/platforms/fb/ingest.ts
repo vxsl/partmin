@@ -354,7 +354,7 @@ export const getListings = async (driver: WebDriver): Promise<Listing[]> => {
       const tokens = text.split(SEP);
       const price =
         tokens[0] !== undefined
-          ? parseInt(tokens[0].replace(",", ""))
+          ? parseInt(tokens[0].replace(/^[^\d]*|[\$,]/g, ""))
           : undefined;
       const title = tokens.slice(1, tokens.length - 1).join(SEP);
 
