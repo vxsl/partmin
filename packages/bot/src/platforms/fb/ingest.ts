@@ -47,31 +47,53 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   let url = getListingURL(l.id);
   debugLog(`visiting listing: ${url}`);
 
-  let info: any;
+  let infos: any[] = [];
 
   for (let i = 0; i < 3; i++) {
     await fbGet(driver, url);
 
-    info = await driver
+    infos = await driver
       .findElements(
         By.xpath(
           `//script[contains(text(), "marketplace_product_details_page")]`
         )
       )
-      .then((els) => els[0])
-      .then((el) => el?.getAttribute("innerHTML"))
-      .then(
-        (html) =>
-          findNestedJSONProperty(html ?? "", "marketplace_product_details_page")
-            ?.target
+      .then((els) =>
+        Promise.all(
+          els
+            .map((e) =>
+              e
+                .getAttribute("innerHTML")
+                .then(
+                  (html) =>
+                    findNestedJSONProperty(
+                      html ?? "",
+                      "marketplace_product_details_page"
+                    )?.target
+                )
+            )
+            .filter(notUndefined)
+        )
       );
 
-    if (info) {
+    if (infos?.length) {
       break;
     }
   }
 
-  if (!info) {
+  const getPart = (fn: (i: any) => any) => {
+    for (const info of infos) {
+      try {
+        const part = fn(info);
+        if (part !== undefined) {
+          return part;
+        }
+      } catch (e) {}
+    }
+    throw new Error(`Couldn't find property: ${fn.toString()}`);
+  };
+
+  if (!infos.length) {
     discordSend(
       `Warning: couldn't retrieve info for the following Marketplace listing: ${url}.\nThe retrieval method may have changed.`,
       { bold: true }
@@ -90,7 +112,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   }
 
   try {
-    const desc = info.redacted_description.text; // TODO is redacted_description always present? Maybe fall back to something else.
+    const desc = getPart((i) => i.redacted_description.text); // TODO is redacted_description always present? Maybe fall back to something else.
     if (desc) {
       l.details.longDescription = desc;
     }
@@ -101,15 +123,19 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 
   let unitIncludes, unitSubtitle;
   try {
-    unitSubtitle = info.pdp_display_sections.find(
-      (s: any) => s.section_type === "UNIT_SUBTITLE"
+    unitSubtitle = getPart((i) =>
+      i.pdp_display_sections.find(
+        (s: any) => s.section_type === "UNIT_SUBTITLE"
+      )
     );
   } catch {
     // TODO
   }
   try {
-    unitIncludes = info.pdp_display_sections.find(
-      (s: any) => s.section_type === "UNIT_INCLUDES"
+    unitIncludes = getPart((i) =>
+      i.pdp_display_sections.find(
+        (s: any) => s.section_type === "UNIT_INCLUDES"
+      )
     );
   } catch {
     // TODO
@@ -189,7 +215,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
     }
 
     try {
-      const areaStr = info.unit_area_info;
+      const areaStr = getPart((i) => i.unit_area_info);
       if (areaStr && unreliableParams?.minAreaSqFt) {
         const _n: string | undefined = areaStr.match(/(\d+)/)?.[1];
         const n = _n === undefined ? undefined : parseInt(_n);
@@ -221,7 +247,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   }
 
   try {
-    const loc = info.home_address?.street;
+    const loc = getPart((i) => i.home_address.street);
     if (loc) {
       l.details.shortAddress = loc;
       const full =
@@ -241,8 +267,8 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   }
 
   try {
-    const lat = info.location.latitude;
-    const lon = info.location.longitude;
+    const lat = getPart((i) => i.location.latitude);
+    const lon = getPart((i) => i.location.longitude);
     l.details.coords = Coordinates.build(lat, lon);
   } catch (e) {
     log(e);
@@ -250,7 +276,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
   }
 
   try {
-    const imgs = info.listing_photos
+    const imgs = getPart((i) => i.listing_photos)
       .map((p: any) => p?.image?.uri)
       .filter(notUndefined);
     if (imgs.length) {
