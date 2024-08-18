@@ -458,9 +458,9 @@ export const main = async (driver: WebDriver) => {
               "Ensuring facebook didn't override the specified radius..."
             );
             await driver
-              .findElement(By.xpath(`//span[contains(., 'kilomet')]`))
+              .findElement(By.xpath(`//span[contains(., 'Within')]`))
               .then((el) => el.getText())
-              .then((text) => text.match(/(\d+\.?\d*)\s?kilomet/)?.[1])
+              .then((text) => text.match(/(\d+\.?\d*)\s?(kilomet|km)/)?.[1])
               .then((_r) => {
                 if (_r === undefined) {
                   throw new Error("Could not validate radius in page");
