@@ -9,6 +9,7 @@ export type Platform = {
   name: string;
   icon: string;
   callbacks: {
+    init?: (d: WebDriver) => Promise<void>;
     main: (d: WebDriver) => Promise<Listing[] | undefined>;
     onSearchParamsChanged?: (d: WebDriver) => Promise<void>;
     perListing?: (d: WebDriver, i: Listing) => Promise<void>;

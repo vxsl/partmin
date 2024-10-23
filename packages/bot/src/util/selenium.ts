@@ -12,11 +12,11 @@ import { debugLog, verboseLog } from "util/log.js";
 import { tryNTimes } from "util/misc.js";
 
 export const clearBrowsingData = async (driver: WebDriver) => {
-  if (!(await driver.getCurrentUrl()).startsWith("data")) {
-    await driver.manage().deleteAllCookies();
-    await driver.executeScript("window.localStorage.clear();");
-    await driver.executeScript("window.sessionStorage.clear();");
-  }
+  // if (!(await driver.getCurrentUrl()).startsWith("data")) {
+  await driver.manage().deleteAllCookies();
+  await driver.executeScript("window.localStorage.clear();");
+  await driver.executeScript("window.sessionStorage.clear();");
+  // }
 };
 
 export const waitUntilUrlChanges = async (
@@ -75,6 +75,13 @@ export const elementShouldBeInteractable = async (
   await driver.wait(until.elementIsEnabled(el), 10 * 1000);
 };
 
+export const click = async (element: WebElementPromise) =>
+  await new Promise((resolve) => {
+    setTimeout(() => {
+      return element.click().then(resolve);
+    }, Math.random() * 200);
+  });
+
 export const elementShouldExist = async (
   method: "xpath" | "css",
   selector: string,
@@ -95,6 +102,7 @@ type WithElementsByXpathOptions = {
   noConcurrency?: boolean;
   parent?: WebElement;
   parentXpath?: string;
+  limit?: number;
 };
 
 export const withElementsByXpath = async <T>(
@@ -112,7 +120,7 @@ export const withElementsByXpath = async <T>(
     .findElements(By.xpath(selector))
     .then((els) => els.length);
   verboseLog(`withElementsByXpath: ${len} elements found`);
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < Math.min(options?.limit ?? Infinity, len); i++) {
     const xpath = `(${selector})[${i + 1}]`;
     const getEl = () => driver.findElement(By.xpath(xpath));
 

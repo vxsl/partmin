@@ -10,6 +10,7 @@ import {
 import { conditionalSpreads, notUndefined } from "util/misc.js";
 
 type InvalidReason =
+  | "stale"
   | "blacklisted"
   | "outsideSearch"
   | "paramsMismatch"
@@ -22,6 +23,7 @@ export type Listing = {
   platform: PlatformKey;
   url: string;
   details: {
+    date: number;
     title: string;
     price?: number;
     longDescription?: string;

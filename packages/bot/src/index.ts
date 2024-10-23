@@ -58,6 +58,14 @@ const logBreakIfConfigChanged = async (platform: string) => {
 };
 
 const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
+  for (const {
+    callbacks: { init },
+    name: platform,
+  } of platforms) {
+    if (!init) continue;
+    log(`Running init routine for ${platform}...`);
+    await init?.(driver);
+  }
   while (true) {
     await ifUserConfigIsChanged(async () => {
       for (const {

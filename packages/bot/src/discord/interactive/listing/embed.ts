@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime.js";
 import { ColorResolvable, EmbedBuilder } from "discord.js";
 
 import { Listing, getCommuteOrigin } from "listing.js";
@@ -16,6 +18,8 @@ export const colors = {
   uninteracted: "#7289da" as ColorResolvable,
   interacted: "#424549" as ColorResolvable,
 };
+
+dayjs.extend(relativeTime);
 
 const listingEmbed = async (l: Listing) => {
   const location =
@@ -38,17 +42,6 @@ const listingEmbed = async (l: Listing) => {
         })
       : undefined;
 
-  let descriptionHeader = [
-    `💸${
-      l.details.price
-        ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
-        : undefined
-    }`,
-    location ? `📍${location}` : undefined,
-  ]
-    .filter(notUndefined)
-    .join("‎    ‎    ‎      ‎ ");
-
   const config = await getUserConfig();
 
   const commuteOrigin = getCommuteOrigin(l);
@@ -58,16 +51,28 @@ const listingEmbed = async (l: Listing) => {
       if (!summ || !commuteOrigin) {
         return "";
       }
-      return [
-        discordFormat(`${await trimAddress(d)}:`, {
-          italic: true,
-        }),
-        formatCommuteSummaryMD(summ, commuteOrigin, d),
-      ]
+      return [formatCommuteSummaryMD(summ, commuteOrigin, d)]
         .filter(notUndefined)
         .join("\n");
     })
   ).then((arr) => arr.join("\n\n") ?? "");
+
+  let descriptionHeader = [
+    `💸${
+      l.details.price
+        ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
+        : undefined
+    }`,
+    `${dayjs.unix(l.details.date).fromNow()}`,
+  ]
+    .filter(notUndefined)
+    .join("‎    ‎    ‎      ‎ ");
+
+  let locationSummary = [commutes, location ? `📍${location}` : undefined]
+    .filter(notUndefined)
+    .join("‎    ‎    ‎      ‎ ");
+
+  // console.log(JSON.stringify(descriptionHeader, null, 2));
 
   return new EmbedBuilder()
     .setColor(colors.uninteracted)
@@ -75,7 +80,8 @@ const listingEmbed = async (l: Listing) => {
     .setDescription(
       [
         descriptionHeader,
-        commutes,
+        locationSummary,
+        // commutes,
         l.computed?.bulletPoints
           ?.map((p) => {
             const prefix = `- `;

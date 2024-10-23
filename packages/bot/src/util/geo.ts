@@ -179,8 +179,8 @@ export const approxLocationLink = async (coords: Coordinates) => {
     comps.find((c: any) => c.types.includes("route"))?.short_name +
     ", " +
     (comps.find((c: any) => c.types.includes("neighborhood"))?.short_name ??
-      comps.find((c: any) => c.types.includes("sublocality"))?.short_name);
-
+      comps.find((c: any) => c.types.includes("sublocality"))?.short_name ??
+      comps.find((c: any) => c.types.includes("locality"))?.short_name);
   await persistent.approximateAddresses.writeValue({
     ...addresses,
     [cacheKey]: [displayAddr, data.results[0].formatted_address],
@@ -236,7 +236,8 @@ export const isValidAddress = async (address: string) => {
   return result;
 };
 
-const commuteModes = ["transit", "bicycling", "driving", "walking"] as const;
+// const commuteModes = ["transit", "bicycling", "driving", "walking"] as const;
+const commuteModes = ["driving"] as const;
 type CommuteMode = (typeof commuteModes)[number];
 export type CommuteSummary = Record<CommuteMode, string>;
 
