@@ -1,21 +1,12 @@
 import { startActivity } from "discord/presence.js";
 import { discordSend } from "discord/util.js";
-import { Listing, addBulletPoints, invalidateListing } from "listing.js";
+import { Listing, invalidateListing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
 import fb from "platforms/fb/index.js";
 import { fbClick, fbType, isOnHomepage } from "platforms/fb/util.js";
 import { By, IWebDriverCookie, WebDriver } from "selenium-webdriver";
-import { PlatformKey } from "types/platform.js";
-import { PetType } from "user-config.js";
 import { getUserConfig } from "util/config.js";
-import {
-  Circle,
-  Coordinates,
-  acresToSqft,
-  decodeMapDevelopersURL,
-  getGoogleMapsLink,
-  sqMetersToSqft,
-} from "util/geo.js";
+import { Circle, Coordinates, decodeMapDevelopersURL } from "util/geo.js";
 import { findNestedJSONProperty } from "util/json.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined, randomWait, tryNTimes } from "util/misc.js";
@@ -92,7 +83,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 
   let infos: any[] = [];
 
-  for (let i = 0; i < 3; i++) {
+  tryNTimes(3, async () => {
     await fbGet(driver, url, { incognito: true });
 
     infos = await driver
@@ -119,90 +110,91 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
         )
       );
 
-    if (infos?.length) {
-      break;
+    if (!infos?.length) {
+      throw new Error("Couldn't find marketplace_product_details_page");
     }
-  }
-  // console.log(`I have ${infos.length} infos`);
-  // console.log(JSON.stringify(infos, null, 2));
+    // console.log(`I have ${infos.length} infos`);
+    // console.log(JSON.stringify(infos, null, 2));
 
-  const getPart = (fn: (i: any) => any) => {
-    for (const info of infos) {
-      try {
-        const part = fn(info);
-        if (part !== undefined) {
-          return part;
-        }
-      } catch (e) {}
+    const getPart = (fn: (i: any) => any) => {
+      for (const info of infos) {
+        try {
+          const part = fn(info);
+          if (part !== undefined) {
+            return part;
+          }
+        } catch (e) {}
+      }
+      throw new Error(`Couldn't find property: ${fn.toString()}`);
+    };
+
+    if (!infos.length) {
+      discordSend(
+        `Warning: couldn't retrieve info for the following Marketplace listing: ${url}.\nThe retrieval method may have changed.`,
+        { bold: true }
+      );
+      // TODO try something else.
+
+      // // if there's a <span> with text "See more", click it:
+      // await driver
+      //   .findElements(By.xpath(`//span[(text()="See more")]`))
+      //   .then(async (els) => {
+      //     if (els.length) {
+      //       await click(els[0]);
+      //     }
+      //   });
+      return;
     }
-    throw new Error(`Couldn't find property: ${fn.toString()}`);
-  };
 
-  if (!infos.length) {
-    discordSend(
-      `Warning: couldn't retrieve info for the following Marketplace listing: ${url}.\nThe retrieval method may have changed.`,
-      { bold: true }
-    );
-    // TODO try something else.
-
-    // // if there's a <span> with text "See more", click it:
-    // await driver
-    //   .findElements(By.xpath(`//span[(text()="See more")]`))
-    //   .then(async (els) => {
-    //     if (els.length) {
-    //       await click(els[0]);
-    //     }
-    //   });
-    return;
-  }
-
-  try {
-    const timestamp = getPart((i) => i.creation_time);
-    if (timestamp === undefined) {
-      throw new Error("Couldn't find creation_time");
+    try {
+      const timestamp = getPart((i) => i.creation_time);
+      if (timestamp === undefined) {
+        throw new Error("Couldn't find creation_time");
+      }
+      l.details.date = timestamp;
+      const date = new Date(timestamp * 1000);
+      if (Date.now() - date.getTime() > 3600000) {
+        invalidateListing(l, "stale", "Listing is older than an hour");
+      }
+    } catch (e) {
+      log(e);
+      invalidateListing(l, "stale", "Couldn't find creation_time");
+      // TODO
     }
-    l.details.date = timestamp;
-    const date = new Date(timestamp * 1000);
-    if (Date.now() - date.getTime() > 3600000) {
-      invalidateListing(l, "stale", "Listing is older than an hour");
+
+    try {
+      const desc = getPart((i) => i.redacted_description.text); // TODO is redacted_description always present? Maybe fall back to something else.
+      if (desc) {
+        l.details.longDescription = desc;
+      }
+    } catch (e) {
+      log(e);
+      // TODO
     }
-  } catch (e) {
-    log(e);
-    // TODO
-  }
 
-  try {
-    const desc = getPart((i) => i.redacted_description.text); // TODO is redacted_description always present? Maybe fall back to something else.
-    if (desc) {
-      l.details.longDescription = desc;
+    // const config = await getUserConfig();
+
+    try {
+      const lat = getPart((i) => i.location.latitude);
+      const lon = getPart((i) => i.location.longitude);
+      l.details.coords = Coordinates.build(lat, lon);
+    } catch (e) {
+      log(e);
+      // TODO
     }
-  } catch (e) {
-    log(e);
-    // TODO
-  }
 
-  // const config = await getUserConfig();
-
-  try {
-    const lat = getPart((i) => i.location.latitude);
-    const lon = getPart((i) => i.location.longitude);
-    l.details.coords = Coordinates.build(lat, lon);
-  } catch (e) {
-    log(e);
-    // TODO
-  }
-
-  try {
-    const imgs = getPart((i) => i.listing_photos)
-      .map((p: any) => p?.image?.uri)
-      .filter(notUndefined);
-    if (imgs.length) {
-      l.imgURLs = imgs;
+    try {
+      const imgs = getPart((i) => i.listing_photos)
+        .map((p: any) => p?.image?.uri)
+        .filter(notUndefined);
+      if (imgs.length) {
+        l.imgURLs = imgs;
+      }
+    } catch (e) {
+      log(e);
+      // TODO
     }
-  } catch (e) {
-    log(e);
-    // TODO
-  }
+  });
 };
 
 export const visitMarketplace = async (driver: WebDriver, radius: Circle) => {
@@ -232,7 +224,7 @@ export const visitMarketplace = async (driver: WebDriver, radius: Circle) => {
   };
 
   const city = config.search.location.city;
-  let url = `https://facebook.com/marketplace/`;
+  let url = `https://facebook.com/marketplace?`;
   for (const [k, v] of Object.entries(vals)) {
     if (v !== undefined && v !== null) {
       url += `${k}=${v}&`;

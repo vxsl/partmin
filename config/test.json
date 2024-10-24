@@ -1,0 +1,3745 @@
+{
+  "require": [
+    [
+      "ScheduledServerJS",
+      "handle",
+      null,
+      [
+        {
+          "__bbox": {
+            "define": [
+              [
+                "cr:3580",
+                [
+                  "NullStateMediaFB"
+                ],
+                {
+                  "__rc": [
+                    "NullStateMediaFB",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:6822",
+                [
+                  "MarketplacePDPC2CRightColumn.hybrid"
+                ],
+                {
+                  "__rc": [
+                    "MarketplacePDPC2CRightColumn.hybrid",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:5",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:537",
+                [
+                  "useCAALoggedOutDialogWrapperHookNoop"
+                ],
+                {
+                  "__rc": [
+                    "useCAALoggedOutDialogWrapperHookNoop",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:5409",
+                [
+                  "usePreloadECPEntryPoint"
+                ],
+                {
+                  "__rc": [
+                    "usePreloadECPEntryPoint",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:12167",
+                [
+                  "CometFBPayECPBaseComponentDataQuery$Parameters.facebook"
+                ],
+                {
+                  "__rc": [
+                    "CometFBPayECPBaseComponentDataQuery$Parameters.facebook",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:12170",
+                [
+                  "FBPayOnsiteECPCheckoutHelperRootWrapperQuery$Parameters.facebook"
+                ],
+                {
+                  "__rc": [
+                    "FBPayOnsiteECPCheckoutHelperRootWrapperQuery$Parameters.facebook",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:12198",
+                [
+                  "useECPCheckoutSetupMutation.facebook.graphql"
+                ],
+                {
+                  "__rc": [
+                    "useECPCheckoutSetupMutation.facebook.graphql",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:1408565",
+                [
+                  "XCometContextualProfileControllerRouteBuilder"
+                ],
+                {
+                  "__rc": [
+                    "XCometContextualProfileControllerRouteBuilder",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:1899533",
+                [
+                  "CometOnFBProfileVerificationBadge.react"
+                ],
+                {
+                  "__rc": [
+                    "CometOnFBProfileVerificationBadge.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cjsr:82448",
+                [
+                  "BaseMiddot.react"
+                ],
+                {
+                  "__m": "BaseMiddot.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:310744",
+                [
+                  "MarketplacePDPC2CSellerInfoHeader.react"
+                ],
+                {
+                  "__m": "MarketplacePDPC2CSellerInfoHeader.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:499229",
+                [
+                  "FDSText.react"
+                ],
+                {
+                  "__m": "FDSText.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:604577",
+                [
+                  "CometLink.react"
+                ],
+                {
+                  "__m": "CometLink.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:761059",
+                [
+                  "FDSUnit.react"
+                ],
+                {
+                  "__m": "FDSUnit.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:815278",
+                [
+                  "CometMarketplaceUIComponent.react"
+                ],
+                {
+                  "__m": "CometMarketplaceUIComponent.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:940090",
+                [
+                  "FDSUnitHeader.react"
+                ],
+                {
+                  "__m": "FDSUnitHeader.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:993475",
+                [
+                  "FDSContextRow.react"
+                ],
+                {
+                  "__m": "FDSContextRow.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:1002286",
+                [
+                  "FDSTextPairing.react"
+                ],
+                {
+                  "__m": "FDSTextPairing.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:1041627",
+                [
+                  "FDSRelativeTimestamp.client"
+                ],
+                {
+                  "__m": "FDSRelativeTimestamp.client"
+                },
+                -1
+              ],
+              [
+                "cjsr:1087377",
+                [
+                  "FDSButton.react"
+                ],
+                {
+                  "__m": "FDSButton.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:1734237",
+                [
+                  "MarketplacePDPC2CDescriptionExpandableText.react"
+                ],
+                {
+                  "__m": "MarketplacePDPC2CDescriptionExpandableText.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:1734238",
+                [
+                  "MarketplacePDPC2CDescriptionTranslationText.react"
+                ],
+                {
+                  "__m": "MarketplacePDPC2CDescriptionTranslationText.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:1849754",
+                [
+                  "MarketplacePDPPageSellerComponent.react"
+                ],
+                {
+                  "__m": "MarketplacePDPPageSellerComponent.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:1849755",
+                [
+                  "MarketplacePDPUserSellerComponent.react"
+                ],
+                {
+                  "__m": "MarketplacePDPUserSellerComponent.react"
+                },
+                -1
+              ],
+              [
+                "cjsr:1857712",
+                [
+                  "MarketplacePDPSellerComponentGranularTimestamp.react"
+                ],
+                {
+                  "__m": "MarketplacePDPSellerComponentGranularTimestamp.react"
+                },
+                -1
+              ],
+              [
+                "DspCDSWebLegacyThemeUsage",
+                [],
+                {
+                  "light": {
+                    "accent": "#1C2B33",
+                    "alert-banner-corner-radius": "12px",
+                    "always-black": "#000000",
+                    "always-white": "#FFFFFF",
+                    "attachment-footer-background": "rgba(28, 43, 51, 0.1)",
+                    "background-deemphasized": "#F1F4F7",
+                    "blue-link": "#0064E0",
+                    "body-emphasized-font-family": "Optimistic Text Bold",
+                    "body-emphasized-font-size": "0.9375rem",
+                    "body-emphasized-font-stretch": "100\u0025",
+                    "body-emphasized-font-weight": "700",
+                    "body-emphasized-line-height": "1.3333",
+                    "body-font-family": "Optimistic Text Normal",
+                    "body-font-size": "0.9375rem",
+                    "body-font-stretch": "100\u0025",
+                    "body-font-weight": "400",
+                    "body-line-height": "1.3333",
+                    "border-focused": "#67788A",
+                    "border-unfocused": "#CBD2D9",
+                    "button-corner-radius": "22px",
+                    "button-corner-radius-medium": "18px",
+                    "button-height-large": "44px",
+                    "button-height-medium": "36px",
+                    "button-icon-padding-large": "16px",
+                    "button-icon-padding-medium": "12px",
+                    "button-inner-icon-spacing-large": "4px",
+                    "button-inner-icon-spacing-medium": "3px",
+                    "button-padding-horizontal-large": "20px",
+                    "button-padding-horizontal-medium": "16px",
+                    "card-background": "#FFFFFF",
+                    "card-background-flat": "#FFFFFF",
+                    "card-border-color": "#DEE3E9",
+                    "card-border-width": "0px",
+                    "card-corner-radius": "12px",
+                    "card-padding-horizontal": "16px",
+                    "card-padding-vertical": "16px",
+                    "chip-background": "rgba(255, 255, 255, 0)",
+                    "chip-background-selected": "#1C2B33",
+                    "chip-corner-radius": "8px",
+                    "comment-background": "rgba(28, 43, 51, 0.1)",
+                    "dialog-corner-radius": "24px",
+                    "disabled-icon": "#CBD2D9",
+                    "disabled-text": "rgba(28, 43, 51, 0.25)",
+                    "divider": "#DEE3E9",
+                    "event-date": "#DC373C",
+                    "fb-wordmark": "#1877F2",
+                    "glimmer": "#FFFFFF",
+                    "glimmer-corner-radius": "12px",
+                    "glimmer-max-opacity": "0.5",
+                    "glimmer-min-opacity": "0.3",
+                    "glimmer-on-white-background": "#1C2B33",
+                    "glimmer-on-white-background-max-opacity": "0.1",
+                    "glimmer-on-white-background-min-opacity": "0.03",
+                    "gradient-opacity": "1",
+                    "header-height": "0px",
+                    "headline1-font-family": "Optimistic Display Bold",
+                    "headline1-font-size": "1.5rem",
+                    "headline1-font-stretch": "100\u0025",
+                    "headline1-font-weight": "700",
+                    "headline1-line-height": "1.25",
+                    "headline2-font-family": "Optimistic Display Bold",
+                    "headline2-font-size": "1.5rem",
+                    "headline2-font-stretch": "100\u0025",
+                    "headline2-font-weight": "700",
+                    "headline2-line-height": "1.25",
+                    "headline3-font-family": "Optimistic Text Bold",
+                    "headline3-font-size": "1.0625rem",
+                    "headline3-font-stretch": "100\u0025",
+                    "headline3-font-weight": "700",
+                    "headline3-line-height": "1.2941",
+                    "hosted-view-selected-state": "#344854",
+                    "hover-overlay": "rgba(0, 0, 0, 0.05)",
+                    "image-corner-radius": "12px",
+                    "input-background": "#FFFFFF",
+                    "input-corner-radius": "12px",
+                    "inverse-text": "#FFFFFF",
+                    "list-border-color": "rgba(255, 255, 255, 0)",
+                    "list-border-width": "0px",
+                    "list-cell-chevron": "#67788A",
+                    "list-cell-corner-radius": "12px",
+                    "list-cell-margin-horizontal": "0px",
+                    "list-cell-min-height": "52px",
+                    "list-cell-padding-vertical": "16px",
+                    "list-cell-padding-vertical-with-addon": "12px",
+                    "media-inner-border": "rgba(28, 43, 51, 0.1)",
+                    "media-pressed": "rgba(28, 43, 51, 0.3)",
+                    "menu-list-cell-corner-radius": "0px",
+                    "meta-emphasized-font-family": "Optimistic Text Bold",
+                    "meta-emphasized-font-size": "0.8125rem",
+                    "meta-emphasized-font-stretch": "100\u0025",
+                    "meta-emphasized-font-weight": "700",
+                    "meta-emphasized-line-height": "1.3846",
+                    "meta-font-family": "Optimistic Text Normal",
+                    "meta-font-size": "0.8125rem",
+                    "meta-font-stretch": "100\u0025",
+                    "meta-font-weight": "400",
+                    "meta-line-height": "1.3846",
+                    "nav-list-cell-corner-radius": "12px",
+                    "nav-list-cell-margin-horizontal": "16px",
+                    "nav-list-cell-margin-horizontal-inner-addon": "16px",
+                    "nav-list-cell-min-height": "52px",
+                    "nav-list-cell-padding-vertical": "16px",
+                    "nav-list-cell-padding-vertical-with-addon": "12px",
+                    "negative": "#C80A28",
+                    "new-notification-background": "rgba(28, 43, 51, 0.1)",
+                    "non-media-pressed": "rgba(28, 43, 51, 0.15)",
+                    "non-media-pressed-on-dark": "rgba(255, 255, 255, 0.3)",
+                    "notification-badge": "#DC373C",
+                    "overlay-alpha-80": "rgba(0, 0, 0, 0.6)",
+                    "overlay-on-media": "rgba(0, 0, 0, 0.6)",
+                    "placeholder-icon": "#8595A4",
+                    "placeholder-image": "#DEE3E9",
+                    "placeholder-text": "rgba(28, 43, 51, 0.5)",
+                    "placeholder-text-on-media": "rgba(255, 255, 255, 0.45)",
+                    "popover-background": "#FFFFFF",
+                    "positive": "#007D1E",
+                    "primary-button-background": "#0064E0",
+                    "primary-button-icon": "#FFFFFF",
+                    "primary-button-text": "#FFFFFF",
+                    "primary-deemphasized-button-text": "#FFFFFF",
+                    "primary-icon": "#1C2B33",
+                    "primary-label-font-family": "Optimistic Text Medium",
+                    "primary-label-font-size": "1rem",
+                    "primary-label-font-stretch": "100\u0025",
+                    "primary-label-font-weight": "500",
+                    "primary-label-line-height": "1.25",
+                    "primary-text": "#1C2B33",
+                    "primary-text-on-media": "#FFFFFF",
+                    "progress-ring-on-media-background": "rgba(255, 255, 255, 0.2)",
+                    "search-input-background": "rgba(0, 0, 0, 0.04)",
+                    "secondary-button-stroke": "#CBD2D9",
+                    "secondary-button-text": "#1C2B33",
+                    "secondary-icon": "#465A69",
+                    "secondary-label-font-family": "Optimistic Text Medium",
+                    "secondary-label-font-size": "0.9375rem",
+                    "secondary-label-font-stretch": "100\u0025",
+                    "secondary-label-font-weight": "500",
+                    "secondary-label-line-height": "1.3333",
+                    "secondary-text": "#465A69",
+                    "secondary-text-on-media": "rgba(255, 255, 255, 0.7)",
+                    "shadow-card": "0px 0px 12px rgba(52, 72, 84, 0.05)",
+                    "shadow-elevated": "0px 5px 12px rgba(52, 72, 84, 0.2)",
+                    "shadow-list": "0px 0px 12px rgba(52, 72, 84, 0.05)",
+                    "shadow-persistent": "0px 0px 12px rgba(52, 72, 84, 0.05)",
+                    "shadow-primary": "0px 0px 12px rgba(52, 72, 84, 0.05)",
+                    "stepper-active": "#344854",
+                    "stepper-inactive": "rgba(52, 72, 84, 0.4)",
+                    "surface-background": "#FFFFFF",
+                    "switch-active": "#0064E0",
+                    "switch-inactive": "#CBD2D9",
+                    "tertiary-label-font-family": "Optimistic Text Medium",
+                    "tertiary-label-font-size": "0.6875rem",
+                    "tertiary-label-font-stretch": "100\u0025",
+                    "tertiary-label-font-weight": "500",
+                    "tertiary-label-line-height": "1.2727",
+                    "text-badge-attention-background": "#FFF3AD",
+                    "text-badge-corner-radius": "4px",
+                    "text-badge-critical-background": "#FFB1B7",
+                    "text-badge-info-background": "#AFD7FF",
+                    "text-badge-neutral-background": "#E6EBEF",
+                    "text-badge-padding-horizontal": "6px",
+                    "text-badge-success-background": "#B9F5AA",
+                    "text-highlight": "#0061A0",
+                    "text-input-caption-margin-top": "12px",
+                    "text-input-field-font-family": "Optimistic Text Medium",
+                    "text-input-field-font-size": "1rem",
+                    "text-input-field-font-stretch": "100\u0025",
+                    "text-input-field-font-weight": "500",
+                    "text-input-field-line-height": "1.25",
+                    "text-input-label-font-family": "Optimistic Text Normal",
+                    "text-input-label-font-size": "1rem",
+                    "text-input-label-font-size-scale-multiplier": "0.8125",
+                    "text-input-label-font-stretch": "100\u0025",
+                    "text-input-label-font-weight": "400",
+                    "text-input-label-line-height": "1.1249875",
+                    "text-input-label-top": "18px",
+                    "text-input-min-height": "60px",
+                    "text-input-multi-padding-between-text-scrollbar": "16px",
+                    "text-input-multi-padding-scrollbar": "8px",
+                    "text-input-padding-vertical": "10px",
+                    "tile-tonal-container-background-blue": "#ECF5FF",
+                    "tile-tonal-container-background-green": "#DCFCD6",
+                    "tile-tonal-container-background-orange": "#FFF2E4",
+                    "tile-tonal-container-background-purple": "#F4F3FF",
+                    "tile-tonal-container-background-rose": "#FFF0F6",
+                    "tile-tonal-container-background-teal": "#D7FCF8",
+                    "tile-tonal-container-background-yellow": "#FDF6BA",
+                    "tile-tonal-icon-blue": "#0457CB",
+                    "tile-tonal-icon-container-background-blue": "#C9E5FF",
+                    "tile-tonal-icon-container-background-green": "#A5F690",
+                    "tile-tonal-icon-container-background-orange": "#FFDBB9",
+                    "tile-tonal-icon-container-background-purple": "#DFDFFF",
+                    "tile-tonal-icon-container-background-rose": "#FCD9E5",
+                    "tile-tonal-icon-container-background-teal": "#A3F0E6",
+                    "tile-tonal-icon-container-background-yellow": "#FFE14A",
+                    "tile-tonal-icon-green": "#076D29",
+                    "tile-tonal-icon-orange": "#A13F04",
+                    "tile-tonal-icon-purple": "#6B1EFD",
+                    "tile-tonal-icon-rose": "#BB0844",
+                    "tile-tonal-icon-teal": "#0F686F",
+                    "tile-tonal-icon-yellow": "#8A5001",
+                    "tile-tonal-text-blue": "#0457CB",
+                    "tile-tonal-text-green": "#076D29",
+                    "tile-tonal-text-orange": "#A13F04",
+                    "tile-tonal-text-purple": "#6B1EFD",
+                    "tile-tonal-text-rose": "#BB0844",
+                    "tile-tonal-text-teal": "#0F686F",
+                    "tile-tonal-text-yellow": "#8A5001",
+                    "toast-background": "#283943",
+                    "toast-container-padding-horizontal": "14px",
+                    "toast-container-padding-vertical": "16px",
+                    "toast-corner-radius": "12px",
+                    "toast-text": "#FFFFFF",
+                    "toast-text-link": "#47A5FA",
+                    "toggle-active-background": "#1C2B33",
+                    "toggle-active-icon": "#0064E0",
+                    "toggle-active-text": "#FFFFFF",
+                    "tooltip-background": "#283943",
+                    "tooltip-corner-radius": "12px",
+                    "tooltip-padding-horizontal": "16px",
+                    "tooltip-padding-vertical": "16px",
+                    "ui-background": "#0F191E",
+                    "warning": "#AF5A00",
+                    "web-wash": "#FFFFFF"
+                  },
+                  "dark": {
+                    "accent": "#CBD2D9",
+                    "alert-banner-corner-radius": "12px",
+                    "always-black": "#000000",
+                    "always-white": "#FFFFFF",
+                    "attachment-footer-background": "rgba(255, 255, 255, 0.1)",
+                    "background-deemphasized": "#0F191E",
+                    "blue-link": "#47A5FA",
+                    "body-emphasized-font-family": "Optimistic Text Bold",
+                    "body-emphasized-font-size": "0.9375rem",
+                    "body-emphasized-font-stretch": "100\u0025",
+                    "body-emphasized-font-weight": "700",
+                    "body-emphasized-line-height": "1.3333",
+                    "body-font-family": "Optimistic Text Normal",
+                    "body-font-size": "0.9375rem",
+                    "body-font-stretch": "100\u0025",
+                    "body-font-weight": "400",
+                    "body-line-height": "1.3333",
+                    "border-focused": "#8595A4",
+                    "border-unfocused": "#465A69",
+                    "button-corner-radius": "22px",
+                    "button-corner-radius-medium": "18px",
+                    "button-height-large": "44px",
+                    "button-height-medium": "36px",
+                    "button-icon-padding-large": "16px",
+                    "button-icon-padding-medium": "12px",
+                    "button-inner-icon-spacing-large": "4px",
+                    "button-inner-icon-spacing-medium": "3px",
+                    "button-padding-horizontal-large": "20px",
+                    "button-padding-horizontal-medium": "16px",
+                    "card-background": "#1C2B33",
+                    "card-background-flat": "#1C2B33",
+                    "card-border-color": "#344854",
+                    "card-border-width": "0px",
+                    "card-corner-radius": "12px",
+                    "card-padding-horizontal": "16px",
+                    "card-padding-vertical": "16px",
+                    "chip-background": "rgba(255, 255, 255, 0)",
+                    "chip-background-selected": "#CBD2D9",
+                    "chip-corner-radius": "8px",
+                    "comment-background": "rgba(255, 255, 255, 0.1)",
+                    "dialog-corner-radius": "24px",
+                    "disabled-icon": "#344854",
+                    "disabled-text": "rgba(255, 255, 255, 0.15)",
+                    "divider": "#283943",
+                    "event-date": "#F05F69",
+                    "fb-wordmark": "#FFFFFF",
+                    "glimmer": "#FFFFFF",
+                    "glimmer-corner-radius": "12px",
+                    "glimmer-max-opacity": "0.11",
+                    "glimmer-min-opacity": "0.066",
+                    "glimmer-on-white-background": "#F1F4F7",
+                    "glimmer-on-white-background-max-opacity": "0.1",
+                    "glimmer-on-white-background-min-opacity": "0.05",
+                    "gradient-opacity": "1",
+                    "header-height": "0px",
+                    "headline1-font-family": "Optimistic Display Bold",
+                    "headline1-font-size": "1.5rem",
+                    "headline1-font-stretch": "100\u0025",
+                    "headline1-font-weight": "700",
+                    "headline1-line-height": "1.25",
+                    "headline2-font-family": "Optimistic Display Bold",
+                    "headline2-font-size": "1.5rem",
+                    "headline2-font-stretch": "100\u0025",
+                    "headline2-font-weight": "700",
+                    "headline2-line-height": "1.25",
+                    "headline3-font-family": "Optimistic Text Bold",
+                    "headline3-font-size": "1.0625rem",
+                    "headline3-font-stretch": "100\u0025",
+                    "headline3-font-weight": "700",
+                    "headline3-line-height": "1.2941",
+                    "hosted-view-selected-state": "#DEE3E9",
+                    "hover-overlay": "rgba(255, 255, 255, 0.1)",
+                    "image-corner-radius": "12px",
+                    "input-background": "#1C2B33",
+                    "input-corner-radius": "12px",
+                    "inverse-text": "#1C2B33",
+                    "list-border-color": "rgba(255, 255, 255, 0)",
+                    "list-border-width": "0px",
+                    "list-cell-chevron": "#A7B3BF",
+                    "list-cell-corner-radius": "12px",
+                    "list-cell-margin-horizontal": "0px",
+                    "list-cell-min-height": "52px",
+                    "list-cell-padding-vertical": "16px",
+                    "list-cell-padding-vertical-with-addon": "12px",
+                    "media-inner-border": "rgba(255, 255, 255, 0.1)",
+                    "media-pressed": "rgba(255, 255, 255, 0.3)",
+                    "menu-list-cell-corner-radius": "0px",
+                    "meta-emphasized-font-family": "Optimistic Text Bold",
+                    "meta-emphasized-font-size": "0.8125rem",
+                    "meta-emphasized-font-stretch": "100\u0025",
+                    "meta-emphasized-font-weight": "700",
+                    "meta-emphasized-line-height": "1.3846",
+                    "meta-font-family": "Optimistic Text Normal",
+                    "meta-font-size": "0.8125rem",
+                    "meta-font-stretch": "100\u0025",
+                    "meta-font-weight": "400",
+                    "meta-line-height": "1.3846",
+                    "nav-list-cell-corner-radius": "12px",
+                    "nav-list-cell-margin-horizontal": "16px",
+                    "nav-list-cell-margin-horizontal-inner-addon": "16px",
+                    "nav-list-cell-min-height": "52px",
+                    "nav-list-cell-padding-vertical": "16px",
+                    "nav-list-cell-padding-vertical-with-addon": "12px",
+                    "negative": "#F05F69",
+                    "new-notification-background": "rgba(255, 255, 255, 0.1)",
+                    "non-media-pressed": "rgba(255, 255, 255, 0.2)",
+                    "non-media-pressed-on-dark": "rgba(255, 255, 255, 0.3)",
+                    "notification-badge": "#F05F69",
+                    "overlay-alpha-80": "rgba(0, 0, 0, 0.6)",
+                    "overlay-on-media": "rgba(0, 0, 0, 0.6)",
+                    "placeholder-icon": "#67788A",
+                    "placeholder-image": "#465A69",
+                    "placeholder-text": "rgba(255, 255, 255, 0.3)",
+                    "placeholder-text-on-media": "rgba(255, 255, 255, 0.45)",
+                    "popover-background": "#1C2B33",
+                    "positive": "#28D232",
+                    "primary-button-background": "#0064E0",
+                    "primary-button-icon": "#FFFFFF",
+                    "primary-button-text": "#FFFFFF",
+                    "primary-deemphasized-button-text": "#1C2B33",
+                    "primary-icon": "#FFFFFF",
+                    "primary-label-font-family": "Optimistic Text Medium",
+                    "primary-label-font-size": "1rem",
+                    "primary-label-font-stretch": "100\u0025",
+                    "primary-label-font-weight": "500",
+                    "primary-label-line-height": "1.25",
+                    "primary-text": "#FFFFFF",
+                    "primary-text-on-media": "#FFFFFF",
+                    "progress-ring-on-media-background": "rgba(255, 255, 255, 0.2)",
+                    "search-input-background": "rgba(255, 255, 255, 0.19)",
+                    "secondary-button-stroke": "#465A69",
+                    "secondary-button-text": "#FFFFFF",
+                    "secondary-icon": "#CBD2D9",
+                    "secondary-label-font-family": "Optimistic Text Medium",
+                    "secondary-label-font-size": "0.9375rem",
+                    "secondary-label-font-stretch": "100\u0025",
+                    "secondary-label-font-weight": "500",
+                    "secondary-label-line-height": "1.3333",
+                    "secondary-text": "#CBD2D9",
+                    "secondary-text-on-media": "rgba(255, 255, 255, 0.7)",
+                    "shadow-card": "0px 0px 12px rgba(15, 25, 30, 0.6)",
+                    "shadow-elevated": "0px 5px 12px rgba(15, 25, 30, 0.6)",
+                    "shadow-list": "0px 0px 12px rgba(15, 25, 30, 0.6)",
+                    "shadow-persistent": "0px 0px 12px rgba(15, 25, 30, 0.6)",
+                    "shadow-primary": "0px 0px 12px rgba(15, 25, 30, 0.2)",
+                    "stepper-active": "#CBD2D9",
+                    "stepper-inactive": "rgba(203, 210, 217, 0.4)",
+                    "surface-background": "#1C2B33",
+                    "switch-active": "#47A5FA",
+                    "switch-inactive": "#465A69",
+                    "tertiary-label-font-family": "Optimistic Text Medium",
+                    "tertiary-label-font-size": "0.6875rem",
+                    "tertiary-label-font-stretch": "100\u0025",
+                    "tertiary-label-font-weight": "500",
+                    "tertiary-label-line-height": "1.2727",
+                    "text-badge-attention-background": "rgba(175, 90, 0, 0.5)",
+                    "text-badge-corner-radius": "4px",
+                    "text-badge-critical-background": "rgba(170, 10, 30, 0.5)",
+                    "text-badge-info-background": "rgba(0, 75, 185, 0.5)",
+                    "text-badge-neutral-background": "#2B3D46",
+                    "text-badge-padding-horizontal": "6px",
+                    "text-badge-success-background": "rgba(0, 125, 30, 0.5)",
+                    "text-highlight": "#82B9E6",
+                    "text-input-caption-margin-top": "12px",
+                    "text-input-field-font-family": "Optimistic Text Medium",
+                    "text-input-field-font-size": "1rem",
+                    "text-input-field-font-stretch": "100\u0025",
+                    "text-input-field-font-weight": "500",
+                    "text-input-field-line-height": "1.25",
+                    "text-input-label-font-family": "Optimistic Text Normal",
+                    "text-input-label-font-size": "1rem",
+                    "text-input-label-font-size-scale-multiplier": "0.8125",
+                    "text-input-label-font-stretch": "100\u0025",
+                    "text-input-label-font-weight": "400",
+                    "text-input-label-line-height": "1.1249875",
+                    "text-input-label-top": "18px",
+                    "text-input-min-height": "60px",
+                    "text-input-multi-padding-between-text-scrollbar": "16px",
+                    "text-input-multi-padding-scrollbar": "8px",
+                    "text-input-padding-vertical": "10px",
+                    "tile-tonal-container-background-blue": "#000844",
+                    "tile-tonal-container-background-green": "#001608",
+                    "tile-tonal-container-background-orange": "#270701",
+                    "tile-tonal-container-background-purple": "#18023E",
+                    "tile-tonal-container-background-rose": "#2C010C",
+                    "tile-tonal-container-background-teal": "#01141C",
+                    "tile-tonal-container-background-yellow": "#220B02",
+                    "tile-tonal-icon-blue": "#0082FB",
+                    "tile-tonal-icon-container-background-blue": "#001E75",
+                    "tile-tonal-icon-container-background-green": "#053018",
+                    "tile-tonal-icon-container-background-orange": "#4E1608",
+                    "tile-tonal-icon-container-background-purple": "#31067B",
+                    "tile-tonal-icon-container-background-rose": "#58021E",
+                    "tile-tonal-icon-container-background-teal": "#062D38",
+                    "tile-tonal-icon-container-background-yellow": "#451E03",
+                    "tile-tonal-icon-green": "#0B991F",
+                    "tile-tonal-icon-orange": "#D66100",
+                    "tile-tonal-icon-purple": "#856CFF",
+                    "tile-tonal-icon-rose": "#F63368",
+                    "tile-tonal-icon-teal": "#0C9293",
+                    "tile-tonal-icon-yellow": "#B47700",
+                    "tile-tonal-text-blue": "#0082FB",
+                    "tile-tonal-text-green": "#0B991F",
+                    "tile-tonal-text-orange": "#D66100",
+                    "tile-tonal-text-purple": "#856CFF",
+                    "tile-tonal-text-rose": "#F63368",
+                    "tile-tonal-text-teal": "#0C9293",
+                    "tile-tonal-text-yellow": "#B47700",
+                    "toast-background": "#283943",
+                    "toast-container-padding-horizontal": "14px",
+                    "toast-container-padding-vertical": "16px",
+                    "toast-corner-radius": "12px",
+                    "toast-text": "#FFFFFF",
+                    "toast-text-link": "#47A5FA",
+                    "toggle-active-background": "#DEE3E9",
+                    "toggle-active-icon": "#47A5FA",
+                    "toggle-active-text": "#1C2B33",
+                    "tooltip-background": "#283943",
+                    "tooltip-corner-radius": "12px",
+                    "tooltip-padding-horizontal": "16px",
+                    "tooltip-padding-vertical": "16px",
+                    "ui-background": "#0F191E",
+                    "warning": "#FFDC32",
+                    "web-wash": "#1C2B33"
+                  }
+                },
+                7221
+              ],
+              [
+                "cr:6048",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:7605",
+                [
+                  "useLinkSharingShareUrlWrapper"
+                ],
+                {
+                  "__rc": [
+                    "useLinkSharingShareUrlWrapper",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:7607",
+                [
+                  "CometLinkSharingInlineDisclosure.react"
+                ],
+                {
+                  "__rc": [
+                    "CometLinkSharingInlineDisclosure.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:949016",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:1025",
+                [
+                  "marketplaceFormatCurrency.evil"
+                ],
+                {
+                  "__rc": [
+                    "marketplaceFormatCurrency.evil",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:8939",
+                [
+                  "AppGroupsFilled12.svg.react"
+                ],
+                {
+                  "__rc": [
+                    "AppGroupsFilled12.svg.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:8988",
+                [
+                  "ArrowsLeftRightCircleFilled12.svg.react"
+                ],
+                {
+                  "__rc": [
+                    "ArrowsLeftRightCircleFilled12.svg.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:9029",
+                [
+                  "BusinessBriefcaseFilled12.svg.react"
+                ],
+                {
+                  "__rc": [
+                    "BusinessBriefcaseFilled12.svg.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:9172",
+                [
+                  "GlobeAmericasFilled12.svg.react"
+                ],
+                {
+                  "__rc": [
+                    "GlobeAmericasFilled12.svg.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:9206",
+                [
+                  "PrivacyFilled12.svg.react"
+                ],
+                {
+                  "__rc": [
+                    "PrivacyFilled12.svg.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:9227",
+                [
+                  "NeighborhoodFilled12.svg.react"
+                ],
+                {
+                  "__rc": [
+                    "NeighborhoodFilled12.svg.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:9239",
+                [
+                  "PennantFilled12.svg.react"
+                ],
+                {
+                  "__rc": [
+                    "PennantFilled12.svg.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:9337",
+                [
+                  "PrivacyUnlockedFilled12.svg.react"
+                ],
+                {
+                  "__rc": [
+                    "PrivacyUnlockedFilled12.svg.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:47",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:1305",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:2139",
+                [
+                  "LexicalHashtag.prod"
+                ],
+                {
+                  "__rc": [
+                    "LexicalHashtag.prod",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:2368",
+                [
+                  "UnifiedShareSheetComposerDestinationSelectorDisabled.react"
+                ],
+                {
+                  "__rc": [
+                    "UnifiedShareSheetComposerDestinationSelectorDisabled.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:2590",
+                [
+                  "CometComposerHashtagsTypeaheadPluginForLexicalDeferred.react"
+                ],
+                {
+                  "__rc": [
+                    "CometComposerHashtagsTypeaheadPluginForLexicalDeferred.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:2905",
+                [
+                  "LexicalLink.prod"
+                ],
+                {
+                  "__rc": [
+                    "LexicalLink.prod",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:2908",
+                [
+                  "LexicalOverflow.prod"
+                ],
+                {
+                  "__rc": [
+                    "LexicalOverflow.prod",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:8468",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:8483",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:8653",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:11347",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:12128",
+                [],
+                {
+                  "__rc": [
+                    null,
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:1872646",
+                [
+                  "useFeedComposerCometWithTagDataSourceImpl"
+                ],
+                {
+                  "__rc": [
+                    "useFeedComposerCometWithTagDataSourceImpl",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:2028537",
+                [
+                  "ComposerEmojiTriggerImpl.react"
+                ],
+                {
+                  "__rc": [
+                    "ComposerEmojiTriggerImpl.react",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "cr:8265",
+                [
+                  "useUpdateLinkSharingUrlMetadataMutation"
+                ],
+                {
+                  "__rc": [
+                    "useUpdateLinkSharingUrlMetadataMutation",
+                    null
+                  ]
+                },
+                -1
+              ],
+              [
+                "VideoUploadLoggingConfig",
+                [],
+                {
+                  "FLOW_VIA_NOTIFIER_COMPOSERS": [
+                    {
+                      "source_type": "composer",
+                      "composer_entry_point_ref": "feedx_sprouts"
+                    },
+                    {
+                      "source_type": "composer",
+                      "composer_entry_point_ref": "timeline"
+                    },
+                    {
+                      "source_type": "composer",
+                      "composer_entry_point_ref": "group"
+                    },
+                    {
+                      "source_type": "comment",
+                      "composer_entry_point_ref": "feed_story"
+                    },
+                    {
+                      "source_type": "composer",
+                      "composer_entry_point_ref": "feed_sprout_dialog"
+                    },
+                    {
+                      "source_type": "newsfeed_composer",
+                      "composer_entry_point_ref": "feed"
+                    }
+                  ]
+                },
+                5151
+              ],
+              [
+                "PECurrencyConfig",
+                [],
+                {
+                  "currency_map_for_render": {
+                    "AED": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0625",
+                      "offset": 100,
+                      "screen_name": "UAE Dirham"
+                    },
+                    "AFN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u060b",
+                      "offset": 100,
+                      "screen_name": "Afghan Afghani"
+                    },
+                    "ALL": {
+                      "format": "{amount}{symbol}",
+                      "symbol": "Lek",
+                      "offset": 100,
+                      "screen_name": "Albanian Lek"
+                    },
+                    "AMD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0564\u0580.",
+                      "offset": 100,
+                      "screen_name": "Armenian Dram"
+                    },
+                    "ANG": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0192",
+                      "offset": 100,
+                      "screen_name": "Netherlands Antillean Guilder"
+                    },
+                    "AOA": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Kz",
+                      "offset": 100,
+                      "screen_name": "Angolan Kwanza"
+                    },
+                    "ARS": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Argentine Peso"
+                    },
+                    "AUD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Australian Dollar"
+                    },
+                    "AWG": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Afl.",
+                      "offset": 100,
+                      "screen_name": "Aruban Florin"
+                    },
+                    "AZN": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u043c\u0430\u043d.",
+                      "offset": 100,
+                      "screen_name": "Azerbaijani Manat"
+                    },
+                    "BAM": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "KM",
+                      "offset": 100,
+                      "screen_name": "Bosnian Herzegovinian Convertible Mark"
+                    },
+                    "BBD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Bds$",
+                      "offset": 100,
+                      "screen_name": "Barbados Dollar"
+                    },
+                    "BDT": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u09f3",
+                      "offset": 100,
+                      "screen_name": "Bangladeshi Taka"
+                    },
+                    "BGN": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u043b\u0432.",
+                      "offset": 100,
+                      "screen_name": "Bulgarian Lev"
+                    },
+                    "BHD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0628.",
+                      "offset": 100,
+                      "screen_name": "Bahraini Dinar"
+                    },
+                    "BIF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "FBu",
+                      "offset": 1,
+                      "screen_name": "Burundian Franc"
+                    },
+                    "BMD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Bermudian Dollar"
+                    },
+                    "BND": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "B$",
+                      "offset": 100,
+                      "screen_name": "Brunei Dollar"
+                    },
+                    "BOB": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Bs.",
+                      "offset": 100,
+                      "screen_name": "Bolivian Boliviano"
+                    },
+                    "BRL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "R$",
+                      "offset": 100,
+                      "screen_name": "Brazilian Real"
+                    },
+                    "BSD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "B$",
+                      "offset": 100,
+                      "screen_name": "Bahamian Dollar"
+                    },
+                    "BTN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Nu.",
+                      "offset": 100,
+                      "screen_name": "Bhutanese Ngultrum"
+                    },
+                    "BWP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "P",
+                      "offset": 100,
+                      "screen_name": "Botswanan Pula"
+                    },
+                    "BYN": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "Br",
+                      "offset": 100,
+                      "screen_name": "Belarusian Ruble"
+                    },
+                    "BZD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "BZ$",
+                      "offset": 100,
+                      "screen_name": "Belize Dollar"
+                    },
+                    "CAD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Canadian Dollar"
+                    },
+                    "CDF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "FC",
+                      "offset": 100,
+                      "screen_name": "Congolese Franc"
+                    },
+                    "CHF": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Fr.",
+                      "offset": 100,
+                      "screen_name": "Swiss Franc"
+                    },
+                    "CLF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "E\u00ba",
+                      "offset": 100,
+                      "screen_name": "Chilean Unit of Account"
+                    },
+                    "CLP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Chilean Peso"
+                    },
+                    "CNY": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a5",
+                      "offset": 100,
+                      "screen_name": "Chinese Yuan"
+                    },
+                    "COP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Colombian Peso"
+                    },
+                    "CRC": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a1",
+                      "offset": 1,
+                      "screen_name": "Costa Rican Col\u00f3n"
+                    },
+                    "CVE": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Cape Verde Escudo"
+                    },
+                    "CZK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "K\u010d",
+                      "offset": 100,
+                      "screen_name": "Czech Koruna"
+                    },
+                    "DJF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Fdj",
+                      "offset": 1,
+                      "screen_name": "Djiboutian Franc"
+                    },
+                    "DKK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr.",
+                      "offset": 100,
+                      "screen_name": "Danish Krone"
+                    },
+                    "DOP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "RD$",
+                      "offset": 100,
+                      "screen_name": "Dominican Peso"
+                    },
+                    "DZD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "DA",
+                      "offset": 100,
+                      "screen_name": "Algerian Dinar"
+                    },
+                    "EGP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u062c.\u0645.",
+                      "offset": 100,
+                      "screen_name": "Egyptian Pound"
+                    },
+                    "ERN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Nfk",
+                      "offset": 100,
+                      "screen_name": "Eritrean Nakfa"
+                    },
+                    "ETB": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Br",
+                      "offset": 100,
+                      "screen_name": "Ethiopian Birr"
+                    },
+                    "EUR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20ac",
+                      "offset": 100,
+                      "screen_name": "Euro"
+                    },
+                    "FBZ": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "C",
+                      "offset": 100,
+                      "screen_name": "credits"
+                    },
+                    "FJD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "FJ$",
+                      "offset": 100,
+                      "screen_name": "Fiji Dollar"
+                    },
+                    "FKP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a3",
+                      "offset": 100,
+                      "screen_name": "Falkland Islands Pound"
+                    },
+                    "GBP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a3",
+                      "offset": 100,
+                      "screen_name": "British Pound"
+                    },
+                    "GEL": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u20be",
+                      "offset": 100,
+                      "screen_name": "Georgian Lari"
+                    },
+                    "GHS": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "GHS",
+                      "offset": 100,
+                      "screen_name": "Ghanaian Cedi"
+                    },
+                    "GIP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a3",
+                      "offset": 100,
+                      "screen_name": "Gibraltar Pound"
+                    },
+                    "GMD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "D",
+                      "offset": 100,
+                      "screen_name": "Gambian Dalasi"
+                    },
+                    "GNF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "FG",
+                      "offset": 1,
+                      "screen_name": "Guinean Franc"
+                    },
+                    "GTQ": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Q",
+                      "offset": 100,
+                      "screen_name": "Guatemalan Quetzal"
+                    },
+                    "GYD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "G$",
+                      "offset": 100,
+                      "screen_name": "Guyanese Dollar"
+                    },
+                    "HKD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Hong Kong Dollar"
+                    },
+                    "HNL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "L.",
+                      "offset": 100,
+                      "screen_name": "Honduran Lempira"
+                    },
+                    "HRK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kn",
+                      "offset": 100,
+                      "screen_name": "Croatian Kuna"
+                    },
+                    "HTG": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "G",
+                      "offset": 100,
+                      "screen_name": "Haitian Gourde"
+                    },
+                    "HUF": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "Ft",
+                      "offset": 1,
+                      "screen_name": "Hungarian Forint"
+                    },
+                    "IDR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Rp",
+                      "offset": 1,
+                      "screen_name": "Indonesian Rupiah"
+                    },
+                    "ILS": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20aa",
+                      "offset": 100,
+                      "screen_name": "Israeli New Shekel"
+                    },
+                    "INR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20b9",
+                      "offset": 100,
+                      "screen_name": "Indian Rupee"
+                    },
+                    "IQD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0639.",
+                      "offset": 100,
+                      "screen_name": "Iraqi Dinar"
+                    },
+                    "ISK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr.",
+                      "offset": 1,
+                      "screen_name": "Iceland Krona"
+                    },
+                    "JMD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "J$",
+                      "offset": 100,
+                      "screen_name": "Jamaican Dollar"
+                    },
+                    "JOD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0627.",
+                      "offset": 100,
+                      "screen_name": "Jordanian Dinar"
+                    },
+                    "JPY": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a5",
+                      "offset": 1,
+                      "screen_name": "Japanese Yen"
+                    },
+                    "KES": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "KSh",
+                      "offset": 100,
+                      "screen_name": "Kenyan Shilling"
+                    },
+                    "KGS": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0441\u043e\u043c",
+                      "offset": 100,
+                      "screen_name": "Kyrgyzstani Som"
+                    },
+                    "KHR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u17db",
+                      "offset": 100,
+                      "screen_name": "Cambodian Riel"
+                    },
+                    "KMF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "CF",
+                      "offset": 1,
+                      "screen_name": "Comoro Franc"
+                    },
+                    "KRW": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a9",
+                      "offset": 1,
+                      "screen_name": "Korean Won"
+                    },
+                    "KWD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0643.",
+                      "offset": 100,
+                      "screen_name": "Kuwaiti Dinar"
+                    },
+                    "KYD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "CI$",
+                      "offset": 100,
+                      "screen_name": "Cayman Islands Dollar"
+                    },
+                    "KZT": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0422",
+                      "offset": 100,
+                      "screen_name": "Kazakhstani Tenge"
+                    },
+                    "LAK": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20ad",
+                      "offset": 100,
+                      "screen_name": "Lao Kip"
+                    },
+                    "LBP": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0644.\u0644.",
+                      "offset": 100,
+                      "screen_name": "Lebanese Pound"
+                    },
+                    "LKR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Rs",
+                      "offset": 100,
+                      "screen_name": "Sri Lankan Rupee"
+                    },
+                    "LRD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "L$",
+                      "offset": 100,
+                      "screen_name": "Liberian Dollar"
+                    },
+                    "LSL": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "M",
+                      "offset": 100,
+                      "screen_name": "Lesotho Loti"
+                    },
+                    "LTL": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "Lt",
+                      "offset": 100,
+                      "screen_name": "Lithuanian Litas"
+                    },
+                    "LVL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Ls",
+                      "offset": 100,
+                      "screen_name": "Latvian Lats"
+                    },
+                    "LYD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0644.",
+                      "offset": 100,
+                      "screen_name": "Libyan Dinar"
+                    },
+                    "MAD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0645.",
+                      "offset": 100,
+                      "screen_name": "Moroccan Dirham"
+                    },
+                    "MDL": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "lei",
+                      "offset": 100,
+                      "screen_name": "Moldovan Leu"
+                    },
+                    "MGA": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Ar",
+                      "offset": 5,
+                      "screen_name": "Malagasy Ariary"
+                    },
+                    "MKD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0434\u0435\u043d.",
+                      "offset": 100,
+                      "screen_name": "Macedonian Denar"
+                    },
+                    "MMK": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Ks",
+                      "offset": 100,
+                      "screen_name": "Burmese Kyat"
+                    },
+                    "MNT": {
+                      "format": "{amount}{symbol}",
+                      "symbol": "\u20ae",
+                      "offset": 100,
+                      "screen_name": "Mongolian Tugrik"
+                    },
+                    "MOP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "MOP",
+                      "offset": 100,
+                      "screen_name": "Macau Patacas"
+                    },
+                    "MRO": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "UM",
+                      "offset": 5,
+                      "screen_name": "Mauritanian Ouguiya"
+                    },
+                    "MUR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a8",
+                      "offset": 100,
+                      "screen_name": "Mauritian Rupee"
+                    },
+                    "MVR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0783.",
+                      "offset": 100,
+                      "screen_name": "Maldivian Rufiyaa"
+                    },
+                    "MWK": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "MK",
+                      "offset": 100,
+                      "screen_name": "Malawian Kwacha"
+                    },
+                    "MXN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Mexican Peso"
+                    },
+                    "MYR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "RM",
+                      "offset": 100,
+                      "screen_name": "Malaysian Ringgit"
+                    },
+                    "MZN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "MT",
+                      "offset": 100,
+                      "screen_name": "Mozambican Metical"
+                    },
+                    "NAD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "N$",
+                      "offset": 100,
+                      "screen_name": "Namibian Dollar"
+                    },
+                    "NGN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a6",
+                      "offset": 100,
+                      "screen_name": "Nigerian Naira"
+                    },
+                    "NIO": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "C$",
+                      "offset": 100,
+                      "screen_name": "Nicaraguan Cordoba"
+                    },
+                    "NOK": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "kr",
+                      "offset": 100,
+                      "screen_name": "Norwegian Krone"
+                    },
+                    "NPR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0930\u0942",
+                      "offset": 100,
+                      "screen_name": "Nepalese Rupee"
+                    },
+                    "NZD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "New Zealand Dollar"
+                    },
+                    "OMR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0639.",
+                      "offset": 100,
+                      "screen_name": "Omani Rial"
+                    },
+                    "PAB": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "B\/.",
+                      "offset": 100,
+                      "screen_name": "Panamanian Balboas"
+                    },
+                    "PEN": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "S\/",
+                      "offset": 100,
+                      "screen_name": "Peruvian Nuevo Sol"
+                    },
+                    "PGK": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "K",
+                      "offset": 100,
+                      "screen_name": "Papua New Guinean Kina"
+                    },
+                    "PHP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20b1",
+                      "offset": 100,
+                      "screen_name": "Philippine Peso"
+                    },
+                    "PKR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Rs",
+                      "offset": 100,
+                      "screen_name": "Pakistani Rupee"
+                    },
+                    "PLN": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "z\u0142",
+                      "offset": 100,
+                      "screen_name": "Polish Zloty"
+                    },
+                    "PYG": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20b2",
+                      "offset": 1,
+                      "screen_name": "Paraguayan Guarani"
+                    },
+                    "QAR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0642.",
+                      "offset": 100,
+                      "screen_name": "Qatari Rials"
+                    },
+                    "RON": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "lei",
+                      "offset": 100,
+                      "screen_name": "Romanian Leu"
+                    },
+                    "RSD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "din",
+                      "offset": 100,
+                      "screen_name": "Serbian Dinar"
+                    },
+                    "RUB": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "p.",
+                      "offset": 100,
+                      "screen_name": "Russian Ruble"
+                    },
+                    "RWF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "FRw",
+                      "offset": 1,
+                      "screen_name": "Rwandan Franc"
+                    },
+                    "SAR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0633.",
+                      "offset": 100,
+                      "screen_name": "Saudi Arabian Riyal"
+                    },
+                    "SBD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "SI$",
+                      "offset": 100,
+                      "screen_name": "Solomon Islands Dollar"
+                    },
+                    "SCR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "SR",
+                      "offset": 100,
+                      "screen_name": "Seychelles Rupee"
+                    },
+                    "SEK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr",
+                      "offset": 100,
+                      "screen_name": "Swedish Krona"
+                    },
+                    "SGD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Singapore Dollar"
+                    },
+                    "SHP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a3",
+                      "offset": 100,
+                      "screen_name": "Saint Helena Pound"
+                    },
+                    "SKK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "Sk",
+                      "offset": 100,
+                      "screen_name": "Slovak Koruna"
+                    },
+                    "SLE": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Le",
+                      "offset": 100,
+                      "screen_name": "Sierra Leonean Leone"
+                    },
+                    "SLL": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Le",
+                      "offset": 100,
+                      "screen_name": "Sierra Leonean Old Leone"
+                    },
+                    "SOS": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "S",
+                      "offset": 100,
+                      "screen_name": "Somali Shilling"
+                    },
+                    "SRD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "SRD",
+                      "offset": 100,
+                      "screen_name": "Surinamese Dollar"
+                    },
+                    "SSP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a3",
+                      "offset": 100,
+                      "screen_name": "South Sudanese Pound"
+                    },
+                    "STD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Db",
+                      "offset": 100,
+                      "screen_name": "Sao Tome and Principe Dobra"
+                    },
+                    "SVC": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a1",
+                      "offset": 100,
+                      "screen_name": "Salvadoran Col\u00f3n"
+                    },
+                    "SZL": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "L",
+                      "offset": 100,
+                      "screen_name": "Swazi Lilangeni"
+                    },
+                    "THB": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0e3f",
+                      "offset": 100,
+                      "screen_name": "Thai Baht"
+                    },
+                    "TJS": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0441.",
+                      "offset": 100,
+                      "screen_name": "Tajikistani Somoni"
+                    },
+                    "TMT": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "T",
+                      "offset": 100,
+                      "screen_name": "Turkmenistani Manat"
+                    },
+                    "TND": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u062a.",
+                      "offset": 100,
+                      "screen_name": "Tunisian Dinar"
+                    },
+                    "TOP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "T$",
+                      "offset": 100,
+                      "screen_name": "Tongan Pa\u02bbanga"
+                    },
+                    "TRY": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "TL",
+                      "offset": 100,
+                      "screen_name": "Turkish Lira"
+                    },
+                    "TTD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "TT$",
+                      "offset": 100,
+                      "screen_name": "Trinidad and Tobago Dollar"
+                    },
+                    "TWD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "NT$",
+                      "offset": 1,
+                      "screen_name": "Taiwan Dollar"
+                    },
+                    "TZS": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "TSh",
+                      "offset": 100,
+                      "screen_name": "Tanzanian Shilling"
+                    },
+                    "UAH": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0433\u0440\u043d.",
+                      "offset": 100,
+                      "screen_name": "Ukrainian Hryvnia"
+                    },
+                    "UGX": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "USh",
+                      "offset": 1,
+                      "screen_name": "Ugandan Shilling"
+                    },
+                    "USD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "US Dollars"
+                    },
+                    "UYU": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$U",
+                      "offset": 100,
+                      "screen_name": "Uruguayan Peso"
+                    },
+                    "UZS": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0441\u045e\u043c",
+                      "offset": 100,
+                      "screen_name": "Uzbekistan Som"
+                    },
+                    "VEF": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Bs.F",
+                      "offset": 100,
+                      "screen_name": "Venezuelan Bolivar"
+                    },
+                    "VES": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Bs.S",
+                      "offset": 100,
+                      "screen_name": "Venezuelan Sovereign Bolivar"
+                    },
+                    "VND": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u20ab",
+                      "offset": 1,
+                      "screen_name": "Vietnamese Dong"
+                    },
+                    "VUV": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "VT",
+                      "offset": 1,
+                      "screen_name": "Vanuatu Vatu"
+                    },
+                    "WST": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "WS$",
+                      "offset": 100,
+                      "screen_name": "Samoan Tala"
+                    },
+                    "XAF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "FCFA",
+                      "offset": 1,
+                      "screen_name": "Central African Frank"
+                    },
+                    "XCD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "East Caribbean Dollar"
+                    },
+                    "XOF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "FCFA",
+                      "offset": 1,
+                      "screen_name": "West African Frank"
+                    },
+                    "XPF": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a3",
+                      "offset": 1,
+                      "screen_name": "CFP Franc"
+                    },
+                    "YER": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u064a.",
+                      "offset": 100,
+                      "screen_name": "Yemeni Rial"
+                    },
+                    "ZAR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "R",
+                      "offset": 100,
+                      "screen_name": "South African Rand"
+                    },
+                    "ZMW": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "K",
+                      "offset": 100,
+                      "screen_name": "Zambian Kwacha"
+                    },
+                    "ZWL": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Zimbabwean Dollar"
+                    }
+                  },
+                  "currency_map_for_cc": {
+                    "AED": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0625",
+                      "offset": 100,
+                      "screen_name": "UAE Dirham"
+                    },
+                    "ARS": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Argentine Peso"
+                    },
+                    "AUD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Australian Dollar"
+                    },
+                    "BDT": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u09f3",
+                      "offset": 100,
+                      "screen_name": "Bangladeshi Taka"
+                    },
+                    "BOB": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Bs.",
+                      "offset": 100,
+                      "screen_name": "Bolivian Boliviano"
+                    },
+                    "BRL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "R$",
+                      "offset": 100,
+                      "screen_name": "Brazilian Real"
+                    },
+                    "CAD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Canadian Dollar"
+                    },
+                    "CHF": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Fr.",
+                      "offset": 100,
+                      "screen_name": "Swiss Franc"
+                    },
+                    "CLP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Chilean Peso"
+                    },
+                    "CNY": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a5",
+                      "offset": 100,
+                      "screen_name": "Chinese Yuan"
+                    },
+                    "COP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Colombian Peso"
+                    },
+                    "CRC": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a1",
+                      "offset": 1,
+                      "screen_name": "Costa Rican Col\u00f3n"
+                    },
+                    "CZK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "K\u010d",
+                      "offset": 100,
+                      "screen_name": "Czech Koruna"
+                    },
+                    "DKK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr.",
+                      "offset": 100,
+                      "screen_name": "Danish Krone"
+                    },
+                    "DZD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "DA",
+                      "offset": 100,
+                      "screen_name": "Algerian Dinar"
+                    },
+                    "EGP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u062c.\u0645.",
+                      "offset": 100,
+                      "screen_name": "Egyptian Pound"
+                    },
+                    "EUR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20ac",
+                      "offset": 100,
+                      "screen_name": "Euro"
+                    },
+                    "GBP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a3",
+                      "offset": 100,
+                      "screen_name": "British Pound"
+                    },
+                    "GTQ": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Q",
+                      "offset": 100,
+                      "screen_name": "Guatemalan Quetzal"
+                    },
+                    "HKD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Hong Kong Dollar"
+                    },
+                    "HNL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "L.",
+                      "offset": 100,
+                      "screen_name": "Honduran Lempira"
+                    },
+                    "HUF": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "Ft",
+                      "offset": 1,
+                      "screen_name": "Hungarian Forint"
+                    },
+                    "IDR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Rp",
+                      "offset": 1,
+                      "screen_name": "Indonesian Rupiah"
+                    },
+                    "ILS": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20aa",
+                      "offset": 100,
+                      "screen_name": "Israeli New Shekel"
+                    },
+                    "INR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20b9",
+                      "offset": 100,
+                      "screen_name": "Indian Rupee"
+                    },
+                    "ISK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr.",
+                      "offset": 1,
+                      "screen_name": "Iceland Krona"
+                    },
+                    "JPY": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a5",
+                      "offset": 1,
+                      "screen_name": "Japanese Yen"
+                    },
+                    "KES": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "KSh",
+                      "offset": 100,
+                      "screen_name": "Kenyan Shilling"
+                    },
+                    "KRW": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a9",
+                      "offset": 1,
+                      "screen_name": "Korean Won"
+                    },
+                    "MOP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "MOP",
+                      "offset": 100,
+                      "screen_name": "Macau Patacas"
+                    },
+                    "MXN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Mexican Peso"
+                    },
+                    "MYR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "RM",
+                      "offset": 100,
+                      "screen_name": "Malaysian Ringgit"
+                    },
+                    "NGN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a6",
+                      "offset": 100,
+                      "screen_name": "Nigerian Naira"
+                    },
+                    "NIO": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "C$",
+                      "offset": 100,
+                      "screen_name": "Nicaraguan Cordoba"
+                    },
+                    "NOK": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "kr",
+                      "offset": 100,
+                      "screen_name": "Norwegian Krone"
+                    },
+                    "NZD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "New Zealand Dollar"
+                    },
+                    "PEN": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "S\/",
+                      "offset": 100,
+                      "screen_name": "Peruvian Nuevo Sol"
+                    },
+                    "PHP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20b1",
+                      "offset": 100,
+                      "screen_name": "Philippine Peso"
+                    },
+                    "PKR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Rs",
+                      "offset": 100,
+                      "screen_name": "Pakistani Rupee"
+                    },
+                    "PLN": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "z\u0142",
+                      "offset": 100,
+                      "screen_name": "Polish Zloty"
+                    },
+                    "PYG": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20b2",
+                      "offset": 1,
+                      "screen_name": "Paraguayan Guarani"
+                    },
+                    "QAR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0642.",
+                      "offset": 100,
+                      "screen_name": "Qatari Rials"
+                    },
+                    "RON": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "lei",
+                      "offset": 100,
+                      "screen_name": "Romanian Leu"
+                    },
+                    "RUB": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "p.",
+                      "offset": 100,
+                      "screen_name": "Russian Ruble"
+                    },
+                    "SAR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0633.",
+                      "offset": 100,
+                      "screen_name": "Saudi Arabian Riyal"
+                    },
+                    "SEK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr",
+                      "offset": 100,
+                      "screen_name": "Swedish Krona"
+                    },
+                    "SGD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Singapore Dollar"
+                    },
+                    "THB": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0e3f",
+                      "offset": 100,
+                      "screen_name": "Thai Baht"
+                    },
+                    "TRY": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "TL",
+                      "offset": 100,
+                      "screen_name": "Turkish Lira"
+                    },
+                    "TWD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "NT$",
+                      "offset": 1,
+                      "screen_name": "Taiwan Dollar"
+                    },
+                    "USD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "US Dollars"
+                    },
+                    "UYU": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$U",
+                      "offset": 100,
+                      "screen_name": "Uruguayan Peso"
+                    },
+                    "VND": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u20ab",
+                      "offset": 1,
+                      "screen_name": "Vietnamese Dong"
+                    },
+                    "ZAR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "R",
+                      "offset": 100,
+                      "screen_name": "South African Rand"
+                    }
+                  },
+                  "currency_map_for_ads": {
+                    "AED": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0625",
+                      "offset": 100,
+                      "screen_name": "UAE Dirham"
+                    },
+                    "ARS": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Argentine Peso"
+                    },
+                    "AUD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Australian Dollar"
+                    },
+                    "BDT": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u09f3",
+                      "offset": 100,
+                      "screen_name": "Bangladeshi Taka"
+                    },
+                    "BOB": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Bs.",
+                      "offset": 100,
+                      "screen_name": "Bolivian Boliviano"
+                    },
+                    "BRL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "R$",
+                      "offset": 100,
+                      "screen_name": "Brazilian Real"
+                    },
+                    "CAD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Canadian Dollar"
+                    },
+                    "CHF": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Fr.",
+                      "offset": 100,
+                      "screen_name": "Swiss Franc"
+                    },
+                    "CLP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Chilean Peso"
+                    },
+                    "CNY": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a5",
+                      "offset": 100,
+                      "screen_name": "Chinese Yuan"
+                    },
+                    "COP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Colombian Peso"
+                    },
+                    "CRC": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a1",
+                      "offset": 1,
+                      "screen_name": "Costa Rican Col\u00f3n"
+                    },
+                    "CZK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "K\u010d",
+                      "offset": 100,
+                      "screen_name": "Czech Koruna"
+                    },
+                    "DKK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr.",
+                      "offset": 100,
+                      "screen_name": "Danish Krone"
+                    },
+                    "DZD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "DA",
+                      "offset": 100,
+                      "screen_name": "Algerian Dinar"
+                    },
+                    "EGP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u062c.\u0645.",
+                      "offset": 100,
+                      "screen_name": "Egyptian Pound"
+                    },
+                    "EUR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20ac",
+                      "offset": 100,
+                      "screen_name": "Euro"
+                    },
+                    "GBP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a3",
+                      "offset": 100,
+                      "screen_name": "British Pound"
+                    },
+                    "GTQ": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Q",
+                      "offset": 100,
+                      "screen_name": "Guatemalan Quetzal"
+                    },
+                    "HKD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Hong Kong Dollar"
+                    },
+                    "HNL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "L.",
+                      "offset": 100,
+                      "screen_name": "Honduran Lempira"
+                    },
+                    "HUF": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "Ft",
+                      "offset": 1,
+                      "screen_name": "Hungarian Forint"
+                    },
+                    "IDR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Rp",
+                      "offset": 1,
+                      "screen_name": "Indonesian Rupiah"
+                    },
+                    "ILS": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20aa",
+                      "offset": 100,
+                      "screen_name": "Israeli New Shekel"
+                    },
+                    "INR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20b9",
+                      "offset": 100,
+                      "screen_name": "Indian Rupee"
+                    },
+                    "ISK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr.",
+                      "offset": 1,
+                      "screen_name": "Iceland Krona"
+                    },
+                    "JPY": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a5",
+                      "offset": 1,
+                      "screen_name": "Japanese Yen"
+                    },
+                    "KES": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "KSh",
+                      "offset": 100,
+                      "screen_name": "Kenyan Shilling"
+                    },
+                    "KRW": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a9",
+                      "offset": 1,
+                      "screen_name": "Korean Won"
+                    },
+                    "MOP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "MOP",
+                      "offset": 100,
+                      "screen_name": "Macau Patacas"
+                    },
+                    "MXN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Mexican Peso"
+                    },
+                    "MYR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "RM",
+                      "offset": 100,
+                      "screen_name": "Malaysian Ringgit"
+                    },
+                    "NGN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a6",
+                      "offset": 100,
+                      "screen_name": "Nigerian Naira"
+                    },
+                    "NIO": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "C$",
+                      "offset": 100,
+                      "screen_name": "Nicaraguan Cordoba"
+                    },
+                    "NOK": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "kr",
+                      "offset": 100,
+                      "screen_name": "Norwegian Krone"
+                    },
+                    "NZD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "New Zealand Dollar"
+                    },
+                    "PEN": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "S\/",
+                      "offset": 100,
+                      "screen_name": "Peruvian Nuevo Sol"
+                    },
+                    "PHP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20b1",
+                      "offset": 100,
+                      "screen_name": "Philippine Peso"
+                    },
+                    "PKR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Rs",
+                      "offset": 100,
+                      "screen_name": "Pakistani Rupee"
+                    },
+                    "PLN": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "z\u0142",
+                      "offset": 100,
+                      "screen_name": "Polish Zloty"
+                    },
+                    "PYG": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20b2",
+                      "offset": 1,
+                      "screen_name": "Paraguayan Guarani"
+                    },
+                    "QAR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0642.",
+                      "offset": 100,
+                      "screen_name": "Qatari Rials"
+                    },
+                    "RON": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "lei",
+                      "offset": 100,
+                      "screen_name": "Romanian Leu"
+                    },
+                    "RUB": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "p.",
+                      "offset": 100,
+                      "screen_name": "Russian Ruble"
+                    },
+                    "SAR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0633.",
+                      "offset": 100,
+                      "screen_name": "Saudi Arabian Riyal"
+                    },
+                    "SEK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr",
+                      "offset": 100,
+                      "screen_name": "Swedish Krona"
+                    },
+                    "SGD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Singapore Dollar"
+                    },
+                    "THB": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0e3f",
+                      "offset": 100,
+                      "screen_name": "Thai Baht"
+                    },
+                    "TRY": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "TL",
+                      "offset": 100,
+                      "screen_name": "Turkish Lira"
+                    },
+                    "TWD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "NT$",
+                      "offset": 1,
+                      "screen_name": "Taiwan Dollar"
+                    },
+                    "UAH": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0433\u0440\u043d.",
+                      "offset": 100,
+                      "screen_name": "Ukrainian Hryvnia"
+                    },
+                    "USD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "US Dollars"
+                    },
+                    "UYU": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$U",
+                      "offset": 100,
+                      "screen_name": "Uruguayan Peso"
+                    },
+                    "VND": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u20ab",
+                      "offset": 1,
+                      "screen_name": "Vietnamese Dong"
+                    },
+                    "ZAR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "R",
+                      "offset": 100,
+                      "screen_name": "South African Rand"
+                    }
+                  },
+                  "currency_map_for_ads_backend": {
+                    "AED": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u062f.\u0625",
+                      "offset": 100,
+                      "screen_name": "UAE Dirham"
+                    },
+                    "ARS": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Argentine Peso"
+                    },
+                    "AUD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Australian Dollar"
+                    },
+                    "BDT": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u09f3",
+                      "offset": 100,
+                      "screen_name": "Bangladeshi Taka"
+                    },
+                    "BOB": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Bs.",
+                      "offset": 100,
+                      "screen_name": "Bolivian Boliviano"
+                    },
+                    "BRL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "R$",
+                      "offset": 100,
+                      "screen_name": "Brazilian Real"
+                    },
+                    "CAD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Canadian Dollar"
+                    },
+                    "CHF": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Fr.",
+                      "offset": 100,
+                      "screen_name": "Swiss Franc"
+                    },
+                    "CLP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Chilean Peso"
+                    },
+                    "CNY": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a5",
+                      "offset": 100,
+                      "screen_name": "Chinese Yuan"
+                    },
+                    "COP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$",
+                      "offset": 1,
+                      "screen_name": "Colombian Peso"
+                    },
+                    "CRC": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a1",
+                      "offset": 1,
+                      "screen_name": "Costa Rican Col\u00f3n"
+                    },
+                    "CZK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "K\u010d",
+                      "offset": 100,
+                      "screen_name": "Czech Koruna"
+                    },
+                    "DKK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr.",
+                      "offset": 100,
+                      "screen_name": "Danish Krone"
+                    },
+                    "DZD": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "DA",
+                      "offset": 100,
+                      "screen_name": "Algerian Dinar"
+                    },
+                    "EGP": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u062c.\u0645.",
+                      "offset": 100,
+                      "screen_name": "Egyptian Pound"
+                    },
+                    "EUR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20ac",
+                      "offset": 100,
+                      "screen_name": "Euro"
+                    },
+                    "GBP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a3",
+                      "offset": 100,
+                      "screen_name": "British Pound"
+                    },
+                    "GTQ": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Q",
+                      "offset": 100,
+                      "screen_name": "Guatemalan Quetzal"
+                    },
+                    "HKD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Hong Kong Dollar"
+                    },
+                    "HNL": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "L.",
+                      "offset": 100,
+                      "screen_name": "Honduran Lempira"
+                    },
+                    "HUF": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "Ft",
+                      "offset": 1,
+                      "screen_name": "Hungarian Forint"
+                    },
+                    "IDR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "Rp",
+                      "offset": 1,
+                      "screen_name": "Indonesian Rupiah"
+                    },
+                    "ILS": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20aa",
+                      "offset": 100,
+                      "screen_name": "Israeli New Shekel"
+                    },
+                    "INR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20b9",
+                      "offset": 100,
+                      "screen_name": "Indian Rupee"
+                    },
+                    "ISK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr.",
+                      "offset": 1,
+                      "screen_name": "Iceland Krona"
+                    },
+                    "JPY": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u00a5",
+                      "offset": 1,
+                      "screen_name": "Japanese Yen"
+                    },
+                    "KES": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "KSh",
+                      "offset": 100,
+                      "screen_name": "Kenyan Shilling"
+                    },
+                    "KRW": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a9",
+                      "offset": 1,
+                      "screen_name": "Korean Won"
+                    },
+                    "LKR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Rs",
+                      "offset": 100,
+                      "screen_name": "Sri Lankan Rupee"
+                    },
+                    "MOP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "MOP",
+                      "offset": 100,
+                      "screen_name": "Macau Patacas"
+                    },
+                    "MXN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Mexican Peso"
+                    },
+                    "MYR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "RM",
+                      "offset": 100,
+                      "screen_name": "Malaysian Ringgit"
+                    },
+                    "NGN": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20a6",
+                      "offset": 100,
+                      "screen_name": "Nigerian Naira"
+                    },
+                    "NIO": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "C$",
+                      "offset": 100,
+                      "screen_name": "Nicaraguan Cordoba"
+                    },
+                    "NOK": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "kr",
+                      "offset": 100,
+                      "screen_name": "Norwegian Krone"
+                    },
+                    "NZD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "New Zealand Dollar"
+                    },
+                    "PEN": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "S\/",
+                      "offset": 100,
+                      "screen_name": "Peruvian Nuevo Sol"
+                    },
+                    "PHP": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u20b1",
+                      "offset": 100,
+                      "screen_name": "Philippine Peso"
+                    },
+                    "PKR": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "Rs",
+                      "offset": 100,
+                      "screen_name": "Pakistani Rupee"
+                    },
+                    "PLN": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "z\u0142",
+                      "offset": 100,
+                      "screen_name": "Polish Zloty"
+                    },
+                    "PYG": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "\u20b2",
+                      "offset": 1,
+                      "screen_name": "Paraguayan Guarani"
+                    },
+                    "QAR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0642.",
+                      "offset": 100,
+                      "screen_name": "Qatari Rials"
+                    },
+                    "RON": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "lei",
+                      "offset": 100,
+                      "screen_name": "Romanian Leu"
+                    },
+                    "SAR": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0631.\u0633.",
+                      "offset": 100,
+                      "screen_name": "Saudi Arabian Riyal"
+                    },
+                    "SEK": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "kr",
+                      "offset": 100,
+                      "screen_name": "Swedish Krona"
+                    },
+                    "SGD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "Singapore Dollar"
+                    },
+                    "THB": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "\u0e3f",
+                      "offset": 100,
+                      "screen_name": "Thai Baht"
+                    },
+                    "TRY": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "TL",
+                      "offset": 100,
+                      "screen_name": "Turkish Lira"
+                    },
+                    "TWD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "NT$",
+                      "offset": 1,
+                      "screen_name": "Taiwan Dollar"
+                    },
+                    "UAH": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u0433\u0440\u043d.",
+                      "offset": 100,
+                      "screen_name": "Ukrainian Hryvnia"
+                    },
+                    "USD": {
+                      "format": "{symbol}{amount}",
+                      "symbol": "$",
+                      "offset": 100,
+                      "screen_name": "US Dollars"
+                    },
+                    "UYU": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "$U",
+                      "offset": 100,
+                      "screen_name": "Uruguayan Peso"
+                    },
+                    "VND": {
+                      "format": "{amount} {symbol}",
+                      "symbol": "\u20ab",
+                      "offset": 1,
+                      "screen_name": "Vietnamese Dong"
+                    },
+                    "ZAR": {
+                      "format": "{symbol} {amount}",
+                      "symbol": "R",
+                      "offset": 100,
+                      "screen_name": "South African Rand"
+                    }
+                  },
+                  "currency_locale_format": {
+                    "AE": "{amount} {symbol}",
+                    "AL": "{amount}{symbol}",
+                    "AM": "{amount} {symbol}",
+                    "AR": "{symbol} {amount}",
+                    "AT": "{symbol} {amount}",
+                    "AU": "{symbol}{amount}",
+                    "AZ": "{amount} {symbol}",
+                    "BE": "{amount} {symbol}",
+                    "BG": "{amount} {symbol}",
+                    "BH": "{amount} {symbol}",
+                    "BN": "",
+                    "BO": "{symbol} {amount}",
+                    "BR": "{symbol} {amount}",
+                    "BY": "{amount} {symbol}",
+                    "BZ": "",
+                    "CA": "{symbol}{amount}",
+                    "CH": "{symbol} {amount}",
+                    "CL": "{symbol} {amount}",
+                    "CN": "{symbol}{amount}",
+                    "CO": "{symbol} {amount}",
+                    "CR": "{symbol}{amount}",
+                    "CZ": "{amount} {symbol}",
+                    "DE": "{amount} {symbol}",
+                    "DK": "{amount} {symbol}",
+                    "DO": "{symbol} {amount}",
+                    "DZ": "{amount} {symbol}",
+                    "EC": "{symbol} {amount}",
+                    "EE": "{amount} {symbol}",
+                    "EG": "{symbol} {amount}",
+                    "ES": "{amount} {symbol}",
+                    "FI": "{amount} {symbol}",
+                    "FO": "{symbol} {amount}",
+                    "FR": "{amount} {symbol}",
+                    "GB": "{symbol}{amount}",
+                    "GE": "{amount} {symbol}",
+                    "GR": "{amount} {symbol}",
+                    "GT": "{symbol}{amount}",
+                    "HK": "{symbol}{amount}",
+                    "HN": "{symbol} {amount}",
+                    "HR": "{amount} {symbol}",
+                    "HU": "{amount} {symbol}",
+                    "ID": "{symbol} {amount}",
+                    "IE": "{symbol} {amount}",
+                    "IL": "{symbol}{amount}",
+                    "IN": "{symbol} {amount}",
+                    "IQ": "{amount} {symbol}",
+                    "IR": "{amount} {symbol}",
+                    "IS": "{amount} {symbol}",
+                    "IT": "{symbol} {amount}",
+                    "JM": "{symbol}{amount}",
+                    "JO": "{amount} {symbol}",
+                    "JP": "{symbol}{amount}",
+                    "KE": "{symbol}{amount}",
+                    "KG": "{amount} {symbol}",
+                    "KR": "{symbol}{amount}",
+                    "KW": "{amount} {symbol}",
+                    "KZ": "{symbol}{amount}",
+                    "LB": "{amount} {symbol}",
+                    "LI": "{symbol} {amount}",
+                    "LT": "{amount} {symbol}",
+                    "LU": "{amount} {symbol}",
+                    "LV": "{symbol} {amount}",
+                    "LY": "{amount} {symbol}",
+                    "MA": "{amount} {symbol}",
+                    "MC": "{amount} {symbol}",
+                    "MK": "{amount} {symbol}",
+                    "MN": "{amount}{symbol}",
+                    "MO": "{symbol}{amount}",
+                    "MV": "",
+                    "MX": "{symbol}{amount}",
+                    "MY": "{symbol}{amount}",
+                    "NI": "{symbol} {amount}",
+                    "NL": "{symbol} {amount}",
+                    "NO": "{symbol} {amount}",
+                    "NZ": "{symbol}{amount}",
+                    "OM": "{amount} {symbol}",
+                    "PA": "{symbol} {amount}",
+                    "PE": "{symbol} {amount}",
+                    "PH": "{symbol}{amount}",
+                    "PK": "{symbol}{amount}",
+                    "PL": "{amount} {symbol}",
+                    "PR": "{symbol} {amount}",
+                    "PT": "{amount} {symbol}",
+                    "PY": "{symbol} {amount}",
+                    "QA": "{amount} {symbol}",
+                    "RO": "{amount} {symbol}",
+                    "RU": "{amount} {symbol}",
+                    "SA": "{amount} {symbol}",
+                    "SE": "{amount} {symbol}",
+                    "SG": "{symbol}{amount}",
+                    "SI": "{amount} {symbol}",
+                    "SK": "{amount} {symbol}",
+                    "SV": "{symbol}{amount}",
+                    "SY": "{amount} {symbol}",
+                    "TH": "{symbol}{amount}",
+                    "TN": "{amount} {symbol}",
+                    "TR": "{amount} {symbol}",
+                    "TT": "",
+                    "TW": "{symbol}{amount}",
+                    "UA": "{amount} {symbol}",
+                    "US": "{symbol}{amount}",
+                    "UY": "{symbol} {amount}",
+                    "UZ": "{amount} {symbol}",
+                    "VE": "{symbol} {amount}",
+                    "VN": "{amount} {symbol}",
+                    "YE": "{amount} {symbol}",
+                    "ZA": "{symbol} {amount}",
+                    "ZW": ""
+                  }
+                },
+                745
+              ],
+              [
+                "TilesMapConfig",
+                [],
+                {
+                  "OSM_ZOOM_THRESHOLD": 0,
+                  "OSM_RECTS_RAW": [
+                    [
+                      90,
+                      -180,
+                      -90,
+                      180
+                    ]
+                  ],
+                  "MIN_SIZE_FOR_ATTRIBUTION": 9999,
+                  "TILE_URL_TEMPLATE": "https:\/\/external.fyvr3-1.fna.fbcdn.net\/map_tile.php?v=2056&theme=default&ccb=4-4&x={x}&y={y}&z={z}&size=512&ppi=250",
+                  "TILE_URL_TEMPLATE_DARK": "https:\/\/external.fyvr3-1.fna.fbcdn.net\/map_tile.php?v=2056&theme=dark&ccb=4-4&x={x}&y={y}&z={z}&size=512&ppi=250",
+                  "STATIC_MAP_URL_TEMPLATE": "https:\/\/external.fyvr3-1.fna.fbcdn.net\/static_map.php?v=2056&theme=default&ccb=4-4",
+                  "STATIC_MAP_URL_TEMPLATE_DARK": "https:\/\/external.fyvr3-1.fna.fbcdn.net\/static_map.php?v=2056&theme=dark&ccb=4-4",
+                  "LOGO": {
+                    "url": "https:\/\/static.xx.fbcdn.net\/rsrc.php\/v3\/yO\/r\/nLWasZfFoIe.png",
+                    "width": 24,
+                    "height": 24
+                  },
+                  "ZOOM_RANGE": {
+                    "MIN": 1,
+                    "MAX": 19
+                  },
+                  "HERE_MAP_REPORTER_URL": "https:\/\/mapfeedback.here.com\/?appId=ZOdjOwwG7wKMxvmMewWg",
+                  "OSM_MAP_REPORTER_URL": "https:\/\/www.openstreetmap.org\/fixthemap\/",
+                  "OSM_MAP_MIN_ZOOM_TO_REPORT_ISSUE": 12,
+                  "DEVICE_PIXEL_RATIO": 3,
+                  "LIVE_MAP_VERSION": "7",
+                  "VERSION": 2056,
+                  "ATTRIBUTIONS": {
+                    "OpenStreetMap": {
+                      "attribution": "OpenStreetMap contributors",
+                      "websites": [
+                        "https:\/\/www.openstreetmap.org\/copyright\/"
+                      ]
+                    },
+                    "Overture Maps Foundation": {
+                      "attribution": "Buildings: \u00a9OpenStreetMap contributors, Microsoft, Esri Community Maps Contributors, Google Open Buildings, USGS 3D Elevation Program Digital Elevation Program\n        Transportation: \u00a9OpenStreetMap contributors\n       \tBase: \u00a9OpenStreetMap contributors, ESA Worldcover",
+                      "attribution_should_omit_copyright_symbol": true,
+                      "websites": [
+                        "https:\/\/docs.overturemaps.org\/attribution\/"
+                      ]
+                    },
+                    "Natural Earth": {
+                      "attribution": "Made with Natural Earth.",
+                      "attribution_should_omit_copyright_symbol": true,
+                      "websites": [
+                        "https:\/\/www.naturalearthdata.com\/"
+                      ]
+                    }
+                  }
+                },
+                664
+              ]
+            ],
+            "require": [
+              [
+                "MarketplacePDPForSaleComponent_page$normalization.graphql"
+              ],
+              [
+                "MarketplacePDPForSaleComponent.react"
+              ],
+              [
+                "emptyFunction",
+                "thatReturns",
+                [
+                  "RequireDeferredReference"
+                ],
+                [
+                  [
+                    {
+                      "__dr": "MarketplacePDPForSaleComponent_page$normalization.graphql"
+                    },
+                    {
+                      "__dr": "MarketplacePDPForSaleComponent.react"
+                    }
+                  ]
+                ]
+              ],
+              [
+                "RelayPrefetchedStreamCache",
+                "next",
+                [],
+                [
+                  "adp_MarketplacePDPContainerQueryRelayPreloader_671a5c6e2a0e77f03719132",
+                  {
+                    "__bbox": {
+                      "complete": true,
+                      "result": {
+                        "data": {
+                          "viewer": {
+                            "marketplace_product_details_page": {
+                              "__typename": "MarketplaceForSaleItemProductDetailsPage",
+                              "product_details_type": "FOR_SALE_ITEM",
+                              "__isMarketplaceProductDetailsPage": "MarketplaceForSaleItemProductDetailsPage",
+                              "marketplace_listing_renderable_target": {
+                                "seo_virtual_category": {
+                                  "taxonomy_path": [
+                                    {
+                                      "seo_info": {
+                                        "seo_url": "home",
+                                        "id": "3035158069888757"
+                                      },
+                                      "id": "753380185098614"
+                                    },
+                                    {
+                                      "seo_info": {
+                                        "seo_url": "home-lighting",
+                                        "id": "2758271644288493"
+                                      },
+                                      "id": "2290334857930322"
+                                    },
+                                    {
+                                      "seo_info": {
+                                        "seo_url": "lamps",
+                                        "id": "2746005022182253"
+                                      },
+                                      "id": "654693445278797"
+                                    },
+                                    {
+                                      "seo_info": {
+                                        "seo_url": "table-lamps",
+                                        "id": "2697563656996164"
+                                      },
+                                      "id": "558723028063393"
+                                    }
+                                  ],
+                                  "id": "558723028063393"
+                                },
+                                "location": {
+                                  "latitude": 49.232482910156,
+                                  "longitude": -123.07434082031
+                                },
+                                "is_shipping_offered": false,
+                                "__isMarketplaceListingWithSweepstake": "GroupCommerceProductItem",
+                                "sweepstake_enabled": false,
+                                "__typename": "GroupCommerceProductItem",
+                                "id": "1117091756816407",
+                                "__isMarketplaceListingWithVariants": "GroupCommerceProductItem",
+                                "base_marketplace_listing_title": "Lava lamp Table lamp",
+                                "marketplace_listing_title": "Lava lamp Table lamp",
+                                "__isMarketplaceListingRenderable": "GroupCommerceProductItem",
+                                "__isMarketplaceListingWithPersonalization": "GroupCommerceProductItem",
+                                "personalization_info": null
+                              },
+                              "target": {
+                                "__typename": "GroupCommerceProductItem",
+                                "__isMarketplaceListingRenderable": "GroupCommerceProductItem",
+                                "primary_mp_ent": {
+                                  "__typename": "GroupCommerceProductItem",
+                                  "id": "1117091756816407"
+                                },
+                                "__isMarketplaceListingWithDeliveryOptions": "GroupCommerceProductItem",
+                                "shipping_profile": null,
+                                "is_buy_now_enabled": false,
+                                "is_shipping_offered": false,
+                                "should_hide_pdp_shipping_content": true,
+                                "__isMarketplaceListingWithDiscounts": "GroupCommerceProductItem",
+                                "has_free_shipping_discounts": false,
+                                "formatted_shipping_price": null,
+                                "delivery_data": {
+                                  "carrier": null,
+                                  "delivery_address": null
+                                },
+                                "formatted_shipping_price_list_price_only": [],
+                                "estimated_delivery_window": null,
+                                "id": "1117091756816407",
+                                "if_viewer_is_buyer": {
+                                  "__typename": "GroupCommerceProductItem",
+                                  "__isMarketplaceListingWithPDPRewrite": "GroupCommerceProductItem",
+                                  "marketplace_pdp_integrity_banner_strings_rewrite": null,
+                                  "id": "1117091756816407"
+                                },
+                                "story": {
+                                  "translation_available_for_viewer": false,
+                                  "translatability_for_viewer": {
+                                    "source_dialect_name": "English"
+                                  },
+                                  "translated_message_for_viewer": null,
+                                  "id": "UzpfSTEwMDAwNDUzNTc0NjU1OTpWSzoxMTE3MDkxNzU2ODE2NDA3",
+                                  "actors": [
+                                    {
+                                      "__typename": "User",
+                                      "name": "Maan S. Abbas",
+                                      "id": "100004535746559"
+                                    }
+                                  ],
+                                  "url": "https:\/\/www.facebook.com\/marketplace\/item\/1117091756816407\/",
+                                  "tracking": "{\"story_location\":26,\"story_attachment_style\":\"native_templates\",\"ent_attachement_type\":\"LegacyCommerceAttachment\",\"actrs\":\"100004535746559\"}",
+                                  "post_id": "8521276447907992",
+                                  "save_info": {
+                                    "viewer_save_state": "NOT_SAVED"
+                                  }
+                                },
+                                "redacted_description": {
+                                  "text": "Comfortable eye table lamp with red and purple light that makes you feel relaxed. Very beautiful and modern design bubbles slowly rolling in a beautiful rhythmic way. Come and pick it up. Don't forget to take a look at our other products."
+                                },
+                                "creation_time": 1729146379,
+                                "location_text": {
+                                  "text": "Vancouver, BC"
+                                },
+                                "location_vanity_or_id": "vancouver",
+                                "is_viewer_seller": false,
+                                "listing_inventory_type": "SINGLE_QUANTITY",
+                                "delivery_types": [
+                                  "IN_PERSON"
+                                ],
+                                "listing_price": {
+                                  "formatted_amount_zeros_stripped": "CA$25",
+                                  "amount_with_offset_in_currency": "1800",
+                                  "amount": "25.00",
+                                  "currency": "CAD"
+                                },
+                                "strikethrough_price": null,
+                                "__isMarketplaceListingWithVariants": "GroupCommerceProductItem",
+                                "base_marketplace_listing_title": "Lava lamp Table lamp",
+                                "marketplace_listing_title": "Lava lamp Table lamp",
+                                "inventory_count": null,
+                                "is_live": true,
+                                "is_pending": false,
+                                "is_sold": false,
+                                "shipping_label_rate_type": null,
+                                "formattedShippingPriceListWithZipcode": [],
+                                "__isMarketplaceListingWithComparablePrice": "GroupCommerceProductItem",
+                                "comparable_price": null,
+                                "comparable_price_type": null,
+                                "discounts_text": null,
+                                "marketplaceListingRenderableIfLoggedOut": null,
+                                "attribute_data": [
+                                  {
+                                    "attribute_name": "Condition",
+                                    "value": "used_like_new",
+                                    "label": "Used - like new"
+                                  },
+                                  {
+                                    "attribute_name": "Band Color",
+                                    "value": "Purple and red",
+                                    "label": "Purple and red"
+                                  }
+                                ],
+                                "legal_reporting_cta_type": null,
+                                "legal_reporting_uri": null,
+                                "__isMarketplaceMessageable": "GroupCommerceProductItem",
+                                "messaging_enabled": true,
+                                "__isMarketplaceListingWithIntegrityStatus": "GroupCommerceProductItem",
+                                "listing_is_rejected": false,
+                                "product_item": {
+                                  "id": "8521276447907992",
+                                  "boosted_marketplace_listing": null,
+                                  "promoted_listing": null
+                                },
+                                "seller_message_thread": null,
+                                "is_checkout_enabled": false,
+                                "is_draft": false,
+                                "can_seller_edit": false,
+                                "origin_group": null,
+                                "default_variant_listing": null,
+                                "is_hidden": false,
+                                "marketplace_listing_seller": {
+                                  "__typename": "User",
+                                  "id": "100004535746559",
+                                  "user_id": "100004535746559",
+                                  "__isActor": "User",
+                                  "marketplace_ratings_stats_by_role": {
+                                    "seller_ratings_are_private": true,
+                                    "seller_stats": {
+                                      "five_star_ratings_average": 5,
+                                      "five_star_total_rating_count_by_role": 3
+                                    }
+                                  },
+                                  "__isProfile": "User",
+                                  "marketplace_user_profile": {
+                                    "c2c_orders_shipped": null,
+                                    "id": "1250405185120661"
+                                  },
+                                  "name": "Maan S. Abbas",
+                                  "profile_picture": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s160x160&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYC82W9bFz-w6OLN9enW3MBm1stHxaR_dv2MmunIY073Uw&oe=6720429B"
+                                  },
+                                  "profile_picture_160": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_p480x480&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDg2z4VlVBFJ-8SVR9RJAElV_10MvFbX3Pi0D5LUPAoAg&oe=6720429B"
+                                  },
+                                  "profile_picture_112": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s480x480&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDldRN9NO-hjLnqNcTYVoG-2E8dhSRsntPbKwsgG9ehLw&oe=6720429B"
+                                  },
+                                  "profile_picture_64": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s200x200&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDjLuEdlh8nlIo9aN980UXXZFq9p-J7yE90n57xeFvJrw&oe=6720429B"
+                                  },
+                                  "profile_picture_60": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s200x200&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDjLuEdlh8nlIo9aN980UXXZFq9p-J7yE90n57xeFvJrw&oe=6720429B"
+                                  },
+                                  "profile_picture_50": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s160x160&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYC82W9bFz-w6OLN9enW3MBm1stHxaR_dv2MmunIY073Uw&oe=6720429B"
+                                  },
+                                  "__isActorWithCustomizableCommerceProfile": "User",
+                                  "commerce_profile_picture_with_fallback_160": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_p480x480&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDg2z4VlVBFJ-8SVR9RJAElV_10MvFbX3Pi0D5LUPAoAg&oe=6720429B"
+                                  },
+                                  "commerce_profile_picture_with_fallback_112": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s480x480&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDldRN9NO-hjLnqNcTYVoG-2E8dhSRsntPbKwsgG9ehLw&oe=6720429B"
+                                  },
+                                  "commerce_profile_picture_with_fallback_64": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s200x200&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDjLuEdlh8nlIo9aN980UXXZFq9p-J7yE90n57xeFvJrw&oe=6720429B"
+                                  },
+                                  "commerce_profile_picture_with_fallback_60": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s200x200&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDjLuEdlh8nlIo9aN980UXXZFq9p-J7yE90n57xeFvJrw&oe=6720429B"
+                                  },
+                                  "commerce_profile_picture_with_fallback_50": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t39.30808-1\/358069570_2507519966075837_2778544718096182826_n.jpg?stp=dst-jpg_s160x160&_nc_cat=108&ccb=1-7&_nc_sid=0ecb9b&_nc_ohc=9GagtFn9bagQ7kNvgFi9t9m&_nc_zt=24&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYC82W9bFz-w6OLN9enW3MBm1stHxaR_dv2MmunIY073Uw&oe=6720429B"
+                                  },
+                                  "join_time": 1401348320,
+                                  "marketplace_should_display_verified_badge": false
+                                },
+                                "reportable_ent_id": "8521276447907992",
+                                "__isMarketplaceListingHideableFromFriends": "GroupCommerceProductItem",
+                                "hidden_from_friends": "VISIBLE_TO_EVERYONE",
+                                "can_share": true,
+                                "share_uri": "https:\/\/www.facebook.com\/marketplace\/item\/1117091756816407\/",
+                                "can_seller_change_availability": false,
+                                "is_on_marketplace": true,
+                                "messagingEnabled": true,
+                                "__isMarketplaceListingWithChildListings": "GroupCommerceProductItem",
+                                "has_children": false,
+                                "cross_post_info": {
+                                  "all_listings": [
+                                    {
+                                      "__typename": "GroupCommerceProductItem",
+                                      "is_on_marketplace": true,
+                                      "id": "1117091756816407"
+                                    }
+                                  ]
+                                },
+                                "active_order": null,
+                                "rebuy_order_receipt": null,
+                                "c2c_shipping_eligible": false,
+                                "__isMarketplaceListingWithCrossposting": "GroupCommerceProductItem",
+                                "cross_post_sync_metadata": null,
+                                "most_recent_active_order_as_buyer": null,
+                                "order_summaries": [],
+                                "primary_listing_photo": {
+                                  "__typename": "ProductImage",
+                                  "listing_image": {
+                                    "uri": "https:\/\/scontent.fyvr3-1.fna.fbcdn.net\/v\/t45.5328-4\/463443763_1647569862460238_8436839829643102414_n.jpg?stp=c0.22.133.133a_dst-jpg_p133x133&_nc_cat=102&ccb=1-7&_nc_sid=247b10&_nc_ohc=lDDnml_CaI4Q7kNvgHjQpBm&_nc_zt=23&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AlUU0qw1SypdWF4yeOTy6jo&oh=00_AYDFnr9rOcF8E9Px_ISPjHqM-WVcTQO8DD9dyqUXVNeEEg&oe=672039C8"
+                                  },
+                                  "id": "1647569859126905"
+                                },
+                                "is_seller_business_onboarded": false,
+                                "is_purchase_protected": false,
+                                "__isMarketplaceListingWithCheckoutOffers": "GroupCommerceProductItem",
+                                "can_buyer_make_checkout_offer": false,
+                                "is_cart_enabled": false,
+                                "seller_cms": null,
+                                "__isMarketplaceListingWithVacationMode": "GroupCommerceProductItem",
+                                "vacation_mode": null,
+                                "__isGroupCommerceProductItemIsDeprecated": "GroupCommerceProductItem",
+                                "all_message_threads": {
+                                  "is_empty": true
+                                },
+                                "marketplace_listing_category_id": "1569171756675761",
+                                "should_show_txn_survey_on_mas": false,
+                                "incentive_campaign_for_free_shipping": null,
+                                "first_message_suggested_value": "Hello, is this still available?",
+                                "__isMarketplaceListingWithSweepstake": "GroupCommerceProductItem",
+                                "sweepstake_enabled": false,
+                                "sweepstake_status": "INVALID",
+                                "sweepstake_content": null,
+                                "variant_group": null,
+                                "item_location": {
+                                  "latitude": 49.232482910156,
+                                  "longitude": -123.07434082031
+                                },
+                                "is_multi_variant_listing": false,
+                                "marketplace_hashtags": {
+                                  "nodes": []
+                                },
+                                "location": {
+                                  "latitude": 49.232482910156,
+                                  "longitude": -123.07434082031
+                                },
+                                "marketplace_bump_info": null,
+                                "__isMarketplaceListingSellerNotices": "GroupCommerceProductItem",
+                                "fi_enhanced_appeal_data": {
+                                  "use_fi_appeals": true,
+                                  "enforcement_instance_id": null
+                                },
+                                "listing_seller_notices": [],
+                                "__isMarketplaceListingWithEmailCommunication": "GroupCommerceProductItem",
+                                "is_email_communication_enabled": false,
+                                "shipping_offered": false,
+                                "legal_disclosure_impressum_url": null,
+                                "__isMarketplaceVehicleListing": "GroupCommerceProductItem",
+                                "vehicle_seller_type": null,
+                                "__isMarketplaceListingWithBadges": "GroupCommerceProductItem",
+                                "commerce_badges_info": {
+                                  "source_summary": null,
+                                  "badges": []
+                                },
+                                "if_should_show_recommended_listings": null,
+                                "if_should_show_complementary_listings": null
+                              },
+                              "ufi_renderer": null,
+                              "viewer": {
+                                "marketplace_actor_with_integrity_status": {
+                                  "marketplace_user_in_dma": false,
+                                  "can_crosspost_to_mp": true
+                                },
+                                "bsg_suppression_holdout_marketplace_cvds": {
+                                  "if_viewer_can_xpost_from_mp_to_bsg": {
+                                    "__typename": "XFBBSGSuppressionHoldoutMarketplaceCVDs"
+                                  },
+                                  "if_viewer_can_xpost_from_bsg_to_mp": {
+                                    "__typename": "XFBBSGSuppressionHoldoutMarketplaceCVDs"
+                                  }
+                                },
+                                "marketplace_nux_states": {
+                                  "mbl_www_selling_view_nux_state": "NOT_VISIBLE",
+                                  "mbl_www_post_publish_nux_state": "NOT_VISIBLE"
+                                },
+                                "marketplace_settings": {
+                                  "custom_initial_message": null,
+                                  "current_marketplace": {
+                                    "__typename": "Marketplace",
+                                    "id": "1759579680997030"
+                                  },
+                                  "search_radius": 10,
+                                  "buy_location": {
+                                    "latitude": 49.2403,
+                                    "longitude": -123.04257
+                                  }
+                                },
+                                "basic_marketplace_standard_user_outside_dma_jurisdiction": true
+                              },
+                              "__module_operation_MarketplacePDP_page": {
+                                "__dr": "MarketplacePDPForSaleComponent_page$normalization.graphql"
+                              },
+                              "__module_component_MarketplacePDP_page": {
+                                "__dr": "MarketplacePDPForSaleComponent.react"
+                              },
+                              "id": "66:1117091756816407:IN_MEMORY_MARKETPLACE_PRODUCT_DETAILS_PAGE:MarketplaceC2CProductDetailsPage"
+                            }
+                          }
+                        },
+                        "extensions": {
+                          "is_final": true
+                        }
+                      },
+                      "sequence_number": 0
+                    }
+                  }
+                ]
+              ],
+              [
+                "CometMapInfoButton.react"
+              ],
+              [
+                "MarketplacePDPRightColumnAds.react"
+              ],
+              [
+                "CometMarketplaceAdCard.react"
+              ],
+              [
+                "Bootloader",
+                "markComponentsAsImmediate",
+                [],
+                [
+                  [
+                    "VideoPlayerHTML5ApiCea608State",
+                    "VideoPlayerHTML5ApiWebVttState",
+                    "MarketplacePDPC2CShippingInfoPostalCodeCalculator.react",
+                    "CometBasicMarketplaceMoreItemsMenu.react",
+                    "CometUnifiedShareSheetDialog.react",
+                    "EntityQualityComplianceEnforcementDetailsDialog.react",
+                    "GroupsCometAnswerAgentEducationModal.react",
+                    "CometMarketplaceMoreItemsMenu.react",
+                    "MarketplacePurchaseProtectionDialog.react",
+                    "CometMarketplaceLocationMapDialog.react",
+                    "CometVerificationHubDialog.react",
+                    "CometMarketplaceItemRejectionAppealDialog.react",
+                    "MarketplacePDPC2CShippedMakeOfferDialog.react",
+                    "MarketplacePDPC2CShippedMakeOfferBuyerHowItWorksDialog.react",
+                    "CometMarketplaceSellerListingTransactionReportingDialog.react",
+                    "MarketplaceMessageSellerDialog.react",
+                    "CometHovercardQueryRenderer.react",
+                    "FDSProfileVideoSection.react",
+                    "MarketplaceInboxSingleThreadDialog.react",
+                    "GroupsCometGroupRuleEntityDialog.react",
+                    "CometMapInfoMenu.react",
+                    "CometProfileVerificationBadgePopover.react",
+                    "CometMarketplaceLegalDisclosuresMenu.react"
+                  ]
+                ]
+              ],
+              [
+                "RequireDeferredReference",
+                "unblock",
+                [],
+                [
+                  [
+                    "MarketplacePDPForSaleComponent_page$normalization.graphql",
+                    "MarketplacePDPForSaleComponent.react",
+                    "CometTooltipDeferredImpl.react",
+                    "CometExceptionDialog.react",
+                    "VideoPlayerSpinner.react",
+                    "VideoPlayerCaptionsArea.react",
+                    "CometMapInfoButton.react",
+                    "MarketplacePDPRightColumnAds.react",
+                    "UnifiedShareSheetComposerSection.react",
+                    "UnifiedShareSheetMessengerSection.react",
+                    "UnifiedShareSheetSharingOptionsSection.react",
+                    "CometMarketplaceAdCard.react",
+                    "UnifiedShareSheetFriendsFeedComposerSection.react",
+                    "CometComposerClientErrorMessage.react"
+                  ],
+                  "sd"
+                ]
+              ],
+              [
+                "RequireDeferredReference",
+                "unblock",
+                [],
+                [
+                  [
+                    "MarketplacePDPForSaleComponent_page$normalization.graphql",
+                    "MarketplacePDPForSaleComponent.react",
+                    "CometTooltipDeferredImpl.react",
+                    "CometExceptionDialog.react",
+                    "VideoPlayerSpinner.react",
+                    "VideoPlayerCaptionsArea.react",
+                    "CometMapInfoButton.react",
+                    "MarketplacePDPRightColumnAds.react",
+                    "CometMarketplaceAdCard.react"
+                  ],
+                  "css"
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "__bbox": null
+        },
+        {
+          "__bbox": null
+        }
+      ]
+    ]
+  ]
+}
