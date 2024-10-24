@@ -3,7 +3,12 @@ import { discordSend } from "discord/util.js";
 import { Listing, invalidateListing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
 import fb from "platforms/fb/index.js";
-import { fbClick, fbType, isOnHomepage } from "platforms/fb/util.js";
+import {
+  fbClick,
+  fbType,
+  isOnHomepage,
+  setMarketplaceLocation,
+} from "platforms/fb/util.js";
 import { By, IWebDriverCookie, WebDriver } from "selenium-webdriver";
 import { getUserConfig } from "util/config.js";
 import { Circle, Coordinates, decodeMapDevelopersURL } from "util/geo.js";
@@ -368,52 +373,67 @@ export const main = async (driver: WebDriver) => {
       activity?.update(i);
 
       try {
-        await tryNTimes(3, async () => {
-          const url = await visitMarketplace(driver, r);
-
-          await withDOMChangesBlocked(driver, async () => {
-            await elementShouldExist("xpath", fbListingXpath, driver);
-
-            verboseLog(
-              "Ensuring facebook didn't override the specified radius..."
-            );
-            await driver
-              .findElement(By.xpath(`//span[contains(., 'Within')]`))
-              .then((el) => el.getText())
-              .then((text) => text.match(/(\d+\.?\d*)\s?(kilomet|km)/)?.[1])
-              .then((_r) => {
-                if (_r === undefined) {
-                  throw new Error("Could not validate radius in page");
-                }
-                const actualRadius = parseFloat(_r);
-                const minAcceptable = r.radius * 0.9;
-                const maxAcceptable = r.radius * 1.1;
-                if (
-                  actualRadius < minAcceptable ||
-                  actualRadius > maxAcceptable
-                ) {
-                  log(
-                    `Facebook loaded results for ${actualRadius} km radius instead of ${r.radius} km radius.`
-                  );
-                  throw new MarketplaceRadiusError(url);
-                } else {
-                  log(
-                    `Facebook successfully loaded results for ${actualRadius} km radius.`
-                  );
-                }
-              });
-
-            debugLog("Parsing listings...");
-            await getListings(driver).then((arr) => {
-              verboseLog(
-                `found the following listings in ${rLabel}: ${arr
-                  ?.map((l) => l.id)
-                  .join(", ")}`
+        await tryNTimes(
+          3,
+          async (i) => {
+            const url = await visitMarketplace(driver, r);
+            let closestRadius = undefined;
+            if (i > 0) {
+              log("Trying to set the correct radius manually...");
+              closestRadius = await setMarketplaceLocation(
+                driver,
+                "V5R",
+                r.radius
               );
-              listings.push(...arr);
+            }
+            let radius = closestRadius ?? r.radius;
+
+            await withDOMChangesBlocked(driver, async () => {
+              await elementShouldExist("xpath", fbListingXpath, driver);
+
+              verboseLog(
+                "Ensuring facebook didn't override the specified radius..."
+              );
+              await driver
+                .findElement(By.xpath(`//span[contains(., 'Within')]`))
+                .then((el) => el.getText())
+                .then((text) => text.match(/(\d+\.?\d*)\s?(kilomet|km)/)?.[1])
+                .then(async (_r) => {
+                  if (_r === undefined) {
+                    throw new Error("Could not validate radius in page");
+                  }
+                  const actualRadius = parseFloat(_r);
+                  const minAcceptable = radius * 0.9;
+                  const maxAcceptable = radius * 1.1;
+                  if (
+                    actualRadius < minAcceptable ||
+                    actualRadius > maxAcceptable
+                  ) {
+                    log(
+                      `Facebook loaded results for ${actualRadius} km radius instead of ${radius} km radius.`
+                    );
+
+                    throw new MarketplaceRadiusError(url);
+                  } else {
+                    log(
+                      `Facebook successfully loaded results for ${actualRadius} km radius.`
+                    );
+                  }
+                });
+
+              debugLog("Parsing listings...");
+              await getListings(driver).then((arr) => {
+                verboseLog(
+                  `found the following listings in ${rLabel}: ${arr
+                    ?.map((l) => l.id)
+                    .join(", ")}`
+                );
+                listings.push(...arr);
+              });
             });
-          });
-        });
+          },
+          true
+        );
         log(
           `found ${
             listings.length - listingCount

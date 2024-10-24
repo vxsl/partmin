@@ -25,7 +25,11 @@ export const buildDriver = async () => {
   log("Browser installed");
 
   const args: string[] = [];
-  args.push("--disable-gpu", "--disable-software-rasterizer");
+  args.push(
+    "--disable-gpu",
+    "--disable-software-rasterizer",
+    "--disable-notifications"
+  );
   if (devOptions?.noSandbox) {
     args.push("--no-sandbox");
   }

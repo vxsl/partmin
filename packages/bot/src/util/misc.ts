@@ -25,7 +25,8 @@ export const waitSeconds = async (s: number) =>
 
 export const tryNTimes = async <T>(
   n: number,
-  fn: () => Promise<T>
+  fn: (i: number) => Promise<T>,
+  doBreak?: boolean
 ): Promise<T> => {
   let attempts = 0;
   let err: unknown;
@@ -34,7 +35,7 @@ export const tryNTimes = async <T>(
     await waitSeconds(2);
 
     try {
-      const res = await fn();
+      const res = await fn(attempts - 1);
       if (attempts > 1) {
         debugLog(`Function completed successfully on try ${attempts}/${n}.`);
       }

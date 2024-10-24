@@ -9,7 +9,7 @@ import {
   until,
 } from "selenium-webdriver";
 import { debugLog, verboseLog } from "util/log.js";
-import { tryNTimes } from "util/misc.js";
+import { tryNTimes, waitSeconds } from "util/misc.js";
 
 export const clearBrowsingData = async (driver: WebDriver) => {
   // if (!(await driver.getCurrentUrl()).startsWith("data")) {
@@ -75,12 +75,14 @@ export const elementShouldBeInteractable = async (
   await driver.wait(until.elementIsEnabled(el), 10 * 1000);
 };
 
-export const click = async (element: WebElementPromise) =>
-  await new Promise((resolve) => {
+export const click = async (element: WebElementPromise) => {
+  await waitSeconds(Math.random() * 1 + 1);
+  return await new Promise((resolve, reject) => {
     setTimeout(() => {
-      return element.click().then(resolve);
+      return element.click().then(resolve).catch(reject);
     }, Math.random() * 200);
   });
+};
 
 export const elementShouldExist = async (
   method: "xpath" | "css",
