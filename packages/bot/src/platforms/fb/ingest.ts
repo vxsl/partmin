@@ -83,7 +83,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 
   let infos: any[] = [];
 
-  tryNTimes(3, async () => {
+  await tryNTimes(3, async () => {
     await fbGet(driver, url, { incognito: true });
 
     infos = await driver
@@ -153,6 +153,7 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
       }
       l.details.date = timestamp;
       const date = new Date(timestamp * 1000);
+      debugLog(`This listing was created at ${date}`);
       if (Date.now() - date.getTime() > 3600000) {
         invalidateListing(l, "stale", "Listing is older than an hour");
       }
@@ -212,7 +213,7 @@ export const visitMarketplace = async (driver: WebDriver, radius: Circle) => {
 
     // results configuration:
     // sortBy: "creation_time_descend",
-    // exact: true,
+    exact: true,
 
     // // search parameters:
     // ...(config.search.params.exclude?.shared && {

@@ -162,10 +162,15 @@ const imageCycle = (l: Listing) =>
     },
   });
 
-const getListingButtons = (l: Listing) => ({
-  ...(l.imgURLs.length > 1 && { imageCycle: imageCycle(l) }),
-  ...(l.details.longDescription && { descriptionToggle: descriptionToggle(l) }),
-});
+const getListingButtons = (l: Listing) =>
+  !l.imgURLs.length && !l.details.longDescription
+    ? undefined
+    : {
+        ...(l.imgURLs.length > 1 && { imageCycle: imageCycle(l) }),
+        ...(l.details.longDescription && {
+          descriptionToggle: descriptionToggle(l),
+        }),
+      };
 
 export const sendListing = async (
   l: Listing,

@@ -74,7 +74,7 @@ export const processListings = async (unseenListings: Listing[]) => {
 };
 
 export const preprocessListings = (listings: Listing[]) =>
-  asyncFilter(listings, async (l) => {
+  asyncFilter(listings, async (l, i) => {
     if (!l.details.coords) return true;
     const v = await isWithinRadii(l.details.coords);
     if (!v) {

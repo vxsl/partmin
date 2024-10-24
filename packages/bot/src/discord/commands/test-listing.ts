@@ -5,20 +5,14 @@ export const testListing = (commandInteraction: CommandInteraction) =>
   sendListing(
     {
       platform: "fb",
-      id: "895554022153211",
+      id: "1059425985473848",
       details: {
-        title: "43 inch Panasonic TV",
-        price: 0,
-        date: 1729712125,
-        longDescription: "10 years old, works well, can not get Netflix ",
-        coords: {
-          lat: 49.270935058594,
-          lon: -123.11828613281,
-        },
+        title: "Shoe rack",
+        price: 25,
       },
-      url: "https://fb.com/marketplace/item/895554022153211",
+      url: "https://fb.com/marketplace/item/1059425985473848",
       imgURLs: [
-        "https://scontent.fyvr3-1.fna.fbcdn.net/v/t45.5328-4/464069723_1545944502961164_7634367415219989251_n.jpg?stp=dst-jpg_s960x960&_nc_cat=111&ccb=1-7&_nc_sid=247b10&_nc_ohc=JTK95Hm8HncQ7kNvgE-nudD&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=AKmU-nd0ERDogajI6CfSQBY&oh=00_AYAE4tCmcJ5NxZeVEO4RaMOknUJS1xNxLvbjAh_BGevt0w&oe=671F1B7D",
+        "https://scontent.fyvr3-1.fna.fbcdn.net/v/t45.5328-4/464535452_2895772200572596_5555876475604276562_n.jpg?stp=c0.43.261.261a_dst-jpg_p261x260&_nc_cat=106&ccb=1-7&_nc_sid=247b10&_nc_ohc=9hDSKtIQVzIQ7kNvgFEShO-&_nc_zt=23&_nc_ht=scontent.fyvr3-1.fna&_nc_gid=Ax2zlJtEgmKGMAn8AVxCWD7&oh=00_AYCgW-WW0VX-o2cURrQ4UHs77AHMoFhkmK0c8Evil2Q3dA&oe=67203D2F",
       ],
       videoURLs: [],
     },
