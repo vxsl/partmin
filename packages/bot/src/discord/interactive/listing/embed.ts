@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 import { ColorResolvable, EmbedBuilder } from "discord.js";
 
-import { Listing, getCommuteOrigin } from "listing.js";
+import { Listing, ensureLocationLink, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
 import { getUserConfig } from "util/config.js";
 import {
@@ -22,6 +22,7 @@ export const colors = {
 dayjs.extend(relativeTime);
 
 const listingEmbed = async (l: Listing) => {
+  await ensureLocationLink(l);
   const location =
     l.computed?.locationLinkText && l.computed?.locationLinkURL
       ? discordFormat(
@@ -58,19 +59,24 @@ const listingEmbed = async (l: Listing) => {
   ).then((arr) => arr.join("\n\n") ?? "");
 
   let descriptionHeader = [
-    `💸${
-      l.details.price
-        ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
-        : undefined
-    }`,
+    discordFormat(
+      `${
+        l.details.price === undefined
+          ? undefined
+          : l.details.price
+          ? `💸 $${parseFloat(`${l.details.price}`).toFixed(2)}`
+          : `Free`
+      }`,
+      { bold: true }
+    ),
     `${dayjs.unix(l.details.date).fromNow()}`,
   ]
     .filter(notUndefined)
-    .join("‎    ‎    ‎      ‎ ");
+    .join(" - ");
 
   let locationSummary = [commutes, location ? `📍${location}` : undefined]
     .filter(notUndefined)
-    .join("‎    ‎    ‎      ‎ ");
+    .join("‎    ‎");
 
   // console.log(JSON.stringify(descriptionHeader, null, 2));
 
@@ -103,7 +109,7 @@ const listingEmbed = async (l: Listing) => {
           .join("\n") ?? "",
       ]
         .filter(Boolean)
-        .join("\n\n")
+        .join("\n")
     )
     .setURL(l.url)
     .setImage(l.imgURLs.find((url) => url.startsWith("http")) ?? null)

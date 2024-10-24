@@ -207,37 +207,37 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
 
 export const visitMarketplace = async (driver: WebDriver, radius: Circle) => {
   const config = await getUserConfig();
-  // const vals = {
-  //   // // location:
-  //   // latitude: radius.lat,
-  //   // longitude: radius.lon,
-  //   // radius:
-  //   //   radius.radius +
-  //   //   Math.random() * 0.00000001 +
-  //   //   Math.random() * 0.0000001 +
-  //   //   Math.random() * 0.000001 +
-  //   //   Math.random() * 0.00001,
+  const vals = {
+    // location:
+    latitude: radius.lat,
+    longitude: radius.lon,
+    radius:
+      radius.radius +
+      Math.random() * 0.00000001 +
+      Math.random() * 0.0000001 +
+      Math.random() * 0.000001 +
+      Math.random() * 0.00001,
 
-  //   // results configuration:
-  //   // sortBy: "creation_time_descend",
-  //   // exact: true,
+    // results configuration:
+    // sortBy: "creation_time_descend",
+    // exact: true,
 
-  //   // // search parameters:
-  //   // ...(config.search.params.exclude?.shared && {
-  //   //   propertyType: ["house", "townhouse", "apartment-condo"].join(","),
-  //   // }),
-  //   minPrice: config.search.params.price.min,
-  //   maxPrice: config.search.params.price.max,
-  //   // minBedrooms: config.search.params.minBedrooms,
-  // };
+    // // search parameters:
+    // ...(config.search.params.exclude?.shared && {
+    //   propertyType: ["house", "townhouse", "apartment-condo"].join(","),
+    // }),
+    // ...(config.search.params.price.min && { minPrice: config.search.params.price.min}),
+    // maxPrice: config.search.params.price.max,
+    // minBedrooms: config.search.params.minBedrooms,
+  };
 
-  // const city = config.search.location.city;
-  let url = `https://facebook.com/marketplace`;
-  // for (const [k, v] of Object.entries(vals)) {
-  //   if (v !== undefined && v !== null) {
-  //     url += `${k}=${v}&`;
-  //   }
-  // }
+  const city = config.search.location.city;
+  let url = `https://facebook.com/marketplace/`;
+  for (const [k, v] of Object.entries(vals)) {
+    if (v !== undefined && v !== null) {
+      url += `${k}=${v}&`;
+    }
+  }
   debugLog(`url: ${url}`);
 
   await fbGet(driver, url);
@@ -295,7 +295,7 @@ export const getListings = async (driver: WebDriver): Promise<Listing[]> => {
       const tokens = text.split(SEP);
       const price =
         tokens[0] !== undefined
-          ? tokens[0] === "FREE"
+          ? tokens[0].includes("FREE")
             ? 0
             : parseInt(tokens[0].replace(/^[^\d]*|[\$,]/g, ""))
           : undefined;
@@ -381,34 +381,34 @@ export const main = async (driver: WebDriver) => {
           await withDOMChangesBlocked(driver, async () => {
             await elementShouldExist("xpath", fbListingXpath, driver);
 
-            // verboseLog(
-            //   "Ensuring facebook didn't override the specified radius..."
-            // );
-            // await driver
-            //   .findElement(By.xpath(`//span[contains(., 'Within')]`))
-            //   .then((el) => el.getText())
-            //   .then((text) => text.match(/(\d+\.?\d*)\s?(kilomet|km)/)?.[1]);
-            // .then((_r) => {
-            //   if (_r === undefined) {
-            //     throw new Error("Could not validate radius in page");
-            //   }
-            //   const actualRadius = parseFloat(_r);
-            //   const minAcceptable = r.radius * 0.9;
-            //   const maxAcceptable = r.radius * 1.1;
-            //   if (
-            //     actualRadius < minAcceptable ||
-            //     actualRadius > maxAcceptable
-            //   ) {
-            //     log(
-            //       `Facebook loaded results for ${actualRadius} km radius instead of ${r.radius} km radius.`
-            //     );
-            //     throw new MarketplaceRadiusError(url);
-            //   } else {
-            //     log(
-            //       `Facebook successfully loaded results for ${actualRadius} km radius.`
-            //     );
-            //   }
-            // });
+            verboseLog(
+              "Ensuring facebook didn't override the specified radius..."
+            );
+            await driver
+              .findElement(By.xpath(`//span[contains(., 'Within')]`))
+              .then((el) => el.getText())
+              .then((text) => text.match(/(\d+\.?\d*)\s?(kilomet|km)/)?.[1])
+              .then((_r) => {
+                if (_r === undefined) {
+                  throw new Error("Could not validate radius in page");
+                }
+                const actualRadius = parseFloat(_r);
+                const minAcceptable = r.radius * 0.9;
+                const maxAcceptable = r.radius * 1.1;
+                if (
+                  actualRadius < minAcceptable ||
+                  actualRadius > maxAcceptable
+                ) {
+                  log(
+                    `Facebook loaded results for ${actualRadius} km radius instead of ${r.radius} km radius.`
+                  );
+                  throw new MarketplaceRadiusError(url);
+                } else {
+                  log(
+                    `Facebook successfully loaded results for ${actualRadius} km radius.`
+                  );
+                }
+              });
 
             debugLog("Parsing listings...");
             await getListings(driver).then((arr) => {
