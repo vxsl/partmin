@@ -75,7 +75,7 @@ export const elementShouldBeInteractable = async (
   await driver.wait(until.elementIsEnabled(el), 10 * 1000);
 };
 
-export const click = async (element: WebElementPromise) => {
+export const click = async (element: WebElementPromise | WebElement) => {
   await waitSeconds(Math.random() * 1 + 1);
   return await new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -155,7 +155,7 @@ export const clickByXPath = async (
     () => (options?.parent ?? driver).findElement(By.xpath(xpath)),
     async (el) => {
       await elementShouldBeInteractable(driver, el, { xpath });
-      await el.click();
+      await click(el);
     }
   );
 };
@@ -174,7 +174,7 @@ export const clickAllByXPath = async (
       await elementShouldBeInteractable(driver, el, {
         name: `${i}th ${xpath}`,
       });
-      await el.click();
+      await click(el);
       await (options?.afterClick?.() ?? Promise.resolve());
     },
     options

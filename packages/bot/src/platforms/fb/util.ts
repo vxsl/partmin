@@ -1,4 +1,10 @@
-import { By, Key, WebDriver, WebElementPromise } from "selenium-webdriver";
+import {
+  By,
+  error,
+  Key,
+  WebDriver,
+  WebElementPromise,
+} from "selenium-webdriver";
 import { log } from "util/log.js";
 import { waitSeconds as seconds, waitSeconds } from "util/misc.js";
 import {
@@ -30,32 +36,45 @@ export const marketplaceReady = async (driver: WebDriver) =>
     .findElements(By.xpath(MP_ITEM_XPATH))
     .then((els) => els.length > 0);
 
-export const isBlocked = async (driver: WebDriver) =>
-  await driver
-    // .findElements(By.xpath(`//span[(text()="You're Temporarily Blocked")]`))
-    .findElements(
-      By.xpath(
-        `//div[contains(text(), "It looks like you were misusing this feature by going too fast. You’ve been temporarily blocked from using it.")]`
-      )
-    )
-    .then((els) => els.length > 0);
+// export const isBlocked = async (driver: WebDriver) =>
+//   await driver
+//     // .findElements(By.xpath(`//span[(text()="You're Temporarily Blocked")]`))
+//     .findElements(
+//       By.xpath(
+//         `//div[contains(text(), "It looks like you were misusing this feature by going too fast. You’ve been temporarily blocked from using it.")]`
+//       )
+//     )
+//     .then((els) => els.length > 0);
 
 export const dismissBlock = async (driver: WebDriver) => {
-  if (await isBlocked(driver)) {
-    await seconds(Math.random() * 1 + 1);
-    await click(
-      driver.findElement(By.css('div[aria-label="OK"][role="button"]'))
-    );
-    await seconds(Math.random() * 2 + 3);
-  }
+  // if (await isBlocked(driver)) {
+  // await seconds(Math.random() * 1 + 1);
+  // await click(
+  //   driver.findElement(By.css('div[aria-label="OK"][role="button"]'))
+  // );
+  // await
+  await clickByXPath(
+    driver,
+    `//div[@role="dialog"]//*[@aria-label="Close" or @aria-label="OK"]`
+  );
+  // await seconds(Math.random() * 2 + 3);
+  // }
 };
 
 export const fbClick = async (
   driver: WebDriver,
   element: WebElementPromise
 ) => {
-  await dismissBlock(driver);
-  await click(element);
+  // await dismissBlock(driver);
+
+  try {
+    await click(element);
+  } catch (e) {
+    if (e instanceof error.ElementClickInterceptedError) {
+      await dismissBlock(driver);
+      await click(element);
+    }
+  }
 };
 
 export const fbType = async (
@@ -63,8 +82,14 @@ export const fbType = async (
   element: WebElementPromise,
   text: string
 ) => {
-  await dismissBlock(driver);
-  await type(element, text);
+  try {
+    await type(element, text);
+  } catch (e) {
+    if (e instanceof error.ElementClickInterceptedError) {
+      await dismissBlock(driver);
+      await type(element, text);
+    }
+  }
 };
 
 export const isOnHomepage = async (driver: WebDriver) =>
@@ -97,7 +122,11 @@ export const setMarketplaceLocation = async (
   // make sure the modal is open:
   await elementShouldExist(
     "xpath",
-    `//span[contains(text(), "Search by city, neighborhood or ZIP code.")]`,
+    // `//span[contains(text(), "Search by") and (contains(text(), "city") or contains(text(), "town")) and contains(text(), "neighborhood") and contains(text(), "ZIP code")]`,
+    `//span[contains(text(), "Search by") \
+    and (contains(text(), "city") or contains(text(), "town")) \
+    and (contains(text(), "ZIP code") or contains(text(), "postal code")) \
+    ]`,
     driver
   );
 
@@ -157,11 +186,7 @@ export const setMarketplaceLocation = async (
 
   await clickByXPath(
     driver,
-    `//div[@role="listbox"]//div[@role="option" and contains(., '${
-      closestRadius > 1
-        ? `${closestRadius} kilometers`
-        : `${closestRadius} kilometer`
-    }')]`
+    `//div[@role="listbox"]//div[@role="option" and contains(., '${closestRadius} kilomet')]`
   );
 
   await fbClick(driver, driver.findElement(By.xpath(`//span[text()="Apply"]`)));

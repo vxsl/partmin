@@ -159,8 +159,8 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
       l.details.date = timestamp;
       const date = new Date(timestamp * 1000);
       debugLog(`This listing was created at ${date}`);
-      if (Date.now() - date.getTime() > 3600000) {
-        invalidateListing(l, "stale", "Listing is older than an hour");
+      if (Date.now() - date.getTime() > 600000) {
+        invalidateListing(l, "stale", "Listing is older than 10 minutes");
       }
     } catch (e) {
       log(e);
@@ -230,7 +230,7 @@ export const visitMarketplace = async (driver: WebDriver, radius: Circle) => {
   };
 
   const city = config.search.location.city;
-  let url = `https://facebook.com/marketplace?`;
+  let url = `https://facebook.com/marketplace/${city}?`;
   for (const [k, v] of Object.entries(vals)) {
     if (v !== undefined && v !== null) {
       url += `${k}=${v}&`;
@@ -329,9 +329,6 @@ export const getListings = async (driver: WebDriver): Promise<Listing[]> => {
       );
 
       return res;
-    },
-    {
-      limit: 5,
     }
   ).then((arr) => arr.filter(notUndefined));
 };

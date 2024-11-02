@@ -396,6 +396,19 @@ export const fatalError = async (e: unknown) => {
         ],
       });
     }
+    //  if the driver has a  "WebDriverError: disconnected: not connected to DevTools,"  error, try to restart the bot:
+
+    // driver.onLogException((e) => {
+    //   if (
+    //     e.message.includes("disconnected: not connected to DevTools") ||
+    //     e.message.includes("disconnected: Unable to receive message from renderer")
+    //   ) {
+    //     log("Detected WebDriver error, restarting bot...");
+
+    //     shutdown();
+    //   }
+    // } );
+
     await retrieval(driver, [
       platforms.fb,
       //  platforms.kijiji

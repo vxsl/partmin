@@ -107,6 +107,12 @@ const persistent = {
     writeTransform: JSON.stringify,
     label: "all listings",
   }),
+  ignore: new PersistentDataDef<string[]>({
+    path: `ignore.json`,
+    readTransform: parseJSON,
+    writeTransform: JSON.stringify,
+    label: "ignored listings",
+  }),
 
   // ---------------------------------------
   // kijiji

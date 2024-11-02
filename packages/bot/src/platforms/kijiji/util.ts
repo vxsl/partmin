@@ -7,6 +7,7 @@ import { By, WebDriver, until } from "selenium-webdriver";
 import { debugLog } from "util/log.js";
 import { isPlainObject, waitSeconds } from "util/misc.js";
 import {
+  click,
   elementShouldBeInteractable,
   withElement,
   withoutImplicitWait,
@@ -20,7 +21,7 @@ export const kijijiGet = async (url: string, driver: WebDriver) => {
     try {
       await driver
         .wait(until.elementLocated(By.xpath(xpath)), 1000)
-        .then((el) => el.click())
+        .then((el) => click(el))
         .then(() => {
           debugLog("Dismissed kijiji cookie banner");
         });
@@ -43,7 +44,7 @@ export const ensureFilterIsOpen = async (id: string, driver: WebDriver) => {
       const expanded = await el.getAttribute("aria-expanded");
       if (!expanded) {
         debugLog(`Expanding ${id}`);
-        await el.click();
+        await click(el);
         await waitSeconds(1);
       }
     }
