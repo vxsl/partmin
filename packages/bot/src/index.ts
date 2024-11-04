@@ -369,6 +369,8 @@ const handleWebDriverError = async (e: unknown) => {
     // close the browser:
     await shutdownWebdriver();
     driver = await buildDriver();
+  } else {
+    throw e;
   }
   return driver;
 };
