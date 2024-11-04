@@ -26,7 +26,7 @@ export const waitSeconds = async (s: number) =>
 export const tryNTimes = async <T>(
   n: number,
   fn: (i: number) => Promise<T>,
-  doBreak?: boolean
+  catchFn?: (e: unknown) => Promise<void>
 ): Promise<T> => {
   let attempts = 0;
   let err: unknown;
@@ -44,6 +44,10 @@ export const tryNTimes = async <T>(
       err = e;
       debugLog(`Function errored on try ${attempts}/${n}:`);
       debugLog(err);
+      if (catchFn && attempts !== n) {
+        debugLog("Running catch function...");
+        await catchFn(e);
+      }
     }
   }
   log(`Failed to execute function after ${n} attempts:`);

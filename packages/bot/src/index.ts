@@ -29,7 +29,7 @@ import {
   processListings,
 } from "process/index.js";
 import psList from "ps-list";
-import { WebDriver } from "selenium-webdriver";
+import { error, WebDriver } from "selenium-webdriver";
 import { Platform, platforms } from "types/platform.js";
 import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
 import {
@@ -57,7 +57,8 @@ const logBreakIfConfigChanged = async (platform: string) => {
   return res;
 };
 
-const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
+const retrieval = async (_driver: WebDriver, platforms: Platform[]) => {
+  let driver = _driver;
   for (const {
     callbacks: { init },
     name: platform,
@@ -99,9 +100,19 @@ const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
       );
       let allListings: Listing[] | undefined;
       try {
-        await tryNTimes(2, async () => {
-          allListings = await callbacks.main(driver);
-        });
+        await tryNTimes(
+          2,
+          async () => {
+            allListings = await callbacks.main(driver);
+          },
+          async (e) => {
+            if (e instanceof error.WebDriverError) {
+              log(e);
+              log("Restarting the browser...");
+              driver = await buildDriver();
+            }
+          }
+        );
       } catch (e) {
         if (!shuttingDown) {
           discordWarning(`Error while visiting ${platform}:`, e);
