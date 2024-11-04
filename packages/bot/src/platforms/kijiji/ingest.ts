@@ -1,12 +1,13 @@
 import { setPresence, startActivity } from "discord/presence.js";
 import he from "he";
+import { requireDriver } from "index.js";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import persistent from "persistent.js";
 import { baseURL } from "platforms/kijiji/constants.js";
 import kijiji from "platforms/kijiji/index.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
-import { By, WebDriver, until } from "selenium-webdriver";
+import { By, until } from "selenium-webdriver";
 import { getUserConfig } from "util/config.js";
 import { getGoogleMapsLink, trimAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
@@ -23,8 +24,9 @@ const parser = new Parser({
   },
 });
 
-export const perListing = async (driver: WebDriver, l: Listing) => {
-  await kijijiGet(l.url, driver);
+export const perListing = async (l: Listing) => {
+  const driver = requireDriver();
+  await kijijiGet(l.url);
 
   debugLog("Retrieving listing data");
 
@@ -172,11 +174,12 @@ export const perListing = async (driver: WebDriver, l: Listing) => {
     .getAttribute("innerText");
 };
 
-export const onSearchParamsChanged = async (driver: WebDriver) => {
+export const onSearchParamsChanged = async () => {
+  const driver = requireDriver();
   log("Building new Kijiji RSS feed... (this may take a while)");
   await setPresence("🧰 building Kijiji RSS feed (this may take a while...)");
-  await kijijiGet(baseURL, driver);
-  await clickByXPath(driver, `//header[1]//*[text() = 'Canada']`);
+  await kijijiGet(baseURL);
+  await clickByXPath(`//header[1]//*[text() = 'Canada']`);
 
   const config = await getUserConfig();
 
@@ -193,17 +196,16 @@ export const onSearchParamsChanged = async (driver: WebDriver) => {
   );
   await waitSeconds(2); // TODO don't arbitrary wait.
   await clickByXPath(
-    driver,
     `//div[@aria-modal='true']//li[not(contains(text(), 'current'))]`
   );
-  await clickByXPath(driver, `//label[contains(text(), 'Search all of')]`);
+  await clickByXPath(`//label[contains(text(), 'Search all of')]`);
   await waitSeconds(1);
-  await clickByXPath(driver, `//button[@data-testid="set-location-button"]`);
+  await clickByXPath(`//button[@data-testid="set-location-button"]`);
 
   debugLog(`Waiting for URL to change`);
   await driver.wait(until.urlMatches(/^(?!.*canada).*$/));
 
-  await setFilters(driver);
+  await setFilters();
 
   log(`Kijiji results after applying filters: ${await driver.getCurrentUrl()}`);
   const rss = await driver

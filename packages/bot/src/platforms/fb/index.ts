@@ -1,6 +1,5 @@
 import { init, main, perListing } from "platforms/fb/ingest.js";
 import { Platform } from "types/platform.js";
-import { preprocessListings } from "../../process/index";
 
 const fb: Platform = {
   name: "Facebook Marketplace",

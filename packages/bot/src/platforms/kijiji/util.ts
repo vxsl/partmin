@@ -1,9 +1,10 @@
+import { requireDriver } from "index.js";
 import filterInteractions, {
   FilterDef,
   FilterInteractionsMap,
   doFilter,
 } from "platforms/kijiji/filter-interactions.js";
-import { By, WebDriver, until } from "selenium-webdriver";
+import { By, until } from "selenium-webdriver";
 import { debugLog } from "util/log.js";
 import { isPlainObject, waitSeconds } from "util/misc.js";
 import {
@@ -13,7 +14,8 @@ import {
   withoutImplicitWait,
 } from "util/selenium.js";
 
-export const kijijiGet = async (url: string, driver: WebDriver) => {
+export const kijijiGet = async (url: string) => {
+  const driver = requireDriver();
   await driver.get(url);
   const xpath = "//button[contains(@class, 'cookieBannerCloseButton')]";
 
@@ -32,14 +34,15 @@ export const kijijiGet = async (url: string, driver: WebDriver) => {
 export const getFilterXpath = (id: string) =>
   `//div[@id="accordion__panel-${id}"]`;
 
-export const ensureFilterIsOpen = async (id: string, driver: WebDriver) => {
+export const ensureFilterIsOpen = async (id: string) => {
+  const driver = requireDriver();
   const xpath = `${getFilterXpath(id)}/..`;
   debugLog(`Ensuring filter ${id} is open`);
   await withElement(
     () => driver.findElement(By.xpath(xpath)),
     async (el) => {
       debugLog(`Ensuring filter ${id} is interactable`);
-      await elementShouldBeInteractable(driver, el, { xpath });
+      await elementShouldBeInteractable(el, { xpath });
       debugLog(`Checking whether ${id} is already expanded`);
       const expanded = await el.getAttribute("aria-expanded");
       if (!expanded) {
@@ -51,7 +54,7 @@ export const ensureFilterIsOpen = async (id: string, driver: WebDriver) => {
   );
 };
 
-export const setFilters = async (driver: WebDriver) => {
+export const setFilters = async () => {
   const interactWithFilters = async (obj: {
     [k: string]: FilterDef<any> | Object;
   }) => {
@@ -59,7 +62,7 @@ export const setFilters = async (driver: WebDriver) => {
       if (v instanceof FilterDef) {
         debugLog(`Applying Kijiji filter ${k}`);
         await waitSeconds(1);
-        await doFilter(driver, v);
+        await doFilter(v);
       } else if (isPlainObject(v)) {
         await interactWithFilters(v as FilterInteractionsMap);
       }

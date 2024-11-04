@@ -1,10 +1,5 @@
-import {
-  By,
-  error,
-  Key,
-  WebDriver,
-  WebElementPromise,
-} from "selenium-webdriver";
+import { requireDriver } from "index.js";
+import { By, error, Key, WebElementPromise } from "selenium-webdriver";
 import { log } from "util/log.js";
 import { waitSeconds as seconds, waitSeconds } from "util/misc.js";
 import {
@@ -16,102 +11,55 @@ import {
 
 export const MP_ITEM_XPATH = `.//a[contains(@href,'/marketplace/item/')]`;
 
-export const visitFacebook = async (driver: WebDriver) => {
-  await driver.get("https://facebook.com");
-};
-
-export const login = async (driver: WebDriver) => {
-  const USER = process.env.FB_USER;
-  const PASS = process.env.FB_PASS;
-  if (!USER || !PASS) throw new Error("Missing FB_USER or FB_PASS env var");
-
-  await fbType(driver, driver.findElement(By.name("email")), USER);
-  await fbType(driver, driver.findElement(By.name("pass")), PASS);
-  await fbClick(driver, driver.findElement(By.name("login")));
-  await elementShouldExist("css", '[aria-label="Search Facebook"]', driver);
-};
-
-export const marketplaceReady = async (driver: WebDriver) =>
-  await driver
+export const marketplaceReady = () =>
+  requireDriver()
     .findElements(By.xpath(MP_ITEM_XPATH))
     .then((els) => els.length > 0);
 
-// export const isBlocked = async (driver: WebDriver) =>
-//   await driver
-//     // .findElements(By.xpath(`//span[(text()="You're Temporarily Blocked")]`))
-//     .findElements(
-//       By.xpath(
-//         `//div[contains(text(), "It looks like you were misusing this feature by going too fast. You’ve been temporarily blocked from using it.")]`
-//       )
-//     )
-//     .then((els) => els.length > 0);
-
-export const dismissBlock = async (driver: WebDriver) => {
-  // if (await isBlocked(driver)) {
-  // await seconds(Math.random() * 1 + 1);
-  // await click(
-  //   driver.findElement(By.css('div[aria-label="OK"][role="button"]'))
-  // );
-  // await
-  await clickByXPath(
-    driver,
+export const dismissBlock = () =>
+  clickByXPath(
     `//div[@role="dialog"]//*[@aria-label="Close" or @aria-label="OK"]`
   );
-  // await seconds(Math.random() * 2 + 3);
-  // }
-};
 
-export const fbClick = async (
-  driver: WebDriver,
-  element: WebElementPromise
-) => {
+export const fbClick = async (element: WebElementPromise) => {
   // await dismissBlock(driver);
 
   try {
     await click(element);
   } catch (e) {
     if (e instanceof error.ElementClickInterceptedError) {
-      await dismissBlock(driver);
+      await dismissBlock();
       await click(element);
     }
   }
 };
 
-export const fbType = async (
-  driver: WebDriver,
-  element: WebElementPromise,
-  text: string
-) => {
+export const fbType = async (element: WebElementPromise, text: string) => {
   try {
     await type(element, text);
   } catch (e) {
     if (e instanceof error.ElementClickInterceptedError) {
-      await dismissBlock(driver);
+      await dismissBlock();
       await type(element, text);
     }
   }
 };
 
-export const isOnHomepage = async (driver: WebDriver) =>
-  await driver
+export const isOnHomepage = async () =>
+  await requireDriver()
     .findElements(By.css('[aria-label="Search Facebook"]'))
     .then((els) => els.length > 0);
 
-export const setMarketplaceLocation = async (
-  driver: WebDriver,
-  fsa: string,
-  radius: number
-) => {
+export const setMarketplaceLocation = async (fsa: string, radius: number) => {
+  const driver = requireDriver();
   // open the modal:
   await elementShouldExist(
     "xpath",
-    `//span[(text()="Vancouver, British Columbia")]`,
+    `//span[(text()="Vancouver, British Columbia")]`
     // `[aria-label="Enter a city"]`,
-    driver
   );
   await seconds(Math.random() * 1 + 1);
   await fbClick(
-    driver,
     // driver.findElement(By.xpath(`//span[(text()="Within 1 kilometer")]`))
     driver.findElement(
       By.xpath(`//span[(text()="Vancouver, British Columbia")]`)
@@ -126,8 +74,7 @@ export const setMarketplaceLocation = async (
     `//span[contains(text(), "Search by") \
     and (contains(text(), "city") or contains(text(), "town")) \
     and (contains(text(), "ZIP code") or contains(text(), "postal code")) \
-    ]`,
-    driver
+    ]`
   );
 
   await seconds(Math.random() * 1 + 1);
@@ -135,7 +82,7 @@ export const setMarketplaceLocation = async (
   const locInput = driver.findElement(
     By.xpath(`//input[@aria-label="Location"]`)
   );
-  await fbClick(driver, locInput);
+  await fbClick(locInput);
 
   await seconds(Math.random() * 1 + 1);
 
@@ -144,15 +91,14 @@ export const setMarketplaceLocation = async (
 
   await seconds(Math.random() * 1 + 0.5);
 
-  await fbType(driver, locInput, fsa);
+  await fbType(locInput, fsa);
   await seconds(1);
 
   // driver.findElement(By.xpath(`//span[contains(text(), "Change location")]`));
 
   await elementShouldExist(
     "xpath",
-    `//span[contains(text(), "Canada ${fsa}")]`,
-    driver
+    `//span[contains(text(), "Canada ${fsa}")]`
   );
 
   await locInput.sendKeys(Key.DOWN);
@@ -160,7 +106,7 @@ export const setMarketplaceLocation = async (
 
   await seconds(Math.random() * 1 + 0.5);
 
-  await clickByXPath(driver, `//label[@aria-label="Radius"]`);
+  await clickByXPath(`//label[@aria-label="Radius"]`);
 
   // get all the radii from  the text contents of the elements in a role=listbox:
   const radiiEls = await driver.findElements(
@@ -185,11 +131,10 @@ export const setMarketplaceLocation = async (
   // await driver.get(`${url}&radius=${radius}`);
 
   await clickByXPath(
-    driver,
     `//div[@role="listbox"]//div[@role="option" and contains(., '${closestRadius} kilomet')]`
   );
 
-  await fbClick(driver, driver.findElement(By.xpath(`//span[text()="Apply"]`)));
+  await fbClick(driver.findElement(By.xpath(`//span[text()="Apply"]`)));
   await waitSeconds(2);
 
   return closestRadius;
