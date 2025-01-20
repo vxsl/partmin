@@ -79,7 +79,7 @@
    Copy and paste the token in your `.env` file:
 
    ```
-   DISCORD_TOKEN=your-bot-token
+   DISCORD_BOT_TOKEN=your-bot-token
    ```
 
 1. **Obtain the application ID from the _General Information_ section of your application's control panel in the developer portal.**
