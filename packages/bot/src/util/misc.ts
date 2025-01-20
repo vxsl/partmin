@@ -55,6 +55,9 @@ export const tryNTimes = async <T>(
   throw err;
 };
 
+export const isNight = () =>
+  !(new Date().getHours() >= 5 && new Date().getHours() < 22);
+
 export const randomWait = async (options?: {
   short?: true;
   suppressLog?: boolean;
@@ -70,9 +73,9 @@ export const randomWait = async (options?: {
 
   const toWait = options?.short
     ? Math.round(Math.random() * (maxShort - minShort) + minShort)
-    : new Date().getHours() >= 5 && new Date().getHours() < 22
-    ? Math.round(Math.random() * (maxLong - minLong) + minLong)
-    : Math.round(Math.random() * (maxLongNight - minLongNight) + minLongNight);
+    : isNight()
+    ? Math.round(Math.random() * (maxLongNight - minLongNight) + minLongNight)
+    : Math.round(Math.random() * (maxLong - minLong) + minLong);
 
   const str = readableSeconds(toWait);
   if (!options?.suppressLog) {

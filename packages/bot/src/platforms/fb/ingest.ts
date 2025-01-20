@@ -24,7 +24,7 @@ import {
 } from "util/geo.js";
 import { findNestedJSONProperty } from "util/json.js";
 import { debugLog, log, verboseLog } from "util/log.js";
-import { notUndefined, randomWait, tryNTimes } from "util/misc.js";
+import { isNight, notUndefined, randomWait, tryNTimes } from "util/misc.js";
 import {
   clearBrowsingData,
   elementShouldExist,
@@ -169,8 +169,14 @@ export const perListing = async (l: Listing) => {
       l.details.date = timestamp;
       const date = new Date(timestamp * 1000);
       debugLog(`This listing was created at ${date}`);
-      if (Date.now() - date.getTime() > 600000) {
-        invalidateListing(l, "stale", "Listing is older than 10 minutes");
+
+      const maxMin = isNight() ? 40 : 10;
+      if (Date.now() - date.getTime() > maxMin * 60 * 1000) {
+        invalidateListing(
+          l,
+          "stale",
+          `Listing is older than ${maxMin} minutes`
+        );
       }
     } catch (e) {
       log(e);
