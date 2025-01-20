@@ -22,6 +22,7 @@ import { promptForBoolean } from "discord/commands/util/interactive-simple.js";
 import { discordGuildID } from "discord/constants.js";
 import { discordClient } from "discord/index.js";
 import { editSearchParams } from "discord/init-routine.js";
+import { fatalError } from "index.js";
 import persistent from "persistent.js";
 import { identifyCity } from "util/geo.js";
 import { log } from "util/log.js";
@@ -83,6 +84,13 @@ const setupCommands = async () => {
         .setDescription("📌 What city do you want to live in?"),
       execute: (commandInteraction: CommandInteraction) =>
         setLocation({ commandInteraction }),
+    },
+    {
+      data: new SlashCommandBuilder()
+        .setName("quit")
+        .setDescription("❌ Stop script execution."),
+      execute: (commandInteraction: CommandInteraction) =>
+        fatalError(`Quit command executed by ${commandInteraction.user.tag}`),
     },
     {
       data: new SlashCommandBuilder()

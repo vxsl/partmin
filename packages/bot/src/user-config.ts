@@ -69,6 +69,7 @@ export const Location = RuntypeRecord({
 
 export const UserConfig = RuntypeRecord({
   search: RuntypeRecord({
+    category: Optional(String),
     params: SearchParams,
     location: Location,
     blacklist: Optional(Array(String)),

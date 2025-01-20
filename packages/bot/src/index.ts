@@ -29,7 +29,7 @@ import {
   processListings,
 } from "process/index.js";
 import psList from "ps-list";
-import { WebDriver } from "selenium-webdriver";
+import { error as seleniumError, WebDriver } from "selenium-webdriver";
 import { Platform, platforms } from "types/platform.js";
 import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
 import {
@@ -46,7 +46,19 @@ process.title = "partmin-bot";
 
 dotenv.load();
 
+const PLATFORMS = [
+  platforms.fb,
+  //  platforms.kijiji
+];
+
 let driver: WebDriver | undefined;
+export const requireDriver = () => {
+  if (!driver) {
+    throw new Error("WebDriver is not initialized.");
+  }
+  return driver;
+};
+
 export let shuttingDown = false;
 
 const logBreakIfConfigChanged = async (platform: string) => {
@@ -57,203 +69,207 @@ const logBreakIfConfigChanged = async (platform: string) => {
   return res;
 };
 
-const retrieval = async (driver: WebDriver, platforms: Platform[]) => {
-  while (true) {
-    await ifUserConfigIsChanged(async () => {
-      for (const {
-        callbacks: { onSearchParamsChanged },
-        name: platform,
-      } of platforms) {
-        if (!onSearchParamsChanged) continue;
-
-        const n = 3;
-        log(
-          `Since the config has changed, running essential preparation for ${platform} retrieval loop.`
-        );
-        await tryNTimes(
-          n,
-          () => onSearchParamsChanged(driver) ?? Promise.resolve()
-        ).catch((e) => {
-          throw new Error(
-            `Unable to run essential preparation for ${platform} (tried ${n} times): ${e}`
-          );
-        });
-      }
-    });
-
+const retrieval = async (platforms: Platform[]) => {
+  await ifUserConfigIsChanged(async () => {
     for (const {
+      callbacks: { onSearchParamsChanged },
       name: platform,
-      callbacks,
-      presenceActivities: presences,
     } of platforms) {
+      if (!onSearchParamsChanged) continue;
+
+      const n = 3;
       log(
-        `\n=======================================================\n${platform}\n`
+        `Since the config has changed, running essential preparation for ${platform} retrieval loop.`
       );
-      let allListings: Listing[] | undefined;
-      try {
-        await tryNTimes(2, async () => {
-          allListings = await callbacks.main(driver);
-        });
-      } catch (e) {
-        if (!shuttingDown) {
-          discordWarning(`Error while visiting ${platform}:`, e);
-        }
-        continue;
-      }
-      if (!allListings?.length) {
-        discordWarning(
-          "Unexpected result",
-          `I didn't find any listings on ${platform}. This may mean that ${platform} has changed and I need to be updated. 😞`
+      await tryNTimes(
+        n,
+        () => onSearchParamsChanged() ?? Promise.resolve()
+      ).catch((e) => {
+        throw new Error(
+          `Unable to run essential preparation for ${platform} (tried ${n} times): ${e}`
         );
-        continue;
-      }
-
-      // abort if config changed:
-      if (await logBreakIfConfigChanged(platform)) break;
-
-      // pre-process listings before per-listing callbacks
-      let listings: Listing[] = [];
-      try {
-        listings = await preprocessListings(allListings);
-        if (!listings.length) {
-          log(`No valid listings found after pre-processing.`);
-          continue;
-        }
-        debugLog(
-          `Found ${listings.length} valid listings that passed pre-processing.`
-        );
-      } catch (e) {
-        if (!shuttingDown) {
-          discordWarning(
-            `Error while pre-processing listings from ${platform}:`,
-            e
-          );
-        }
-        continue;
-      }
-
-      // abort if config changed:
-      if (await logBreakIfConfigChanged(platform)) break;
-
-      const seen = (await persistent.listings.value()) ?? [];
-      const seenKeys = new Set(seen.map(getListingKey));
-      const unseen = listings.filter((l) => !seenKeys.has(getListingKey(l)));
-      log(
-        `${unseen.length} unseen listing${
-          unseen.length !== 1 ? "s" : ""
-        } out of ${listings.length}.`
-      );
-      if (unseen.length) {
-        verboseLog(unseen.map((l) => l.url).join(", "));
-      }
-
-      // per-listing callbacks:
-      if (callbacks.perListing) {
-        try {
-          const activity = startActivity(presences?.perListing, unseen.length);
-          for (let i = 0; i < unseen.length; i++) {
-            activity?.update(i + 1);
-            const l = unseen[i];
-            if (!l) continue;
-
-            debugLog(`visiting listing (${i + 1}/${unseen.length}): ${l.url}`);
-            await callbacks
-              .perListing(driver, l)
-              ?.then(() =>
-                randomWait({ short: true, suppressProgressLog: true })
-              );
-            if (await logBreakIfConfigChanged(platform)) break;
-          }
-        } catch (e) {
-          if (!shuttingDown) {
-            discordWarning(
-              `Error while visiting listings from ${platform}:`,
-              e
-            );
-          }
-        }
-      }
-
-      // abort if config changed:
-      if (await logBreakIfConfigChanged(platform)) break;
-
-      // process listings:
-      let validListings: Listing[] = [];
-      try {
-        validListings = await processListings(unseen);
-      } catch (e) {
-        if (!shuttingDown) {
-          discordWarning(
-            `Error while processing listings from ${platform}:`,
-            e
-          );
-        }
-      }
-
-      // abort if config changed:
-      if (await logBreakIfConfigChanged(platform)) break;
-
-      // notify:
-      try {
-        const activity = startActivity(
-          presenceActivities.notifying,
-          validListings.length
-        );
-
-        let stopDueToConfigChange = false;
-
-        const notificationPromises = validListings.map(async (l, i) => {
-          activity?.update(i + 1);
-          if (!l) return;
-
-          log(
-            `Sending Discord notification for listing (${i + 1}/${
-              validListings.length
-            }): ${l.url}`
-          );
-          try {
-            await sendListing(l);
-          } catch (e) {
-            discordWarning(
-              `Error while sending Discord notification for listing ${i + 1}/${
-                validListings.length
-              }: ${l.url}`,
-              e
-            );
-          }
-          if (await logBreakIfConfigChanged(platform)) {
-            stopDueToConfigChange = true;
-          }
-          await waitSeconds(0.5);
-        });
-
-        await Promise.all(
-          notificationPromises.map((p) =>
-            Promise.race([
-              p,
-              new Promise((_, reject) => {
-                if (stopDueToConfigChange) {
-                  reject();
-                }
-              }),
-            ])
-          )
-        );
-
-        // save listings only once all notifications have been sent
-        await persistent.listings.writeValue([...seen, ...unseen]);
-      } catch (e) {
-        if (!shuttingDown) {
-          discordWarning(
-            `Error while sending Discord listing notifications: ${platform}:`,
-            e
-          );
-        }
-      }
-      log("\n----------------------------------------\n");
+      });
     }
-    await randomWait({ setPresence: true });
+  });
+
+  for (const {
+    name: platform,
+    callbacks,
+    presenceActivities: presences,
+  } of platforms) {
+    log(
+      `\n=======================================================\n${platform}\n`
+    );
+    let allListings: Listing[] | undefined;
+    try {
+      await tryNTimes(2, async () => {
+        allListings = await callbacks.main();
+      });
+    } catch (e) {
+      if (e instanceof seleniumError.WebDriverError) {
+        throw e;
+      }
+      if (!shuttingDown) {
+        discordWarning(`Error while visiting ${platform}:`, e);
+      }
+      continue;
+    }
+    if (!allListings?.length) {
+      discordWarning(
+        "Unexpected result",
+        `I didn't find any listings on ${platform}. This may mean that ${platform} has changed and I need to be updated. 😞`
+      );
+      continue;
+    }
+
+    // abort if config changed:
+    if (await logBreakIfConfigChanged(platform)) break;
+
+    // pre-process listings before per-listing callbacks
+    let listings: Listing[] = [];
+    try {
+      listings = await preprocessListings(allListings);
+      if (!listings.length) {
+        log(`No valid listings found after pre-processing.`);
+        continue;
+      }
+      debugLog(
+        `Found ${listings.length} valid listings that passed pre-processing.`
+      );
+    } catch (e) {
+      if (e instanceof seleniumError.WebDriverError) {
+        throw e;
+      }
+      if (!shuttingDown) {
+        discordWarning(
+          `Error while pre-processing listings from ${platform}:`,
+          e
+        );
+      }
+      continue;
+    }
+
+    // abort if config changed:
+    if (await logBreakIfConfigChanged(platform)) break;
+
+    const seen = (await persistent.listings.value()) ?? [];
+    const seenKeys = new Set(seen.map(getListingKey));
+    const unseen = listings.filter((l) => !seenKeys.has(getListingKey(l)));
+    log(
+      `${unseen.length} unseen listing${
+        unseen.length !== 1 ? "s" : ""
+      } out of ${listings.length}.`
+    );
+    if (unseen.length) {
+      verboseLog(unseen.map((l) => l.url).join(", "));
+    }
+
+    // per-listing callbacks:
+    if (callbacks.perListing) {
+      try {
+        const activity = startActivity(presences?.perListing, unseen.length);
+        for (let i = 0; i < unseen.length; i++) {
+          activity?.update(i + 1);
+          const l = unseen[i];
+          if (!l) continue;
+
+          debugLog(`visiting listing (${i + 1}/${unseen.length}): ${l.url}`);
+          await callbacks
+            .perListing(l)
+            ?.then(() =>
+              randomWait({ short: true, suppressProgressLog: true })
+            );
+          if (await logBreakIfConfigChanged(platform)) break;
+        }
+      } catch (e) {
+        if (e instanceof seleniumError.WebDriverError) {
+          throw e;
+        }
+        if (!shuttingDown) {
+          discordWarning(`Error while visiting listings from ${platform}:`, e);
+        }
+      }
+    }
+
+    // abort if config changed:
+    if (await logBreakIfConfigChanged(platform)) break;
+
+    // process listings:
+    let validListings: Listing[] = [];
+    try {
+      validListings = await processListings(unseen);
+    } catch (e) {
+      if (e instanceof seleniumError.WebDriverError) {
+        throw e;
+      }
+      if (!shuttingDown) {
+        discordWarning(`Error while processing listings from ${platform}:`, e);
+      }
+    }
+
+    // abort if config changed:
+    if (await logBreakIfConfigChanged(platform)) break;
+
+    // notify:
+    try {
+      const activity = startActivity(
+        presenceActivities.notifying,
+        validListings.length
+      );
+
+      let stopDueToConfigChange = false;
+
+      const notificationPromises = validListings.map(async (l, i) => {
+        activity?.update(i + 1);
+        if (!l) return;
+
+        log(
+          `Sending Discord notification for listing (${i + 1}/${
+            validListings.length
+          }): ${l.url}`
+        );
+        try {
+          await sendListing(l);
+        } catch (e) {
+          discordWarning(
+            `Error while sending Discord notification for listing ${i + 1}/${
+              validListings.length
+            }: ${l.url}`,
+            e
+          );
+        }
+        if (await logBreakIfConfigChanged(platform)) {
+          stopDueToConfigChange = true;
+        }
+        await waitSeconds(0.5);
+      });
+
+      await Promise.all(
+        notificationPromises.map((p) =>
+          Promise.race([
+            p,
+            new Promise((_, reject) => {
+              if (stopDueToConfigChange) {
+                reject();
+              }
+            }),
+          ])
+        )
+      );
+
+      // save listings only once all notifications have been sent
+      await persistent.listings.writeValue([...seen, ...unseen]);
+    } catch (e) {
+      if (!shuttingDown) {
+        discordWarning(
+          `Error while sending Discord listing notifications: ${platform}:`,
+          e
+        );
+      }
+    }
+    log("\n----------------------------------------\n");
   }
+  await randomWait({ setPresence: true });
 };
 
 const shutdownWebdriver = async () => {
@@ -338,6 +354,21 @@ export const fatalError = async (e: unknown) => {
   process.exit(1);
 };
 
+const handleWebDriverError = async (e: unknown) => {
+  if (e instanceof seleniumError.WebDriverError) {
+    log("Encountered a WebDriverError:");
+    log(e);
+    log("Restarting the browser...");
+    await waitSeconds(10);
+    // close the browser:
+    await shutdownWebdriver();
+    driver = await buildDriver();
+  } else {
+    throw e;
+  }
+  return driver;
+};
+
 (async () => {
   try {
     await defineAdvancedConfig().then((c) =>
@@ -347,7 +378,6 @@ export const fatalError = async (e: unknown) => {
     await discordInitRoutine();
     setPresence("launching");
     reinitializeInteractiveListingMessages();
-    driver = await buildDriver();
     setPresence("online");
     log("Starting main retrieval loop...");
 
@@ -388,10 +418,45 @@ export const fatalError = async (e: unknown) => {
         ],
       });
     }
-    await retrieval(driver, [
-      platforms.fb,
-      //  platforms.kijiji
-    ]);
+
+    driver = await buildDriver();
+    if (!driver) {
+      await fatalError("Failed to initialize WebDriver.");
+    }
+
+    await tryNTimes(
+      2,
+      async () => {
+        for (const {
+          callbacks: { init },
+          name: platform,
+        } of PLATFORMS) {
+          if (!init) continue;
+          log(`Running init routine for ${platform}...`);
+          await init();
+        }
+      },
+      async (e) => {
+        driver = await handleWebDriverError(e);
+      }
+    );
+
+    let retries = 0;
+    while (retries < 2) {
+      try {
+        await retrieval(PLATFORMS);
+        retries = 0;
+      } catch (e) {
+        const ogDriver: WebDriver | undefined = driver;
+        driver = await handleWebDriverError(e);
+        if (driver === ogDriver) {
+          // Don't retry if it was not a WebDriverError or if the driver was not successfully restarted
+          break;
+        }
+        log("Retrying retrieval loop after restarting the browser...");
+        retries++;
+      }
+    }
   } catch (e) {
     if (shuttingDown) {
       log("Caught error during shutdown:");

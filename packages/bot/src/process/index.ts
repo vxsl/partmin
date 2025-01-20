@@ -9,6 +9,7 @@ import {
   ensureLocationLink,
   isValid,
 } from "listing.js";
+import persistent from "persistent.js";
 import { isWithinRadii } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
 import { asyncFilter } from "util/misc.js";
@@ -73,8 +74,8 @@ export const processListings = async (unseenListings: Listing[]) => {
   return validResults;
 };
 
-export const preprocessListings = (listings: Listing[]) =>
-  asyncFilter(listings, async (l) => {
+export const preprocessListings = async (listings: Listing[]) => {
+  const withinRadii = await asyncFilter(listings, async (l, i) => {
     if (!l.details.coords) return true;
     const v = await isWithinRadii(l.details.coords);
     if (!v) {
@@ -87,3 +88,24 @@ export const preprocessListings = (listings: Listing[]) =>
     }
     return v;
   });
+
+  const res = withinRadii.slice(0, 5);
+
+  let ignore = (await persistent.ignore.value()) ?? [];
+  await persistent.ignore.writeValue([
+    ...ignore,
+    ...withinRadii.slice(5).map(getListingKey),
+  ]);
+  ignore = (await persistent.ignore.value()) ?? [];
+  return res.filter((l) => {
+    const doIgnore = ignore.includes(getListingKey(l));
+    if (doIgnore) {
+      log(
+        `Ignoring ${getListingKey(
+          l
+        )} because it was previously a low-ranked listing`
+      );
+    }
+    return !doIgnore;
+  });
+};

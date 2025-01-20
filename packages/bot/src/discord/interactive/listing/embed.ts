@@ -1,6 +1,8 @@
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime.js";
 import { ColorResolvable, EmbedBuilder } from "discord.js";
 
-import { Listing, getCommuteOrigin } from "listing.js";
+import { Listing, ensureLocationLink, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
 import { getUserConfig } from "util/config.js";
 import {
@@ -17,7 +19,10 @@ export const colors = {
   interacted: "#424549" as ColorResolvable,
 };
 
+dayjs.extend(relativeTime);
+
 const listingEmbed = async (l: Listing) => {
+  await ensureLocationLink(l);
   const location =
     l.computed?.locationLinkText && l.computed?.locationLinkURL
       ? discordFormat(
@@ -38,17 +43,6 @@ const listingEmbed = async (l: Listing) => {
         })
       : undefined;
 
-  let descriptionHeader = [
-    `💸${
-      l.details.price
-        ? `**$${parseFloat(`${l.details.price}`).toFixed(2)}**`
-        : undefined
-    }`,
-    location ? `📍${location}` : undefined,
-  ]
-    .filter(notUndefined)
-    .join("‎    ‎    ‎      ‎ ");
-
   const config = await getUserConfig();
 
   const commuteOrigin = getCommuteOrigin(l);
@@ -58,16 +52,31 @@ const listingEmbed = async (l: Listing) => {
       if (!summ || !commuteOrigin) {
         return "";
       }
-      return [
-        discordFormat(`${await trimAddress(d)}:`, {
-          italic: true,
-        }),
-        formatCommuteSummaryMD(summ, commuteOrigin, d),
-      ]
+      return [formatCommuteSummaryMD(summ, commuteOrigin, d)]
         .filter(notUndefined)
         .join("\n");
     })
   ).then((arr) => arr.join("\n\n") ?? "");
+
+  let descriptionHeader = [
+    discordFormat(
+      `${
+        l.details.price === undefined
+          ? undefined
+          : l.details.price
+          ? `💸 $${parseFloat(`${l.details.price}`).toFixed(2)}`
+          : `Free`
+      }`,
+      { bold: true }
+    ),
+    `${dayjs.unix(l.details.date).fromNow()}`,
+  ]
+    .filter(notUndefined)
+    .join(" - ");
+
+  let locationSummary = [commutes, location ? `📍${location}` : undefined]
+    .filter(notUndefined)
+    .join("‎    ‎");
 
   return new EmbedBuilder()
     .setColor(colors.uninteracted)
@@ -75,7 +84,7 @@ const listingEmbed = async (l: Listing) => {
     .setDescription(
       [
         descriptionHeader,
-        commutes,
+        locationSummary,
         l.computed?.bulletPoints
           ?.map((p) => {
             const prefix = `- `;
@@ -97,7 +106,7 @@ const listingEmbed = async (l: Listing) => {
           .join("\n") ?? "",
       ]
         .filter(Boolean)
-        .join("\n\n")
+        .join("\n")
     )
     .setURL(l.url)
     .setImage(l.imgURLs.find((url) => url.startsWith("http")) ?? null)

@@ -173,14 +173,25 @@ export const approxLocationLink = async (coords: Coordinates) => {
     }&${await gMapsAPIKey()}`
   );
   const comps = data.results[0].address_components;
-  const displayAddr =
-    comps.find((c: any) => c.types.includes("street_number"))?.short_name +
-    " " +
-    comps.find((c: any) => c.types.includes("route"))?.short_name +
-    ", " +
-    (comps.find((c: any) => c.types.includes("neighborhood"))?.short_name ??
-      comps.find((c: any) => c.types.includes("sublocality"))?.short_name);
+  const streetNum = comps.find((c: any) =>
+    c.types.includes("street_number")
+  )?.short_name;
+  const route = comps.find((c: any) => c.types.includes("route"))?.short_name;
+  const firstLine =
+    streetNum !== undefined && route !== undefined
+      ? `${streetNum} ${route}`
+      : ["neighborhood", "sublocality", "locality"].includes(comps[0].types)
+      ? undefined
+      : comps[0].short_name;
+  const displayAddr = [
+    firstLine,
 
+    comps.find((c: any) => c.types.includes("neighborhood"))?.short_name ??
+      comps.find((c: any) => c.types.includes("sublocality"))?.short_name ??
+      comps.find((c: any) => c.types.includes("locality"))?.short_name,
+  ]
+    .filter(notUndefined)
+    .join(", ");
   await persistent.approximateAddresses.writeValue({
     ...addresses,
     [cacheKey]: [displayAddr, data.results[0].formatted_address],

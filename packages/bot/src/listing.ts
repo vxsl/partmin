@@ -7,9 +7,11 @@ import {
   approxLocationLink,
   getCommuteSummary,
 } from "util/geo.js";
+import { debugLog } from "util/log.js";
 import { conditionalSpreads, notUndefined } from "util/misc.js";
 
 type InvalidReason =
+  | "stale"
   | "blacklisted"
   | "outsideSearch"
   | "paramsMismatch"
@@ -22,6 +24,7 @@ export type Listing = {
   platform: PlatformKey;
   url: string;
   details: {
+    date: number;
     title: string;
     price?: number;
     longDescription?: string;
@@ -53,6 +56,7 @@ export const invalidateListing = (
   reason: InvalidReason,
   message: string
 ) => {
+  debugLog(`Invalidating listing ${l.id} due to ${reason}: ${message}`);
   l.invalidDueTo = {
     ...(l.invalidDueTo ?? {}),
     [reason]: message,

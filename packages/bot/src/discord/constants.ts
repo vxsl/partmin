@@ -168,11 +168,13 @@ export const presenceActivities: Record<
 > = {
   processing: {
     emoji: "🔄",
-    message: ({ max }) => `processing/filtering ${max} new listings...`,
+    message: ({ max }) =>
+      `processing/filtering ${max} new listing${max === 1 ? "" : "s"}...`,
   },
   notifying: {
     emoji: "💌",
-    message: ({ max }) => `sending ${max} new listings your way!`,
+    message: ({ max }) =>
+      `sending ${max} new listing${max === 1 ? "" : "s"} your way!`,
   },
   waiting: {
     emoji: `⏳`,
