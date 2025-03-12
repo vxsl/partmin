@@ -94,7 +94,7 @@ export const setMarketplaceLocation = async (fsa: string, radius: number) => {
 
   await seconds(Math.random() * 1 + 0.5);
 
-  await clickByXPath(`//text()[contains(., "Radius")]/..`);
+  await clickByXPath(`//text()[contains(., "Radius")]/../../../../..`);
 
   // get all the radii from  the text contents of the elements in a role=listbox:
   const radiiEls = await driver.findElements(
