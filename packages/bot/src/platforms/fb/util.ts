@@ -52,10 +52,10 @@ export const setMarketplaceLocation = async (fsa: string, radius: number) => {
   const driver = requireDriver();
 
   // open the modal:
-  await elementShouldExist("xpath", `//span[contains(text(), "Within")]`);
+  await elementShouldExist("xpath", `//text()[contains(., "Within")]/..`);
   await seconds(Math.random() * 1 + 1);
   await fbClick(
-    driver.findElement(By.xpath(`//span[contains(text(), "Within")]`))
+    driver.findElement(By.xpath(`//text()[contains(., "Within")]/..`))
   );
 
   // make sure the modal is open:
