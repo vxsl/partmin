@@ -162,6 +162,8 @@ export const perListing = async (l: Listing) => {
       return;
     }
 
+    const maxMin = isNight() ? 60 : 30;
+
     try {
       const timestamp = getPart((i) => i.creation_time);
       if (timestamp === undefined) {
@@ -171,7 +173,6 @@ export const perListing = async (l: Listing) => {
       const date = new Date(timestamp * 1000);
       debugLog(`This listing was created at ${date}`);
 
-      const maxMin = isNight() ? 60 : 30;
       if (Date.now() - date.getTime() > maxMin * 60 * 1000) {
         invalidateListing(
           l,
@@ -194,6 +195,17 @@ export const perListing = async (l: Listing) => {
       )?.pdp_fields.find((f: any) =>
         f.display_label.includes("Listed")
       )?.display_label;
+
+      if (
+        maxMin <= 60 &&
+        l.details.dateFallbackStr?.toLowerCase().includes("hours")
+      ) {
+        invalidateListing(
+          l,
+          "stale",
+          `Stale threshold is ${maxMin} minutes and found text "${l.details.dateFallbackStr}"`
+        );
+      }
     } catch (e) {
       log(e);
       // TODO
