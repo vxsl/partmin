@@ -181,7 +181,7 @@ export const perListing = async (l: Listing) => {
       }
     } catch (e) {
       log(e);
-      invalidateListing(l, "stale", "Couldn't find creation_time");
+      // invalidateListing(l, "stale", "Couldn't find creation_time");
       // TODO
     }
 
