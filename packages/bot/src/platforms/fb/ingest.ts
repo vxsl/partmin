@@ -170,7 +170,7 @@ export const perListing = async (l: Listing) => {
       const date = new Date(timestamp * 1000);
       debugLog(`This listing was created at ${date}`);
 
-      const maxMin = isNight() ? 40 : 10;
+      const maxMin = isNight() ? 60 : 30;
       if (Date.now() - date.getTime() > maxMin * 60 * 1000) {
         invalidateListing(
           l,
