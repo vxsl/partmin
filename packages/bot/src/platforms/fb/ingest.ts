@@ -7,6 +7,7 @@ import fb from "platforms/fb/index.js";
 import {
   fbClick,
   fbType,
+  getCurrentRadius,
   isOnHomepage,
   setMarketplaceLocation,
 } from "platforms/fb/util.js";
@@ -576,32 +577,29 @@ export const main = async () => {
             verboseLog(
               "Ensuring facebook didn't override the specified radius..."
             );
-            await driver
-              .findElement(By.xpath(`//span[contains(., 'Within')]`))
-              .then((el) => el.getText())
-              .then((text) => text.match(/(\d+\.?\d*)\s?(kilomet|km)/)?.[1])
-              .then((_r) => {
-                if (_r === undefined) {
-                  throw new Error("Could not validate radius in page");
-                }
-                const actualRadius = parseFloat(_r);
-                const minAcceptable = radius * 0.9;
-                const maxAcceptable = radius * 1.1;
-                if (
-                  actualRadius < minAcceptable ||
-                  actualRadius > maxAcceptable
-                ) {
-                  log(
-                    `Facebook loaded results for ${actualRadius} km radius instead of ${radius} km radius.`
-                  );
+            await getCurrentRadius().then((actualRadius) => {
+              const minAcceptable = radius * 0.9;
+              const maxAcceptable = radius * 1.1;
 
-                  throw new MarketplaceRadiusError(url);
-                } else {
-                  log(
-                    `Facebook successfully loaded results for ${actualRadius} km radius.`
-                  );
-                }
-              });
+              if (i > 0 && Math.abs(actualRadius - r.radius) < 0.1) {
+                log(
+                  `Happily, Facebook ended up loaded results for ${actualRadius} km after all.`
+                );
+              } else if (
+                actualRadius < minAcceptable ||
+                actualRadius > maxAcceptable
+              ) {
+                log(
+                  `Facebook loaded results for ${actualRadius} km radius instead of ${radius} km radius.`
+                );
+
+                throw new MarketplaceRadiusError(url);
+              } else {
+                log(
+                  `Facebook successfully loaded results for ${actualRadius} km radius.`
+                );
+              }
+            });
 
             debugLog("Parsing listings...");
             await getListings().then((arr) => {

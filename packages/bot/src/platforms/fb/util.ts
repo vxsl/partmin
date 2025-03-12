@@ -1,7 +1,7 @@
 import { requireDriver } from "index.js";
 import { By, error, Key, WebElementPromise } from "selenium-webdriver";
 import { log } from "util/log.js";
-import { waitSeconds as seconds, waitSeconds } from "util/misc.js";
+import { waitSeconds as seconds, tryNTimes, waitSeconds } from "util/misc.js";
 import {
   click,
   clickByXPath,
@@ -47,6 +47,18 @@ export const isOnHomepage = async () =>
   await requireDriver()
     .findElements(By.css('[aria-label="Search Facebook"]'))
     .then((els) => els.length > 0);
+
+export const getCurrentRadius = () =>
+  requireDriver()
+    .findElement(By.xpath(`//text()[contains(., "Within")]/..`))
+    .then((el) => el.getText())
+    .then((text) => text.match(/(\d+\.?\d*)\s?(kilomet|km)/)?.[1])
+    .then((_r) => {
+      if (_r === undefined) {
+        throw new Error("Could not validate radius in page");
+      }
+      return parseFloat(_r);
+    });
 
 export const setMarketplaceLocation = async (fsa: string, radius: number) => {
   const driver = requireDriver();
@@ -94,29 +106,47 @@ export const setMarketplaceLocation = async (fsa: string, radius: number) => {
 
   await seconds(Math.random() * 1 + 0.5);
 
-  await clickByXPath(`//text()[contains(., "Radius")]/../../../../..`);
+  return await tryNTimes(3, async () => {
+    const actualRadius = await getCurrentRadius();
+    if (Math.abs(actualRadius - radius) < 0.1) {
+      log(
+        `Happily, Facebook ended up loaded results for ${actualRadius} km after all.`
+      );
+      return actualRadius;
+    }
 
-  // get all the radii from  the text contents of the elements in a role=listbox:
-  const radiiEls = await driver.findElements(
-    By.xpath(`//div[@role="listbox"]//div[@role="option"]`)
-  );
-  const radii = await Promise.all(
-    radiiEls.map((r) => r.getText().then((t) => parseInt(t.trim())))
-  );
-  // select the radius that's closest to the desired radius:
-  const closestRadius = radii.reduce((a, b) =>
-    Math.abs(b - radius) < Math.abs(a - radius) ? b : a
-  );
-  log(
-    `Setting the radius to ${closestRadius} km instead of ${radius} km because it's the closest available option in the manual location modal`
-  );
+    await clickByXPath(`//text()[contains(., "Radius")]/../../../../..`);
 
-  await clickByXPath(
-    `//div[@role="listbox"]//div[@role="option" and contains(., '${closestRadius} kilomet')]`
-  );
+    // get all the radii from  the text contents of the elements in a role=listbox:
+    const radiiEls = await driver.findElements(
+      By.xpath(`//div[@role="listbox"]//div[@role="option"]`)
+    );
+    const radii = await Promise.all(
+      radiiEls.map((r) => r.getText().then((t) => parseInt(t.trim())))
+    );
+    // select the radius that's closest to the desired radius:
+    const closestRadius = radii.reduce((a, b) =>
+      Math.abs(b - radius) < Math.abs(a - radius) ? b : a
+    );
+    log(
+      `Setting the radius to ${closestRadius} km instead of ${radius} km because it's the closest available option in the manual location modal`
+    );
 
-  await fbClick(driver.findElement(By.xpath(`//span[text()="Apply"]`)));
-  await waitSeconds(2);
+    await clickByXPath(
+      `//div[@role="listbox"]//div[@role="option" and contains(., '${closestRadius} kilomet')]`
+    );
 
-  return closestRadius;
+    const actualRadiusAgain = await getCurrentRadius();
+    if (Math.abs(actualRadiusAgain - radius) < 0.1) {
+      log(
+        `Happily, Facebook ended up loaded results for ${actualRadiusAgain} km after all.`
+      );
+      return actualRadiusAgain;
+    }
+
+    await fbClick(driver.findElement(By.xpath(`//span[text()="Apply"]`)));
+    await waitSeconds(2);
+
+    return closestRadius;
+  });
 };
