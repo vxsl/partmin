@@ -69,7 +69,9 @@ const listingEmbed = async (l: Listing) => {
       }`,
       { bold: true }
     ),
-    `${dayjs.unix(l.details.date).fromNow()}`,
+    l.details.date !== undefined
+      ? `${dayjs.unix(l.details.date).fromNow()}`
+      : l.details.dateFallbackStr ?? "",
   ]
     .filter(notUndefined)
     .join(" - ");

@@ -185,6 +185,20 @@ export const perListing = async (l: Listing) => {
       // TODO
     }
 
+    // TODO make this less silly... I'm tired atm
+    try {
+      l.details.dateFallbackStr = getPart((i) =>
+        i.pdp_display_sections.find((s: any) =>
+          s.pdp_fields.find((f: any) => f.display_label.includes("Listed"))
+        )
+      )?.pdp_fields.find((f: any) =>
+        f.display_label.includes("Listed")
+      )?.display_label;
+    } catch (e) {
+      log(e);
+      // TODO
+    }
+
     try {
       const desc = getPart((i) => i.redacted_description.text); // TODO is redacted_description always present? Maybe fall back to something else.
       if (desc) {

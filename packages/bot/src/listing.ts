@@ -24,7 +24,8 @@ export type Listing = {
   platform: PlatformKey;
   url: string;
   details: {
-    date: number;
+    date?: number;
+    dateFallbackStr?: string;
     title: string;
     price?: number;
     longDescription?: string;
