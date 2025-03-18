@@ -156,11 +156,14 @@ export const isWithinRadii = async (coords: Coordinates) => {
 export const getGoogleMapsLink = (query: string) =>
   `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
-export const getApproximateAddress = async (coords: Coordinates) => {
+export const getApproximateAddress = async (
+  coords: Coordinates,
+  noCache = false
+) => {
   const addresses = (await persistent.approximateAddresses.value()) ?? {};
   const cacheKey = Coordinates.toString(coords, { raw: true });
   const cached = addresses?.[cacheKey];
-  if (cached) {
+  if (!noCache && cached) {
     return cached;
   }
   const { data } = await axios.get(
@@ -194,7 +197,7 @@ export const getApproximateAddress = async (coords: Coordinates) => {
   const val = {
     displayAddr,
     formattedAddress: data.results[0].formatted_address,
-    fsa,
+    fsa: fsa ?? null,
   };
   await persistent.approximateAddresses.writeValue({
     ...addresses,
@@ -211,8 +214,14 @@ export const approxLocationLink = async (coords: Coordinates) => {
   };
 };
 
-export const approxFSA = async (coords: Coordinates) =>
-  ((await getApproximateAddress(coords)) ?? {}).fsa;
+export const approxFSA = async (coords: Coordinates) => {
+  const address = await getApproximateAddress(coords);
+  const keys = Object.keys(address);
+  if (!keys.includes("fsa")) {
+    return (await getApproximateAddress(coords, true)).fsa;
+  }
+  return address.fsa;
+};
 
 export const identifyAddress = async (address: string) => {
   const { data } = await axios.get(

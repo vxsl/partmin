@@ -69,7 +69,11 @@ const persistent = {
     common: true,
   }),
   approximateAddresses: new PersistentDataDef<{
-    [k: string]: { displayAddr: string; formattedAddress: string; fsa: string };
+    [k: string]: {
+      displayAddr: string;
+      formattedAddress: string;
+      fsa: string | null;
+    };
   }>({
     path: `approximate-addresses.json`,
     readTransform: parseJSON,
