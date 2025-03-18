@@ -156,17 +156,13 @@ export const isWithinRadii = async (coords: Coordinates) => {
 export const getGoogleMapsLink = (query: string) =>
   `${gMaps}/search/?api=1&query=${encodeURIComponent(query)}`;
 
-export const approxLocationLink = async (coords: Coordinates) => {
+export const getApproximateAddress = async (coords: Coordinates) => {
   const addresses = (await persistent.approximateAddresses.value()) ?? {};
   const cacheKey = Coordinates.toString(coords, { raw: true });
   const cached = addresses?.[cacheKey];
   if (cached) {
-    const text = cached[0];
-    const query = encodeURIComponent(cached[1]);
-    const url = `${gMaps}/search/?api=1&query=${query}`;
-    return { text, url };
+    return cached;
   }
-
   const { data } = await axios.get(
     `${gMapsAPIs}/geocode/json?latlng=${coords.lat},${
       coords.lon
@@ -183,6 +179,9 @@ export const approxLocationLink = async (coords: Coordinates) => {
       : ["neighborhood", "sublocality", "locality"].includes(comps[0].types)
       ? undefined
       : comps[0].short_name;
+  const fsa = comps.find((c: any) =>
+    c.types.includes("postal_code")
+  )?.short_name;
   const displayAddr = [
     firstLine,
 
@@ -192,14 +191,28 @@ export const approxLocationLink = async (coords: Coordinates) => {
   ]
     .filter(notUndefined)
     .join(", ");
+  const val = {
+    displayAddr,
+    formattedAddress: data.results[0].formatted_address,
+    fsa,
+  };
   await persistent.approximateAddresses.writeValue({
     ...addresses,
-    [cacheKey]: [displayAddr, data.results[0].formatted_address],
+    [cacheKey]: val,
   });
-
-  const query = data.results[0].formatted_address;
-  return { text: displayAddr, url: getGoogleMapsLink(query) };
+  return val;
 };
+
+export const approxLocationLink = async (coords: Coordinates) => {
+  const address = await getApproximateAddress(coords);
+  return {
+    text: address.displayAddr,
+    url: getGoogleMapsLink(address.formattedAddress),
+  };
+};
+
+export const approxFSA = async (coords: Coordinates) =>
+  ((await getApproximateAddress(coords)) ?? {}).fsa;
 
 export const identifyAddress = async (address: string) => {
   const { data } = await axios.get(

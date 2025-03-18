@@ -17,6 +17,7 @@ import { PetType } from "user-config.js";
 import { getUserConfig } from "util/config.js";
 import {
   acresToSqft,
+  approxFSA,
   Circle,
   Coordinates,
   decodeMapDevelopersURL,
@@ -593,8 +594,8 @@ export const main = async () => {
           let closestRadius = undefined;
           if (i > 0) {
             log("Trying to set the correct radius manually...");
-            // TODO use the actual FSA:
-            closestRadius = await setMarketplaceLocation("V5R", r.radius).catch(
+            const fsa = await approxFSA(r);
+            closestRadius = await setMarketplaceLocation(fsa, r.radius).catch(
               async (e) => {
                 log(e);
                 const actualRadius = await getCurrentRadius();
