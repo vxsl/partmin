@@ -179,9 +179,9 @@ export const getApproximateAddress = async (coords: Coordinates) => {
       : ["neighborhood", "sublocality", "locality"].includes(comps[0].types)
       ? undefined
       : comps[0].short_name;
-  const fsa = comps.find((c: any) =>
-    c.types.includes("postal_code")
-  )?.short_name;
+  const fsa = comps
+    .find((c: any) => c.types.includes("postal_code"))
+    ?.short_name?.split(" ")[0];
   const displayAddr = [
     firstLine,
 
