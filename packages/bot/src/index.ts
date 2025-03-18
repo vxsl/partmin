@@ -442,7 +442,8 @@ const handleWebDriverError = async (e: unknown) => {
     );
 
     let retries = 0;
-    while (retries < 2) {
+    while (retries < Infinity) {
+      // TODO consider parameterizing retries
       try {
         await retrieval(PLATFORMS);
         retries = 0;
@@ -451,7 +452,7 @@ const handleWebDriverError = async (e: unknown) => {
         driver = await handleWebDriverError(e);
         if (driver === ogDriver) {
           // Don't retry if it was not a WebDriverError or if the driver was not successfully restarted
-          break;
+          throw e;
         }
         log("Retrying retrieval loop after restarting the browser...");
         retries++;
