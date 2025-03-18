@@ -593,7 +593,20 @@ export const main = async () => {
           let closestRadius = undefined;
           if (i > 0) {
             log("Trying to set the correct radius manually...");
-            closestRadius = await setMarketplaceLocation("V5R", r.radius);
+            // TODO use the actual FSA:
+            closestRadius = await setMarketplaceLocation("V5R", r.radius).catch(
+              async (e) => {
+                log(e);
+                const actualRadius = await getCurrentRadius();
+                if (Math.abs(actualRadius - r.radius) < 0.1) {
+                  log(
+                    `Happily, Facebook ended up loaded results for ${actualRadius} km after all.`
+                  );
+                  return actualRadius;
+                }
+                throw e;
+              }
+            );
           }
           let radius = closestRadius ?? r.radius;
 
