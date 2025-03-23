@@ -198,9 +198,12 @@ export const perListing = async (l: Listing) => {
       )?.display_label;
 
       if (
-        maxMin <= 60 &&
-        (l.details.dateFallbackStr?.toLowerCase().includes("hours") ||
-          l.details.dateFallbackStr?.toLowerCase().includes("day"))
+        (maxMin <= 60 &&
+          l.details.dateFallbackStr?.toLowerCase().includes("hours")) ||
+        l.details.dateFallbackStr?.toLowerCase().includes("day") ||
+        l.details.dateFallbackStr?.toLowerCase().includes("week") ||
+        l.details.dateFallbackStr?.toLowerCase().includes("month") ||
+        l.details.dateFallbackStr?.toLowerCase().includes("year")
       ) {
         invalidateListing(
           l,
