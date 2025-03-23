@@ -26,7 +26,7 @@ import persistent from "persistent.js";
 import {
   getListingKey,
   preprocessListings,
-  processListings,
+  decorateAndFilterListings,
 } from "process/index.js";
 import psList from "ps-list";
 import { error as seleniumError, WebDriver } from "selenium-webdriver";
@@ -100,10 +100,166 @@ const retrieval = async (platforms: Platform[]) => {
     log(
       `\n=======================================================\n${platform}\n`
     );
-    let allListings: Listing[] | undefined;
+
+    const processListings = async (listings: Listing[]) => {
+      // abort if config changed:
+      if (await logBreakIfConfigChanged(platform)) return; // TODO this used to be a break
+
+      // pre-process listings before per-listing callbacks
+      let preprocessedListings: Listing[] = [];
+      try {
+        preprocessedListings = await preprocessListings(listings);
+        if (!preprocessedListings.length) {
+          log(`No valid listings found after pre-processing.`);
+          return;
+        }
+        debugLog(
+          `Found ${preprocessedListings.length} valid listings that passed pre-processing.`
+        );
+      } catch (e) {
+        if (e instanceof seleniumError.WebDriverError) {
+          throw e;
+        }
+        if (!shuttingDown) {
+          discordWarning(
+            `Error while pre-processing listings from ${platform}:`,
+            e
+          );
+        }
+        return;
+      }
+
+      // abort if config changed:
+      if (await logBreakIfConfigChanged(platform)) return; // TODO this used to be a break
+
+      const seen = (await persistent.listings.value()) ?? [];
+      const seenKeys = new Set(seen.map(getListingKey));
+      const unseen = preprocessedListings.filter(
+        (l) => !seenKeys.has(getListingKey(l))
+      );
+      log(
+        `${unseen.length} unseen listing${
+          unseen.length !== 1 ? "s" : ""
+        } out of ${preprocessedListings.length}.`
+      );
+      if (unseen.length) {
+        verboseLog(unseen.map((l) => l.url).join(", "));
+      }
+
+      // per-listing callbacks:
+      if (callbacks.perListing) {
+        try {
+          const activity = startActivity(presences?.perListing, unseen.length);
+          for (let i = 0; i < unseen.length; i++) {
+            activity?.update(i + 1);
+            const l = unseen[i];
+            if (!l) continue;
+
+            debugLog(`visiting listing (${i + 1}/${unseen.length}): ${l.url}`);
+            await callbacks
+              .perListing(l)
+              ?.then(() =>
+                randomWait({ short: true, suppressProgressLog: true })
+              );
+            if (await logBreakIfConfigChanged(platform)) break;
+          }
+        } catch (e) {
+          if (e instanceof seleniumError.WebDriverError) {
+            throw e;
+          }
+          if (!shuttingDown) {
+            discordWarning(
+              `Error while visiting listings from ${platform}:`,
+              e
+            );
+          }
+        }
+      }
+
+      // abort if config changed:
+      if (await logBreakIfConfigChanged(platform)) return; // TODO this used to be a break
+
+      // process listings:
+      let validListings: Listing[] = [];
+      try {
+        validListings = await decorateAndFilterListings(unseen);
+      } catch (e) {
+        if (e instanceof seleniumError.WebDriverError) {
+          throw e;
+        }
+        if (!shuttingDown) {
+          discordWarning(
+            `Error while processing listings from ${platform}:`,
+            e
+          );
+        }
+      }
+
+      // abort if config changed:
+      if (await logBreakIfConfigChanged(platform)) return; // TODO this used to be a break
+
+      // notify:
+      try {
+        const activity = startActivity(
+          presenceActivities.notifying,
+          validListings.length
+        );
+
+        let stopDueToConfigChange = false;
+
+        const notificationPromises = validListings.map(async (l, i) => {
+          activity?.update(i + 1);
+          if (!l) return;
+
+          log(
+            `Sending Discord notification for listing (${i + 1}/${
+              validListings.length
+            }): ${l.url}`
+          );
+          try {
+            await sendListing(l);
+          } catch (e) {
+            discordWarning(
+              `Error while sending Discord notification for listing ${i + 1}/${
+                validListings.length
+              }: ${l.url}`,
+              e
+            );
+          }
+          if (await logBreakIfConfigChanged(platform)) {
+            stopDueToConfigChange = true;
+          }
+          await waitSeconds(0.5);
+        });
+
+        await Promise.all(
+          notificationPromises.map((p) =>
+            Promise.race([
+              p,
+              new Promise((_, reject) => {
+                if (stopDueToConfigChange) {
+                  reject();
+                }
+              }),
+            ])
+          )
+        );
+
+        // save listings only once all notifications have been sent
+        await persistent.listings.writeValue([...seen, ...unseen]);
+      } catch (e) {
+        if (!shuttingDown) {
+          discordWarning(
+            `Error while sending Discord listing notifications: ${platform}:`,
+            e
+          );
+        }
+      }
+      log("\n----------------------------------------\n");
+    };
     try {
       await tryNTimes(2, async () => {
-        allListings = await callbacks.main();
+        await callbacks.main(processListings);
       });
     } catch (e) {
       if (e instanceof seleniumError.WebDriverError) {
@@ -114,160 +270,6 @@ const retrieval = async (platforms: Platform[]) => {
       }
       continue;
     }
-    if (!allListings?.length) {
-      discordWarning(
-        "Unexpected result",
-        `I didn't find any listings on ${platform}. This may mean that ${platform} has changed and I need to be updated. 😞`
-      );
-      continue;
-    }
-
-    // abort if config changed:
-    if (await logBreakIfConfigChanged(platform)) break;
-
-    // pre-process listings before per-listing callbacks
-    let listings: Listing[] = [];
-    try {
-      listings = await preprocessListings(allListings);
-      if (!listings.length) {
-        log(`No valid listings found after pre-processing.`);
-        continue;
-      }
-      debugLog(
-        `Found ${listings.length} valid listings that passed pre-processing.`
-      );
-    } catch (e) {
-      if (e instanceof seleniumError.WebDriverError) {
-        throw e;
-      }
-      if (!shuttingDown) {
-        discordWarning(
-          `Error while pre-processing listings from ${platform}:`,
-          e
-        );
-      }
-      continue;
-    }
-
-    // abort if config changed:
-    if (await logBreakIfConfigChanged(platform)) break;
-
-    const seen = (await persistent.listings.value()) ?? [];
-    const seenKeys = new Set(seen.map(getListingKey));
-    const unseen = listings.filter((l) => !seenKeys.has(getListingKey(l)));
-    log(
-      `${unseen.length} unseen listing${
-        unseen.length !== 1 ? "s" : ""
-      } out of ${listings.length}.`
-    );
-    if (unseen.length) {
-      verboseLog(unseen.map((l) => l.url).join(", "));
-    }
-
-    // per-listing callbacks:
-    if (callbacks.perListing) {
-      try {
-        const activity = startActivity(presences?.perListing, unseen.length);
-        for (let i = 0; i < unseen.length; i++) {
-          activity?.update(i + 1);
-          const l = unseen[i];
-          if (!l) continue;
-
-          debugLog(`visiting listing (${i + 1}/${unseen.length}): ${l.url}`);
-          await callbacks
-            .perListing(l)
-            ?.then(() =>
-              randomWait({ short: true, suppressProgressLog: true })
-            );
-          if (await logBreakIfConfigChanged(platform)) break;
-        }
-      } catch (e) {
-        if (e instanceof seleniumError.WebDriverError) {
-          throw e;
-        }
-        if (!shuttingDown) {
-          discordWarning(`Error while visiting listings from ${platform}:`, e);
-        }
-      }
-    }
-
-    // abort if config changed:
-    if (await logBreakIfConfigChanged(platform)) break;
-
-    // process listings:
-    let validListings: Listing[] = [];
-    try {
-      validListings = await processListings(unseen);
-    } catch (e) {
-      if (e instanceof seleniumError.WebDriverError) {
-        throw e;
-      }
-      if (!shuttingDown) {
-        discordWarning(`Error while processing listings from ${platform}:`, e);
-      }
-    }
-
-    // abort if config changed:
-    if (await logBreakIfConfigChanged(platform)) break;
-
-    // notify:
-    try {
-      const activity = startActivity(
-        presenceActivities.notifying,
-        validListings.length
-      );
-
-      let stopDueToConfigChange = false;
-
-      const notificationPromises = validListings.map(async (l, i) => {
-        activity?.update(i + 1);
-        if (!l) return;
-
-        log(
-          `Sending Discord notification for listing (${i + 1}/${
-            validListings.length
-          }): ${l.url}`
-        );
-        try {
-          await sendListing(l);
-        } catch (e) {
-          discordWarning(
-            `Error while sending Discord notification for listing ${i + 1}/${
-              validListings.length
-            }: ${l.url}`,
-            e
-          );
-        }
-        if (await logBreakIfConfigChanged(platform)) {
-          stopDueToConfigChange = true;
-        }
-        await waitSeconds(0.5);
-      });
-
-      await Promise.all(
-        notificationPromises.map((p) =>
-          Promise.race([
-            p,
-            new Promise((_, reject) => {
-              if (stopDueToConfigChange) {
-                reject();
-              }
-            }),
-          ])
-        )
-      );
-
-      // save listings only once all notifications have been sent
-      await persistent.listings.writeValue([...seen, ...unseen]);
-    } catch (e) {
-      if (!shuttingDown) {
-        discordWarning(
-          `Error while sending Discord listing notifications: ${platform}:`,
-          e
-        );
-      }
-    }
-    log("\n----------------------------------------\n");
   }
   await randomWait({ setPresence: true });
 };

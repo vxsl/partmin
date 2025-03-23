@@ -9,7 +9,9 @@ export type Platform = {
   icon: string;
   callbacks: {
     init?: () => Promise<void>;
-    main: () => Promise<Listing[] | undefined>;
+    main: (
+      processListings: (listings: Listing[]) => Promise<void>
+    ) => Promise<Listing[] | undefined>;
     onSearchParamsChanged?: () => Promise<void>;
     perListing?: (i: Listing) => Promise<void>;
   };

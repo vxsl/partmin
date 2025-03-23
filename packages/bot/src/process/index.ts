@@ -19,7 +19,7 @@ dotenv.load();
 export const getSeenKey = (platform: string, id: string) => `${platform}-${id}`;
 export const getListingKey = (l: Listing) => getSeenKey(l.platform, l.id);
 
-export const processListings = async (unseenListings: Listing[]) => {
+export const decorateAndFilterListings = async (unseenListings: Listing[]) => {
   const activity = startActivity(
     presenceActivities.processing,
     unseenListings.length

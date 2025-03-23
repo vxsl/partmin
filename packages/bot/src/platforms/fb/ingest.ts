@@ -558,12 +558,11 @@ export const init = async () => {
   }
 };
 
-export const main = async () => {
-  const driver = requireDriver();
+export const main = async (
+  processListings: (listings: Listing[]) => Promise<void>
+) => {
   const config = await getUserConfig();
-  const listings: Listing[] = [];
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
-  let listingCount = 0;
 
   const activity = startActivity(fb.presenceActivities?.main, radii.length);
 
@@ -575,7 +574,7 @@ export const main = async () => {
       const _i = secondAttempt ? failedRadiiIndices[i] ?? i : i;
       const r = arr[i];
       if (!r) {
-        continue; // I don't know why TypeScript doesn't know that r is not undefined here.
+        continue;
       }
       const rLabel = `radius ${_i + 1}/${radii.length}`;
       log(
@@ -642,22 +641,15 @@ export const main = async () => {
             });
 
             debugLog("Parsing listings...");
-            await getListings().then((arr) => {
-              verboseLog(
-                `found the following listings in ${rLabel}: ${arr
-                  ?.map((l) => l.id)
-                  .join(", ")}`
-              );
-              listings.push(...arr);
-            });
+            const listings = await getListings();
+            verboseLog(
+              `found ${listings.length} listings in ${rLabel}: ${listings
+                ?.map((l) => l.id)
+                .join(", ")}`
+            );
+            await processListings(listings);
           });
         });
-        log(
-          `found ${
-            listings.length - listingCount
-          } listings in ${rLabel} (${Circle.toString(r, { truncate: true })})`
-        );
-        listingCount = listings.length;
         if (i < arr.length - 1) {
           await randomWait({ short: true, suppressProgressLog: true });
         }
@@ -678,5 +670,4 @@ export const main = async () => {
       }
     }
   }
-  return listings;
 };
