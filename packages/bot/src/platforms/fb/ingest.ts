@@ -199,7 +199,8 @@ export const perListing = async (l: Listing) => {
 
       if (
         maxMin <= 60 &&
-        l.details.dateFallbackStr?.toLowerCase().includes("hours")
+        (l.details.dateFallbackStr?.toLowerCase().includes("hours") ||
+          l.details.dateFallbackStr?.toLowerCase().includes("day"))
       ) {
         invalidateListing(
           l,
