@@ -11,7 +11,7 @@ export type Platform = {
     init?: () => Promise<void>;
     main: (
       processListings: (listings: Listing[]) => Promise<void>
-    ) => Promise<Listing[] | undefined>;
+    ) => Promise<void>;
     onSearchParamsChanged?: () => Promise<void>;
     perListing?: (i: Listing) => Promise<void>;
   };
