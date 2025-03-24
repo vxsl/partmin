@@ -76,13 +76,13 @@ export const prodChannelDefs: Record<ProdChannelKey, ProdChannelDef> = {
     type: ChannelType.GuildCategory,
   },
   listings: {
-    defaultName: "🌇┃listings",
+    defaultName: "🌇",
     type: ChannelType.GuildText,
     topic: `@partmin created this channel. This is where you'll find listings that match your search criteria.`,
     parent: "main-category",
   },
   logs: {
-    defaultName: "📜┃logs",
+    defaultName: "logs",
     type: ChannelType.GuildText,
     msgFlags: MessageFlags.SuppressNotifications,
     topic:
