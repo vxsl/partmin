@@ -168,35 +168,7 @@ export const perListing = async (l: Listing) => {
     try {
       const timestamp = getPart((i) => i.creation_time);
       if (timestamp === undefined) {
-        debugLog(`Couldn't find creation_time for listing ${l.id}`);
-        // TODO make this less silly... I'm tired atm
-        try {
-          l.details.dateFallbackStr = getPart((i) =>
-            i.pdp_display_sections.find((s: any) =>
-              s.pdp_fields.find((f: any) => f.display_label.includes("Listed"))
-            )
-          )?.pdp_fields.find((f: any) =>
-            f.display_label.includes("Listed")
-          )?.display_label;
-
-          if (
-            (maxMin <= 60 &&
-              l.details.dateFallbackStr?.toLowerCase().includes("hours")) ||
-            l.details.dateFallbackStr?.toLowerCase().includes("day") ||
-            l.details.dateFallbackStr?.toLowerCase().includes("week") ||
-            l.details.dateFallbackStr?.toLowerCase().includes("month") ||
-            l.details.dateFallbackStr?.toLowerCase().includes("year")
-          ) {
-            invalidateListing(
-              l,
-              "stale",
-              `Stale threshold is ${maxMin} minutes and found text "${l.details.dateFallbackStr}"`
-            );
-          }
-        } catch (e) {
-          log(e);
-          throw new Error(`Couldn't determine listing age for ${l.id}: ${e}`);
-        }
+        throw new Error("creation_time is undefined");
       }
       l.details.date = timestamp;
       const date = new Date(timestamp * 1000);
@@ -210,9 +182,35 @@ export const perListing = async (l: Listing) => {
         );
       }
     } catch (e) {
-      log(e);
-      // invalidateListing(l, "stale", "Couldn't find creation_time");
-      // TODO
+      debugLog(`Couldn't find creation_time for listing ${l.id}: ${e}`);
+      // TODO make this less silly... I'm tired atm:
+      try {
+        l.details.dateFallbackStr = getPart((i) =>
+          i.pdp_display_sections.find((s: any) =>
+            s.pdp_fields.find((f: any) => f.display_label.includes("Listed"))
+          )
+        )?.pdp_fields.find((f: any) =>
+          f.display_label.includes("Listed")
+        )?.display_label;
+
+        if (
+          (maxMin <= 60 &&
+            l.details.dateFallbackStr?.toLowerCase().includes("hours")) ||
+          l.details.dateFallbackStr?.toLowerCase().includes("day") ||
+          l.details.dateFallbackStr?.toLowerCase().includes("week") ||
+          l.details.dateFallbackStr?.toLowerCase().includes("month") ||
+          l.details.dateFallbackStr?.toLowerCase().includes("year")
+        ) {
+          invalidateListing(
+            l,
+            "stale",
+            `Stale threshold is ${maxMin} minutes and found text "${l.details.dateFallbackStr}"`
+          );
+        }
+      } catch (e) {
+        log(e);
+        throw new Error(`Couldn't determine listing age for ${l.id}: ${e}`);
+      }
     }
 
     try {
