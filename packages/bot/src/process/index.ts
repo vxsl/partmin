@@ -29,7 +29,7 @@ export const decorateAndFilterListings = async (unseenListings: Listing[]) => {
   >(async (promises, l, i) => {
     activity?.update(i);
     const [valid, invalid] = await promises;
-    checkForBlacklist(l);
+    await checkForBlacklist(l);
     if (isValid(l)) {
       valid.push(l);
       await ensureLocationLink(l);
