@@ -6,14 +6,14 @@ import chrome from "selenium-webdriver/chrome.js";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { log } from "util/log.js";
 
-const installChrome = () =>
+const installBrowser = (browser: Browser, label: string) =>
   install({
-    browser: Browser.CHROME,
+    browser,
     buildId: chromeVersion,
     cacheDir: getDirs().puppeteerCache,
     downloadProgressCallback: (downloaded, total) => {
       singleLineStdOut(
-        `downloading Chrome (${downloaded}/${total})${
+        `downloading ${label} (${downloaded}/${total})${
           downloaded === total ? "\ncomplete.\n" : ""
         }`
       );
@@ -21,8 +21,10 @@ const installChrome = () =>
   });
 
 export const buildDriver = async () => {
-  await installChrome();
+  await installBrowser(Browser.CHROME, "Chrome");
   log("Browser installed");
+  const chromedriver = await installBrowser(Browser.CHROMEDRIVER, "ChromeDriver");
+  log("ChromeDriver installed");
 
   const args: string[] = [];
   args.push(
@@ -57,6 +59,8 @@ export const buildDriver = async () => {
     throw new Error("No Chrome browser found");
   }
 
+  const service = new chrome.ServiceBuilder(chromedriver.executablePath);
+
   const driver = await new Builder()
     .forBrowser("chrome")
     .setChromeOptions(
@@ -64,6 +68,7 @@ export const buildDriver = async () => {
         .addArguments(...args)
         .setChromeBinaryPath(b.executablePath)
     )
+    .setChromeService(service)
     .build();
 
   await driver.manage().setTimeouts({ implicit: seleniumImplicitWait });
