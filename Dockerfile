@@ -1,7 +1,6 @@
 FROM node:20 AS build
 
 RUN corepack enable
-RUN corepack prepare yarn@3.x --activate
 
 RUN apt-get update 
 RUN apt-get install -yq libgbm1 jq \
