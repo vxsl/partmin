@@ -1,9 +1,10 @@
 import { PresenceActivityDef } from "discord/presence.js";
 import { Listing } from "listing.js";
+import craigslist from "platforms/craigslist/index.js";
 import fb from "platforms/fb/index.js";
 import kijiji from "platforms/kijiji/index.js";
 
-export type PlatformKey = "kijiji" | "fb";
+export type PlatformKey = "kijiji" | "fb" | "craigslist";
 export type Platform = {
   name: string;
   icon: string;
@@ -22,4 +23,5 @@ export type Platform = {
 export const platforms: Record<PlatformKey, Platform> = {
   kijiji,
   fb,
+  craigslist,
 };

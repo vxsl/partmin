@@ -53,9 +53,9 @@ export const decorateAndFilterListings = async (unseenListings: Listing[]) => {
     log(
       `${invalidResults.length} invalid result${
         invalidResults.length !== 1 ? "s" : ""
-      }${logLevels.verbose ? ":" : "."}`
+      }:`
     );
-    verboseLog(
+    log(
       invalidResults
         .map(
           (l) =>
@@ -65,7 +65,7 @@ export const decorateAndFilterListings = async (unseenListings: Listing[]) => {
                     .map(([k, v]) => `${k}: ${v}`)
                     .join(", ")
                 : "unknown"
-            } `
+            }`
         )
         .join("\n")
     );
