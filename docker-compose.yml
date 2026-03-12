@@ -2,7 +2,9 @@ version: "2"
 
 services:
   bot:
-    build: .
+    build:
+      context: .
+      network: host
     env_file: .env
     volumes:
       - ./config:/usr/src/app/config
