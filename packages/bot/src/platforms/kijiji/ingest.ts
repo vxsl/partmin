@@ -1,13 +1,12 @@
 import { setPresence, startActivity } from "discord/presence.js";
 import he from "he";
-import { requireDriver } from "index.js";
+import { requirePage } from "index.js";
 import { Listing, addBulletPoints, invalidateListing } from "listing.js";
 import persistent from "persistent.js";
 import { baseURL } from "platforms/kijiji/constants.js";
 import kijiji from "platforms/kijiji/index.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
-import { By, until } from "selenium-webdriver";
 import { getUserConfig } from "util/config.js";
 import { getGoogleMapsLink, trimAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
@@ -25,12 +24,12 @@ const parser = new Parser({
 });
 
 export const perListing = async (l: Listing) => {
-  const driver = requireDriver();
+  const page = requirePage();
   await kijijiGet(l.url);
 
   debugLog("Retrieving listing data");
 
-  const data: any = await driver.executeScript("return window.__data;");
+  const data: any = await page.evaluate(() => (window as any).__data);
   if (!data || typeof data !== "object") {
     // TODO do something else.
     return;
@@ -167,15 +166,13 @@ export const perListing = async (l: Listing) => {
     // TODO
   }
 
-  l.details.longDescription = await driver
-    .findElement(
-      By.xpath(`//*[starts-with(@class, 'descriptionContainer')]//div`)
-    )
-    .getAttribute("innerText");
+  l.details.longDescription = await page
+    .locator(`xpath=//*[starts-with(@class, 'descriptionContainer')]//div`)
+    .innerText();
 };
 
 export const onSearchParamsChanged = async () => {
-  const driver = requireDriver();
+  const page = requirePage();
   log("Building new Kijiji RSS feed... (this may take a while)");
   await setPresence("🧰 building Kijiji RSS feed (this may take a while...)");
   await kijijiGet(baseURL);
@@ -185,7 +182,7 @@ export const onSearchParamsChanged = async () => {
 
   await waitSeconds(2); // TODO don't arbitrary wait. Figure out the multiple renders of this element
   await withElement(
-    () => driver.findElement(By.xpath(`//div[@aria-modal='true']//input`)),
+    () => page.locator(`xpath=//div[@aria-modal='true']//input`),
     async (el) => {
       await manualClear(el);
       await type(
@@ -203,16 +200,16 @@ export const onSearchParamsChanged = async () => {
   await clickByXPath(`//button[@data-testid="set-location-button"]`);
 
   debugLog(`Waiting for URL to change`);
-  await driver.wait(until.urlMatches(/^(?!.*canada).*$/));
+  await page.waitForURL(/^(?!.*canada).*$/);
 
   await setFilters();
 
-  log(`Kijiji results after applying filters: ${await driver.getCurrentUrl()}`);
-  const rss = await driver
-    .findElement(By.xpath(`//div[@data-testid="srp-rss-feed-button"]//a`))
-    .then((el) => el.getAttribute("href"));
+  log(`Kijiji results after applying filters: ${page.url()}`);
+  const rss = await page
+    .locator(`xpath=//div[@data-testid="srp-rss-feed-button"]//a`)
+    .getAttribute("href");
   log(`Kijiji RSS feed: ${rss}`);
-  await persistent.kijijiRSS.writeValue(rss);
+  await persistent.kijijiRSS.writeValue(rss ?? "");
 };
 
 export const main = async (): Promise<Listing[]> => {

@@ -29,7 +29,7 @@ import {
   decorateAndFilterListings,
 } from "process/index.js";
 import psList from "ps-list";
-import { error as seleniumError, WebDriver } from "selenium-webdriver";
+import type { Page } from "playwright";
 import { Platform, platforms } from "types/platform.js";
 import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
 import {
@@ -47,17 +47,25 @@ process.title = "partmin-bot";
 dotenv.load();
 
 const PLATFORMS = [
-  platforms.fb,
+  // platforms.fb,
+  platforms.craigslist,
   //  platforms.kijiji
 ];
 
-let driver: WebDriver | undefined;
-export const requireDriver = () => {
-  if (!driver) {
-    throw new Error("WebDriver is not initialized.");
+let page: Page | undefined;
+export const requirePage = () => {
+  if (!page) {
+    throw new Error("Browser page is not initialized.");
   }
-  return driver;
+  return page;
 };
+
+const isPlaywrightBrowserError = (e: unknown): boolean =>
+  e instanceof Error &&
+  (e.message.includes("closed") ||
+    e.message.includes("Target closed") ||
+    e.message.includes("crashed") ||
+    e.constructor.name === "TimeoutError");
 
 export let shuttingDown = false;
 
@@ -117,7 +125,7 @@ const retrieval = async (platforms: Platform[]) => {
           `Found ${preprocessedListings.length} valid listings that passed pre-processing.`
         );
       } catch (e) {
-        if (e instanceof seleniumError.WebDriverError) {
+        if (isPlaywrightBrowserError(e)) {
           throw e;
         }
         if (!shuttingDown) {
@@ -164,7 +172,7 @@ const retrieval = async (platforms: Platform[]) => {
             if (await logBreakIfConfigChanged(platform)) break;
           }
         } catch (e) {
-          if (e instanceof seleniumError.WebDriverError) {
+          if (isPlaywrightBrowserError(e)) {
             throw e;
           }
           if (!shuttingDown) {
@@ -184,7 +192,7 @@ const retrieval = async (platforms: Platform[]) => {
       try {
         validListings = await decorateAndFilterListings(unseen);
       } catch (e) {
-        if (e instanceof seleniumError.WebDriverError) {
+        if (isPlaywrightBrowserError(e)) {
           throw e;
         }
         if (!shuttingDown) {
@@ -262,7 +270,7 @@ const retrieval = async (platforms: Platform[]) => {
         await callbacks.main(processListings);
       });
     } catch (e) {
-      if (e instanceof seleniumError.WebDriverError) {
+      if (isPlaywrightBrowserError(e)) {
         throw e;
       }
       if (!shuttingDown) {
@@ -274,34 +282,13 @@ const retrieval = async (platforms: Platform[]) => {
   await randomWait({ setPresence: true });
 };
 
-const shutdownWebdriver = async () => {
+const shutdownBrowser = async () => {
   debugLogNoDiscord("Closing the browser...");
-  if (!driver) {
+  if (!page) {
     debugLogNoDiscord("The browser is already closed.");
     return;
   }
-  await driver
-    .getAllWindowHandles()
-    .catch()
-    .then(async (handles) => {
-      for (const handle of handles || []) {
-        await driver?.switchTo().window(handle);
-        debugLogNoDiscord("Closing window:");
-        debugLogNoDiscord(handle);
-        debugLogNoDiscord(`(url ${await driver?.getCurrentUrl()})`);
-        await driver?.close();
-        debugLogNoDiscord("Closed window");
-      }
-    })
-    .catch((e) => {
-      debugLogNoDiscord("Error closing windows:", e);
-    })
-    .then(async () => {
-      debugLogNoDiscord("Closing the browser...");
-      await driver?.quit();
-      debugLogNoDiscord("Closed the browser.");
-    })
-    .catch();
+  await page?.context().browser()?.close().catch(() => {});
 };
 
 export const shutdown = async () => {
@@ -315,7 +302,7 @@ export const shutdown = async () => {
     }
     logNoDiscord("Shutting down...");
     await setPresence("shuttingDown", { skipDiscordLog: true });
-    await shutdownWebdriver();
+    await shutdownBrowser();
     logNoDiscord("Closed the browser.");
     await shutdownDiscord();
     logNoDiscord("Stopped the discord bot.");
@@ -356,19 +343,19 @@ export const fatalError = async (e: unknown) => {
   process.exit(1);
 };
 
-const handleWebDriverError = async (e: unknown) => {
-  if (e instanceof seleniumError.WebDriverError) {
-    log("Encountered a WebDriverError:");
+const handleBrowserError = async (e: unknown) => {
+  if (isPlaywrightBrowserError(e)) {
+    log("Encountered a browser error:");
     log(e);
     log("Restarting the browser...");
     await waitSeconds(10);
     // close the browser:
-    await shutdownWebdriver();
-    driver = await buildDriver();
+    await shutdownBrowser();
+    page = await buildDriver();
   } else {
     throw e;
   }
-  return driver;
+  return page;
 };
 
 (async () => {
@@ -421,9 +408,9 @@ const handleWebDriverError = async (e: unknown) => {
       });
     }
 
-    driver = await buildDriver();
-    if (!driver) {
-      await fatalError("Failed to initialize WebDriver.");
+    page = await buildDriver();
+    if (!page) {
+      await fatalError("Failed to initialize browser.");
     }
 
     await tryNTimes(
@@ -439,7 +426,7 @@ const handleWebDriverError = async (e: unknown) => {
         }
       },
       async (e) => {
-        driver = await handleWebDriverError(e);
+        page = await handleBrowserError(e);
       }
     );
 
@@ -450,10 +437,10 @@ const handleWebDriverError = async (e: unknown) => {
         await retrieval(PLATFORMS);
         retries = 0;
       } catch (e) {
-        const ogDriver: WebDriver | undefined = driver;
-        driver = await handleWebDriverError(e);
-        if (driver === ogDriver) {
-          // Don't retry if it was not a WebDriverError or if the driver was not successfully restarted
+        const ogPage: Page | undefined = page;
+        page = await handleBrowserError(e);
+        if (page === ogPage) {
+          // Don't retry if it was not a browser error or if the page was not successfully restarted
           throw e;
         }
         log("Retrying retrieval loop after restarting the browser...");

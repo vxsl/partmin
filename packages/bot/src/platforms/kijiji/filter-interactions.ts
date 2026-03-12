@@ -1,4 +1,3 @@
-import { requireDriver } from "index.js";
 import { ensureFilterIsOpen, getFilterXpath } from "platforms/kijiji/util.js";
 import { StaticUserConfig } from "user-config.js";
 import { getUserConfig } from "util/config.js";
@@ -8,6 +7,7 @@ import {
   fillInputByLabel,
   waitUntilUrlChanges,
 } from "util/selenium.js";
+import { waitSeconds } from "util/misc.js";
 
 export class FilterDef<V> {
   constructor(
@@ -65,7 +65,7 @@ const filterInteractions: FilterInteractionsMap = {
           parentXpath: `${xpath}/..`,
           afterClick: async () => {
             await waitUntilUrlChanges();
-            await requireDriver().sleep(1000);
+            await waitSeconds(1);
             await ensureFilterIsOpen("unittype");
           },
         });
@@ -103,7 +103,7 @@ const filterInteractions: FilterInteractionsMap = {
           parentXpath: `${xpath}/..`,
           afterClick: async () => {
             await waitUntilUrlChanges();
-            await requireDriver().sleep(1000);
+            await waitSeconds(1);
             await ensureFilterIsOpen("numberbedrooms");
           },
         });

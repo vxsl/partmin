@@ -1,128 +1,102 @@
-import { seleniumImplicitWait } from "constants.js";
-import { requireDriver } from "index.js";
-import {
-  By,
-  Condition,
-  Key,
-  WebElement,
-  WebElementPromise,
-  until,
-} from "selenium-webdriver";
+import { requirePage } from "index.js";
+import type { Locator } from "playwright";
 import { debugLog, verboseLog } from "util/log.js";
 import { tryNTimes, waitSeconds } from "util/misc.js";
 
 export const clearBrowsingData = async () => {
-  const driver = requireDriver();
-  await driver.manage().deleteAllCookies();
-  await driver.executeScript("window.localStorage.clear();");
-  await driver.executeScript("window.sessionStorage.clear();");
+  const page = requirePage();
+  await page.context().clearCookies();
+  await page.evaluate(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
 };
 
 export const waitUntilUrlChanges = async (compareTo?: string) => {
-  const driver = requireDriver();
-  const url = compareTo ?? (await driver.getCurrentUrl());
-  await driver.wait(
-    new Condition("Waiting until the browser URL changes", (driver) =>
-      driver.getCurrentUrl().then((_url) => _url !== url)
-    ),
-    10 * 1000
-  );
+  const page = requirePage();
+  const url = compareTo ?? page.url();
+  await page.waitForURL((u) => u.toString() !== url, { timeout: 10 * 1000 });
 };
 
 export const type = async (
-  element: WebElementPromise | WebElement,
-  v: string | number
+  element: Locator,
+  v: string | number | undefined
 ) => {
-  const isNumber = typeof v === "number";
+  if (v === undefined) return;
   const str = `${v}`;
   for (let i = 0; i < str.length; i++) {
     const char = str[i];
-    if (char === undefined) {
-      continue; // I don't know why TypeScript doesn't know that char is defined here
-    }
+    if (char === undefined) continue;
     await new Promise((resolve) =>
       setTimeout(
-        () => element.sendKeys(isNumber ? Number(char) : char).then(resolve),
+        () => element.pressSequentially(char).then(resolve),
         Math.random() * 200
       )
     );
   }
 };
 
-export const manualClear = async (el: WebElementPromise | WebElement) =>
-  await el.sendKeys(Key.chord(Key.CONTROL, "a", Key.DELETE));
-
-export const elementShouldBeInteractable = async (
-  el: WebElement,
-  log:
-    | {
-        xpath: string;
-        name?: undefined;
-      }
-    | {
-        xpath?: undefined;
-        name: string;
-      }
-) => {
-  const driver = requireDriver();
-  const str = log.xpath ?? log.name;
-  debugLog(`Waiting for ${str} to be visible`);
-  await driver.wait(until.elementIsVisible(el), 10 * 1000);
-  debugLog(`Waiting for ${str} to be enabled`);
-  await driver.wait(until.elementIsEnabled(el), 10 * 1000);
+export const manualClear = async (el: Locator) => {
+  await el.press("Control+a");
+  await el.press("Delete");
 };
 
-export const click = async (element: WebElementPromise | WebElement) => {
+export const elementShouldBeInteractable = async (
+  el: Locator,
+  log:
+    | { xpath: string; name?: undefined }
+    | { xpath?: undefined; name: string }
+) => {
+  const str = log.xpath ?? log.name;
+  debugLog(`Waiting for ${str} to be visible`);
+  await el.waitFor({ state: "visible", timeout: 10 * 1000 });
+};
+
+export const click = async (element: Locator) => {
   await waitSeconds(Math.random() * 1 + 1);
-  return await new Promise((resolve, reject) => {
-    setTimeout(() => {
-      return element.click().then(resolve).catch(reject);
-    }, Math.random() * 200);
-  });
+  await element.click({ delay: Math.random() * 200 });
 };
 
 export const elementShouldExist = async (
   method: "xpath" | "css",
   selector: string
 ) => {
-  const driver = requireDriver();
-  await (method === "xpath"
-    ? driver.wait(until.elementLocated(By.xpath(selector)), 10 * 1000)
-    : method === "css"
-    ? driver.wait(until.elementLocated(By.css(selector)), 10 * 1000)
-    : Promise.resolve());
+  const page = requirePage();
+  const locSelector = method === "xpath" ? `xpath=${selector}` : selector;
+  await page.waitForSelector(locSelector, { timeout: 10 * 1000 });
 };
 
-export const withElement = <F extends (el: WebElement) => any>(
-  getEl: () => WebElement | WebElementPromise,
+export const withElement = <F extends (el: Locator) => any>(
+  getEl: () => Locator,
   fn: F
-): Promise<ReturnType<F>> => tryNTimes(3, async () => fn(await getEl()));
+): Promise<ReturnType<F>> => tryNTimes(3, async () => fn(getEl()));
 
 type WithElementsByXpathOptions = {
   noConcurrency?: boolean;
-  parent?: WebElement;
+  parent?: Locator;
   parentXpath?: string;
   limit?: number;
 };
 
 export const withElementsByXpath = async <T>(
   _selector: string,
-  fn: (el: WebElement, i: number) => Promise<T>,
+  fn: (el: Locator, i: number) => Promise<T>,
   options?: WithElementsByXpathOptions
 ): Promise<T[]> => {
-  const driver = await requireDriver();
+  const page = requirePage();
   const promises: Promise<T>[] = [];
   const results: T[] = [];
 
-  const selector = `${options?.parentXpath ?? ""}${_selector}`;
+  const selector = `xpath=${(options?.parentXpath ?? "") + _selector}`;
+  const loc = options?.parent
+    ? options.parent.locator(selector)
+    : page.locator(selector);
 
-  const len = await driver
-    .findElements(By.xpath(selector))
-    .then((els) => els.length);
+  const len = await loc.count();
   verboseLog(`withElementsByXpath: ${len} elements found`);
+
   for (let i = 0; i < Math.min(options?.limit ?? Infinity, len); i++) {
-    const xpath = `(${selector})[${i + 1}]`;
-    const getEl = () => driver.findElement(By.xpath(xpath));
+    const getEl = () => loc.nth(i);
 
     if (options?.noConcurrency) {
       const r = await withElement(getEl, (el) => fn(el, i));
@@ -143,13 +117,14 @@ export const withElementsByXpath = async <T>(
 export const clickByXPath = async (
   selector: string,
   options?: {
-    parent?: WebElement;
+    parent?: Locator;
     parentXpath?: string;
   }
 ) => {
-  const xpath = `${options?.parentXpath ?? ""}${selector}`;
+  const xpath = (options?.parentXpath ?? "") + selector;
   await withElement(
-    () => (options?.parent ?? requireDriver()).findElement(By.xpath(xpath)),
+    () =>
+      (options?.parent ?? requirePage()).locator(`xpath=${xpath}`),
     async (el) => {
       await elementShouldBeInteractable(el, { xpath });
       await click(el);
@@ -178,19 +153,17 @@ export const clickAllByXPath = async (
 
 export const fillInputByLabel = async (
   label: string,
-  v: string | number,
+  v: string | number | undefined,
   options?: {
     parentXpath?: string;
   }
 ) => {
   await withElement(
     () =>
-      requireDriver().findElement(
-        By.xpath(
-          `${
-            options?.parentXpath ?? ""
-          }//label[contains(text(), "${label}")]/following-sibling::input | //label[contains(text(), "${label}")]/ancestor::label/following-sibling::input`
-        )
+      requirePage().locator(
+        `xpath=${
+          options?.parentXpath ?? ""
+        }//label[contains(text(), "${label}")]/following-sibling::input | //label[contains(text(), "${label}")]/ancestor::label/following-sibling::input`
       ),
     async (el) => {
       await type(el, v);
@@ -199,8 +172,8 @@ export const fillInputByLabel = async (
 };
 
 export const withDOMChangesBlocked = async (fn: Function) => {
-  const driver = requireDriver();
-  await driver.executeScript(`
+  const page = requirePage();
+  await page.evaluate(`
     window.ogAppendChild = Node.prototype.appendChild;
     window.ogRemoveChild = Node.prototype.removeChild;
     window.ogInsertBefore = Node.prototype.insertBefore;
@@ -212,30 +185,13 @@ export const withDOMChangesBlocked = async (fn: Function) => {
   try {
     await fn();
   } finally {
-    await driver.executeScript(
-      `
+    await page.evaluate(`
       Node.prototype.appendChild = window.ogAppendChild;
       Node.prototype.removeChild = window.ogRemoveChild;
       Node.prototype.insertBefore = window.ogInsertBefore;
-    `
-    );
+    `);
   }
 };
 
-export const withoutImplicitWait = async <T>(fn: () => Promise<T>) => {
-  const driver = requireDriver();
-  verboseLog("Disabling implicit wait");
-  await driver.manage().setTimeouts({ implicit: 0 });
-  verboseLog("Executing function without implicit wait");
-  let res;
-  try {
-    res = await fn();
-    verboseLog("Function executed without implicit wait");
-  } finally {
-    verboseLog("Re-enabling implicit wait");
-    await driver.manage().setTimeouts({ implicit: seleniumImplicitWait });
-    verboseLog("Implicit wait re-enabled");
-  }
-  verboseLog("Returning result");
-  return res;
-};
+// Playwright has no implicit wait; this wrapper is a passthrough for compatibility.
+export const withoutImplicitWait = <T>(fn: () => Promise<T>) => fn();

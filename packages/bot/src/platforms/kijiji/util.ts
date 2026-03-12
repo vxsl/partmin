@@ -1,10 +1,9 @@
-import { requireDriver } from "index.js";
+import { requirePage } from "index.js";
 import filterInteractions, {
   FilterDef,
   FilterInteractionsMap,
   doFilter,
 } from "platforms/kijiji/filter-interactions.js";
-import { By, until } from "selenium-webdriver";
 import { debugLog } from "util/log.js";
 import { isPlainObject, waitSeconds } from "util/misc.js";
 import {
@@ -15,15 +14,15 @@ import {
 } from "util/selenium.js";
 
 export const kijijiGet = async (url: string) => {
-  const driver = requireDriver();
-  await driver.get(url);
+  const page = requirePage();
+  await page.goto(url);
   const xpath = "//button[contains(@class, 'cookieBannerCloseButton')]";
 
   await withoutImplicitWait(async () => {
     try {
-      await driver
-        .wait(until.elementLocated(By.xpath(xpath)), 1000)
-        .then((el) => click(el))
+      await page
+        .waitForSelector(`xpath=${xpath}`, { timeout: 1000 })
+        .then(() => click(page.locator(`xpath=${xpath}`)))
         .then(() => {
           debugLog("Dismissed kijiji cookie banner");
         });
@@ -35,11 +34,11 @@ export const getFilterXpath = (id: string) =>
   `//div[@id="accordion__panel-${id}"]`;
 
 export const ensureFilterIsOpen = async (id: string) => {
-  const driver = requireDriver();
+  const page = requirePage();
   const xpath = `${getFilterXpath(id)}/..`;
   debugLog(`Ensuring filter ${id} is open`);
   await withElement(
-    () => driver.findElement(By.xpath(xpath)),
+    () => page.locator(`xpath=${xpath}`),
     async (el) => {
       debugLog(`Ensuring filter ${id} is interactable`);
       await elementShouldBeInteractable(el, { xpath });

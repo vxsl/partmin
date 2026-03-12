@@ -1,6 +1,6 @@
 import { startActivity } from "discord/presence.js";
 import { discordSend } from "discord/util.js";
-import { requireDriver } from "index.js";
+import { requirePage } from "index.js";
 import { addBulletPoints, invalidateListing, Listing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
 import fb from "platforms/fb/index.js";
@@ -11,7 +11,7 @@ import {
   isOnHomepage,
   setMarketplaceLocation,
 } from "platforms/fb/util.js";
-import { By, IWebDriverCookie } from "selenium-webdriver";
+import type { Cookie } from "playwright";
 import { PlatformKey } from "types/platform.js";
 import { PetType } from "user-config.js";
 import { getUserConfig } from "util/config.js";
@@ -47,9 +47,9 @@ class MarketplaceRadiusError extends Error {
   }
 }
 
-let cachedCookies: IWebDriverCookie[] | undefined = undefined;
-let cachedLocalStorage: Storage | undefined = undefined;
-let cachedSessionStorage: Storage | undefined = undefined;
+let cachedCookies: Cookie[] | undefined = undefined;
+let cachedLocalStorage: Record<string, string> | undefined = undefined;
+let cachedSessionStorage: Record<string, string> | undefined = undefined;
 
 const fbGet = async (
   url: string,
@@ -57,43 +57,40 @@ const fbGet = async (
     incognito?: boolean;
   }
 ) => {
-  const driver = requireDriver();
+  const page = requirePage();
   if (!options?.incognito) {
-    return await driver.get(url);
+    return await page.goto(url);
   }
-  cachedCookies = await driver.manage().getCookies();
-  cachedLocalStorage = await driver.executeScript("return window.localStorage");
-  cachedSessionStorage = await driver.executeScript(
-    "return window.sessionStorage"
-  );
+  cachedCookies = await page.context().cookies();
+  cachedLocalStorage = await page.evaluate(() => ({ ...window.localStorage }));
+  cachedSessionStorage = await page.evaluate(() => ({
+    ...window.sessionStorage,
+  }));
   await clearBrowsingData();
 
-  await driver.get(url);
+  await page.goto(url);
 
   await clearBrowsingData();
   if (cachedCookies) {
-    for (const cookie of cachedCookies) {
-      await driver.manage().addCookie(cookie);
-    }
+    await page.context().addCookies(cachedCookies);
   }
   if (cachedLocalStorage) {
-    await driver.executeScript(
-      `Object.entries(${JSON.stringify(
-        cachedLocalStorage
-      )}).forEach(([k, v]) => localStorage.setItem(k, v));`
+    await page.evaluate(
+      (ls: Record<string, string>) => Object.entries(ls).forEach(([k, v]) => localStorage.setItem(k, v)),
+      cachedLocalStorage
     );
   }
   if (cachedSessionStorage) {
-    await driver.executeScript(
-      `Object.entries(${JSON.stringify(
-        cachedSessionStorage
-      )}).forEach(([k, v]) => sessionStorage.setItem(k, v));`
+    await page.evaluate(
+      (ss: Record<string, string>) =>
+        Object.entries(ss).forEach(([k, v]) => sessionStorage.setItem(k, v)),
+      cachedSessionStorage
     );
   }
 };
 
 export const perListing = async (l: Listing) => {
-  const driver = requireDriver();
+  const page = requirePage();
   let url = getListingURL(l.id);
   debugLog(`visiting listing: ${url}`);
 
@@ -105,29 +102,28 @@ export const perListing = async (l: Listing) => {
   await tryNTimes(3, async () => {
     await fbGet(url, { incognito: true });
 
-    infos = await driver
-      .findElements(
-        By.xpath(
-          `//script[contains(text(), "marketplace_product_details_page")]`
-        )
+    const els = await page
+      .locator(
+        `xpath=//script[contains(text(), "marketplace_product_details_page")]`
       )
-      .then((els) =>
-        Promise.all(
-          els
-            .map((e) =>
-              e
-                .getAttribute("innerHTML")
-                .then(
-                  (html) =>
-                    findNestedJSONProperty(
-                      html ?? "",
-                      "marketplace_product_details_page"
-                    )?.target
-                )
-            )
-            .filter(notUndefined)
-        )
-      );
+      .all();
+    infos = (
+      await Promise.all(
+        els
+          .map((e) =>
+            e
+              .innerHTML()
+              .then(
+                (html) =>
+                  findNestedJSONProperty(
+                    html ?? "",
+                    "marketplace_product_details_page"
+                  )?.target
+              )
+          )
+          .filter(notUndefined)
+      )
+    ).filter(notUndefined);
 
     if (!infos?.length) {
       throw new Error("Couldn't find marketplace_product_details_page");
@@ -411,7 +407,7 @@ export const perListing = async (l: Listing) => {
 };
 
 export const visitMarketplace = async (radius: Circle) => {
-  const driver = requireDriver();
+  const page = requirePage();
   const config = await getUserConfig();
 
   const city = config.search.location.city;
@@ -460,29 +456,24 @@ export const visitMarketplace = async (radius: Circle) => {
 
   await fbGet(url);
 
-  await driver.wait(async () => {
-    const state = (await driver.executeScript(
-      "return document.readyState"
-    )) as string;
-    return state === "complete";
-  });
+  await page.waitForLoadState("load");
 
   return url;
 };
 
 export const visitFacebook = async () => {
-  await requireDriver().get("https://facebook.com");
+  await requirePage().goto("https://facebook.com");
 };
 
 export const login = async () => {
-  const driver = requireDriver();
+  const page = requirePage();
   const USER = process.env.FB_USER;
   const PASS = process.env.FB_PASS;
   if (!USER || !PASS) throw new Error("Missing FB_USER or FB_PASS env var");
 
-  await fbType(driver.findElement(By.name("email")), USER);
-  await fbType(driver.findElement(By.name("pass")), PASS);
-  await fbClick(driver.findElement(By.name("login")));
+  await fbType(page.locator('[name="email"]'), USER);
+  await fbType(page.locator('[name="pass"]'), PASS);
+  await fbClick(page.locator('[aria-label="Log In"]'));
   await elementShouldExist("css", '[aria-label="Search Facebook"]');
 };
 
@@ -496,7 +487,7 @@ export const getListings = async (): Promise<Listing[]> => {
     fbListingXpath,
     async (e): Promise<Listing | undefined> => {
       const href = await e.getAttribute("href");
-      const id = href.match(/\d+/)?.[0];
+      const id = href?.match(/\d+/)?.[0];
 
       if (!id) {
         log(`Unable to parse listing ID from ${href}`);
@@ -505,7 +496,7 @@ export const getListings = async (): Promise<Listing[]> => {
 
       const SEP = " - ";
       const text = await e
-        .getText()
+        .innerText()
         .then((t) =>
           t.replace("\n", SEP).replace(/^C\$+/, "").replace("\n", SEP)
         );
@@ -543,8 +534,8 @@ export const getListings = async (): Promise<Listing[]> => {
       };
 
       await withElement(
-        () => e.findElement(By.css("img")),
-        (img) => img.getAttribute("src").then((src) => res.imgURLs.push(src))
+        () => e.locator("img"),
+        (img) => img.getAttribute("src").then((src) => src && res.imgURLs.push(src))
       );
 
       return res;
