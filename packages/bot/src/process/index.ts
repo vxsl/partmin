@@ -89,12 +89,12 @@ export const preprocessListings = async (listings: Listing[]) => {
     return v;
   });
 
-  const res = withinRadii.slice(0, 5);
+  const res = withinRadii.slice(0, 15);
 
   let ignore = (await persistent.ignore.value()) ?? [];
   await persistent.ignore.writeValue([
     ...ignore,
-    ...withinRadii.slice(5).map(getListingKey),
+    ...withinRadii.slice(15).map(getListingKey),
   ]);
   ignore = (await persistent.ignore.value()) ?? [];
   return res.filter((l) => {
