@@ -46,6 +46,59 @@ export const accessParentOfNestedProperty = (
   return accessNestedProperty(obj, path.slice(0, -1));
 };
 
+/**
+ * Every balanced JSON object in the string that encloses the given key.
+ *
+ * findNestedJSONProperty only ever looks at the nearest enclosing brace, which
+ * lands on whichever small fragment happens to sit closest to the key. This
+ * walks outward instead, collecting each successively larger object that still
+ * parses, so a caller can pick whichever one actually holds the fields it needs.
+ */
+export const findEnclosingJSONObjects = (
+  jsonString: string,
+  key: string,
+  options?: { maxResults?: number; maxOutwardSteps?: number }
+): any[] => {
+  const maxResults = options?.maxResults ?? 300;
+  const maxOutwardSteps = options?.maxOutwardSteps ?? 30;
+  const needle = `"${key}"`;
+  const results: any[] = [];
+
+  let keyIndex = jsonString.indexOf(needle);
+  while (keyIndex !== -1 && results.length < maxResults) {
+    let from = keyIndex;
+    for (let step = 0; step < maxOutwardSteps; step++) {
+      from = jsonString.lastIndexOf("{", from - 1);
+      if (from < 0) {
+        break;
+      }
+      let depth = 0;
+      for (let i = from; i < jsonString.length; i++) {
+        const c = jsonString[i];
+        if (c === "{") {
+          depth++;
+        } else if (c === "}") {
+          depth--;
+        }
+        if (depth === 0) {
+          // An object that closes before the key doesn't contain it:
+          if (i >= keyIndex) {
+            try {
+              results.push(JSON.parse(jsonString.substring(from, i + 1)));
+            } catch {
+              // not valid JSON on its own; a wider object may still parse
+            }
+          }
+          break;
+        }
+      }
+    }
+    keyIndex = jsonString.indexOf(needle, keyIndex + 1);
+  }
+
+  return results;
+};
+
 export const findNestedJSONProperty = (
   jsonString: string,
   key: string
