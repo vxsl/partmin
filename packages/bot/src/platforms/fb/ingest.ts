@@ -1,17 +1,23 @@
+import { AttachmentBuilder } from "discord.js";
 import { startActivity } from "discord/presence.js";
-import { discordSend } from "discord/util.js";
+import { discordSend, manualDiscordSend } from "discord/util.js";
 import { requirePage } from "index.js";
 import { addBulletPoints, invalidateListing, Listing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
 import fb from "platforms/fb/index.js";
 import {
+  applyFbSessionToContext,
+  saveFbSession,
+} from "platforms/fb/session.js";
+import {
+  collectListingInfos,
   fbClick,
   fbType,
   getCurrentRadius,
-  isOnHomepage,
+  isLoggedIn,
+  loginChallengeReason,
   setMarketplaceLocation,
 } from "platforms/fb/util.js";
-import type { Cookie } from "playwright";
 import { PlatformKey } from "types/platform.js";
 import { PetType } from "user-config.js";
 import { getUserConfig } from "util/config.js";
@@ -26,10 +32,16 @@ import {
 } from "util/geo.js";
 import { findNestedJSONProperty } from "util/json.js";
 import { debugLog, log, verboseLog } from "util/log.js";
-import { isNight, notUndefined, randomWait, tryNTimes } from "util/misc.js";
 import {
-  clearBrowsingData,
+  isNight,
+  notUndefined,
+  randomWait,
+  tryNTimes,
+  waitSeconds,
+} from "util/misc.js";
+import {
   elementShouldExist,
+  withCleanPage,
   withDOMChangesBlocked,
   withElement,
   withElementsByXpath,
@@ -47,50 +59,9 @@ class MarketplaceRadiusError extends Error {
   }
 }
 
-let cachedCookies: Cookie[] | undefined = undefined;
-let cachedLocalStorage: Record<string, string> | undefined = undefined;
-let cachedSessionStorage: Record<string, string> | undefined = undefined;
-
-const fbGet = async (
-  url: string,
-  options?: {
-    incognito?: boolean;
-  }
-) => {
-  const page = requirePage();
-  if (!options?.incognito) {
-    return await page.goto(url);
-  }
-  cachedCookies = await page.context().cookies();
-  cachedLocalStorage = await page.evaluate(() => ({ ...window.localStorage }));
-  cachedSessionStorage = await page.evaluate(() => ({
-    ...window.sessionStorage,
-  }));
-  await clearBrowsingData();
-
-  await page.goto(url);
-
-  await clearBrowsingData();
-  if (cachedCookies) {
-    await page.context().addCookies(cachedCookies);
-  }
-  if (cachedLocalStorage) {
-    await page.evaluate(
-      (ls: Record<string, string>) => Object.entries(ls).forEach(([k, v]) => localStorage.setItem(k, v)),
-      cachedLocalStorage
-    );
-  }
-  if (cachedSessionStorage) {
-    await page.evaluate(
-      (ss: Record<string, string>) =>
-        Object.entries(ss).forEach(([k, v]) => sessionStorage.setItem(k, v)),
-      cachedSessionStorage
-    );
-  }
-};
+const fbGet = async (url: string) => await requirePage().goto(url);
 
 export const perListing = async (l: Listing) => {
-  const page = requirePage();
   let url = getListingURL(l.id);
   debugLog(`visiting listing: ${url}`);
 
@@ -100,30 +71,35 @@ export const perListing = async (l: Listing) => {
   const isAptSearch = config.search.category === "propertyrentals";
 
   await tryNTimes(3, async () => {
-    await fbGet(url, { incognito: true });
+    // Listing detail pages are public, so they're fetched anonymously to keep
+    // the logged-in session away from per-listing traffic:
+    infos = await withCleanPage(async (page) => {
+      await page.goto(url);
 
-    const els = await page
-      .locator(
-        `xpath=//script[contains(text(), "marketplace_product_details_page")]`
-      )
-      .all();
-    infos = (
-      await Promise.all(
-        els
-          .map((e) =>
-            e
-              .innerHTML()
-              .then(
-                (html) =>
-                  findNestedJSONProperty(
-                    html ?? "",
-                    "marketplace_product_details_page"
-                  )?.target
-              )
-          )
-          .filter(notUndefined)
-      )
-    ).filter(notUndefined);
+      const scripts = await page
+        .locator("xpath=//script")
+        .all()
+        .then((els) => Promise.all(els.map((e) => e.innerHTML().catch(() => ""))));
+
+      // Facebook moved the listing's fields out of marketplace_product_details_page
+      // (which now carries only photos and an id), so gather every object on the
+      // page belonging to this listing instead:
+      const collected = collectListingInfos(scripts, l.id);
+      if (collected.length) {
+        return collected;
+      }
+
+      verboseLog(
+        `Found no id-matched data for listing ${l.id}; falling back to marketplace_product_details_page.`
+      );
+      return scripts
+        .map(
+          (html) =>
+            findNestedJSONProperty(html, "marketplace_product_details_page")
+              ?.target
+        )
+        .filter(notUndefined);
+    });
 
     if (!infos?.length) {
       throw new Error("Couldn't find marketplace_product_details_page");
@@ -204,8 +180,14 @@ export const perListing = async (l: Listing) => {
           );
         }
       } catch (e) {
-        log(e);
-        throw new Error(`Couldn't determine listing age for ${l.id}: ${e}`);
+        // Fail closed. Throwing here used to abort the whole batch, and treating
+        // an unknown age as "fresh" is how month-old listings got sent.
+        debugLog(`Couldn't determine the age of listing ${l.id}: ${e}`);
+        invalidateListing(
+          l,
+          "stale",
+          "Couldn't determine how old this listing is"
+        );
       }
     }
 
@@ -474,7 +456,140 @@ export const login = async () => {
   await fbType(page.locator('[name="email"]'), USER);
   await fbType(page.locator('[name="pass"]'), PASS);
   await fbClick(page.locator('[aria-label="Log In"]'));
-  await elementShouldExist("css", '[aria-label="Search Facebook"]');
+
+  // Facebook answers either by logging us in or by raising a challenge, and a
+  // challenge iframe can take a second or two to render — so poll for both
+  // instead of assuming which arrives first. Checking only for the logged-in
+  // state would report a bare selector timeout and lose the actual reason.
+  const deadline = Date.now() + 30 * 1000;
+  while (Date.now() < deadline) {
+    if (await isLoggedIn()) {
+      return;
+    }
+    const challenge = await loginChallengeReason();
+    if (challenge) {
+      throw new Error(challenge);
+    }
+    await waitSeconds(1);
+  }
+
+  throw new Error("Facebook didn't complete the login within 30 seconds");
+};
+
+const manualLoginPromptIntervalMs = 30 * 60 * 1000;
+let lastManualLoginPromptAt: number | undefined;
+
+const manualLoginInstructions = (reason: string) =>
+  [
+    "🔐 **Facebook needs a manual login.**",
+    "",
+    reason.endsWith(".") ? reason : `${reason}.`,
+    "Marketplace listings will be skipped until a session is available. Other platforms are unaffected.",
+    "",
+    "On the machine running partmin, from the partmin repo directory:",
+    "```",
+    "docker compose --profile login run --rm --service-ports fb-login",
+    "```",
+    "Then, from your own machine:",
+    "```",
+    "ssh -L 6080:localhost:6080 <your-server>",
+    "```",
+    "and open <http://localhost:6080/vnc.html?autoconnect=1&resize=scale> to drive the browser directly and complete the login. partmin will pick up the session on its next pass — no restart needed.",
+  ].join("\n");
+
+const promptForManualLogin = async (reason: string) => {
+  const now = Date.now();
+  if (
+    lastManualLoginPromptAt !== undefined &&
+    now - lastManualLoginPromptAt < manualLoginPromptIntervalMs
+  ) {
+    log(`Still no Facebook session (${reason}). Already asked for a login.`);
+    return;
+  }
+  lastManualLoginPromptAt = now;
+
+  log(`Facebook needs a manual login: ${reason}`);
+
+  const screenshot = await requirePage()
+    .screenshot({ type: "png" })
+    .catch((e) => {
+      debugLog(`Couldn't screenshot the Facebook login page: ${e}`);
+      return undefined;
+    });
+
+  await manualDiscordSend({
+    content: manualLoginInstructions(reason),
+    ...(screenshot && {
+      files: [
+        new AttachmentBuilder(screenshot, { name: "facebook-login.png" }),
+      ],
+    }),
+  });
+};
+
+/**
+ * Make sure there's a usable Facebook session, returning false if the bot can't
+ * get one on its own. Called before every pass so that a login completed
+ * out-of-band (see the fb-login service) is picked up without a restart.
+ */
+// Every automated login is a real login attempt against Facebook, and a burst
+// of failures is what gets an account challenged or locked. One attempt per
+// process is enough: past that, a human needs to intervene anyway.
+let autoLoginAttempted = false;
+
+export const ensureSession = async (): Promise<boolean> => {
+  const page = requirePage();
+
+  await visitFacebook();
+  if (await isLoggedIn()) {
+    verboseLog("Facebook session is valid.");
+    await saveFbSession(page.context());
+    return true;
+  }
+
+  // Someone may have completed a login out-of-band since the last pass:
+  if (await applyFbSessionToContext(page.context())) {
+    await visitFacebook();
+    if (await isLoggedIn()) {
+      log("Picked up a Facebook session completed out-of-band.");
+      return true;
+    }
+    log("The Facebook session found on disk didn't result in a login.");
+  }
+
+  log("No valid Facebook session.");
+
+  // An automated login is what triggers the captcha in the first place, so only
+  // attempt it when credentials were provided, and give up as soon as Facebook
+  // pushes back:
+  if (process.env.FB_USER && process.env.FB_PASS && !autoLoginAttempted) {
+    autoLoginAttempted = true;
+    log("Attempting to log in with the configured credentials...");
+    try {
+      await login();
+      if (await isLoggedIn()) {
+        log("Logged into Facebook successfully.");
+        await saveFbSession(page.context(), { force: true });
+        return true;
+      }
+      await promptForManualLogin(
+        "The automated login didn't result in a logged-in session"
+      );
+      return false;
+    } catch (e) {
+      await promptForManualLogin(
+        `The automated login failed: ${e instanceof Error ? e.message : e}`
+      );
+      return false;
+    }
+  }
+
+  await promptForManualLogin(
+    autoLoginAttempted
+      ? "The automated login already failed once this run, so it won't be retried"
+      : "There's no saved session and no FB_USER/FB_PASS credentials are configured"
+  );
+  return false;
 };
 
 export const getListings = async (): Promise<Listing[]> => {
@@ -544,15 +659,19 @@ export const getListings = async (): Promise<Listing[]> => {
 };
 
 export const init = async () => {
-  await visitFacebook();
-  if ((await isOnHomepage()) === false) {
-    await login();
-  }
+  // A missing session mustn't be fatal: the other platforms should keep working
+  // while the user completes a login.
+  await ensureSession();
 };
 
 export const main = async (
   processListings: (listings: Listing[]) => Promise<void>
 ) => {
+  if (!(await ensureSession())) {
+    log("Skipping Facebook Marketplace until a session is available.");
+    return;
+  }
+
   const config = await getUserConfig();
   const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
 

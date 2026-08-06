@@ -1,5 +1,6 @@
 import { requirePage } from "index.js";
 import type { Locator } from "playwright";
+import { findEnclosingJSONObjects } from "util/json.js";
 import { log } from "util/log.js";
 import { waitSeconds as seconds, tryNTimes, waitSeconds } from "util/misc.js";
 import {
@@ -10,6 +11,44 @@ import {
 } from "util/selenium.js";
 
 export const MP_ITEM_XPATH = `.//a[contains(@href,'/marketplace/item/')]`;
+
+// Fields worth anchoring on when hunting for a listing's data in the page. Each
+// one lives on a different object in Facebook's payload, so several anchors are
+// needed to gather everything perListing reads.
+const listingInfoAnchors = [
+  "creation_time",
+  "redacted_description",
+  "listing_photos",
+  "pdp_display_sections",
+];
+
+/**
+ * The JSON objects in a listing page's inline scripts that belong to the given
+ * listing.
+ *
+ * A Marketplace item page embeds many *other* listings too (recommendations,
+ * "similar items"), each with its own creation_time — so an object is only
+ * trusted when it identifies itself as this listing. Without that check the
+ * staleness filter reads a neighbouring listing's timestamp.
+ */
+export const collectListingInfos = (scripts: string[], id: string): any[] => {
+  const candidates: any[] = [];
+  for (const script of scripts) {
+    for (const anchor of listingInfoAnchors) {
+      if (!script.includes(`"${anchor}"`)) {
+        continue;
+      }
+      candidates.push(...findEnclosingJSONObjects(script, anchor));
+    }
+  }
+
+  return (
+    candidates
+      .filter((o) => o && typeof o === "object" && String(o.id) === id)
+      // richest first, so getPart finds populated fields sooner:
+      .sort((a, b) => Object.keys(b).length - Object.keys(a).length)
+  );
+};
 
 export const marketplaceReady = () =>
   requirePage()
@@ -67,6 +106,62 @@ export const isOnHomepage = async () =>
     .locator('[aria-label="Search Facebook"]')
     .count()
     .then((n) => n > 0);
+
+/**
+ * Whether the browser holds a logged-in Facebook session. Checking the cookie
+ * rather than the DOM means this holds true regardless of which Facebook page
+ * happens to be open.
+ */
+export const isLoggedIn = async () =>
+  await requirePage()
+    .context()
+    .cookies("https://www.facebook.com")
+    .then((cs) => cs.some((c) => c.name === "c_user" && !!c.value));
+
+const challengeURLFragments: [string, string][] = [
+  ["/checkpoint/", "Facebook is showing a security checkpoint"],
+  ["two_step_verification", "Facebook is asking for a 2FA code"],
+  ["/recover/", "Facebook is asking to recover the account"],
+  ["login_attempt", "Facebook is questioning the login attempt"],
+];
+
+const challengeSelectors: [string, string][] = [
+  ['[name="captcha_response"]', "Facebook is showing a captcha"],
+  ['iframe[src*="captcha"]', "Facebook is showing a captcha"],
+  ['iframe[src*="recaptcha"]', "Facebook is showing a reCAPTCHA"],
+];
+
+/**
+ * A human-readable reason if Facebook is blocking the login with a challenge,
+ * otherwise undefined. Used to bail out of an automated login attempt instead
+ * of hammering a captcha the bot can't solve.
+ */
+export const loginChallengeReason = async (): Promise<string | undefined> => {
+  const page = requirePage();
+
+  const url = page.url();
+  for (const [fragment, reason] of challengeURLFragments) {
+    if (url.includes(fragment)) {
+      return reason;
+    }
+  }
+
+  for (const [selector, reason] of challengeSelectors) {
+    if ((await page.locator(selector).count()) > 0) {
+      return reason;
+    }
+  }
+
+  const securityCheck = await page
+    .getByText(/security check|vérification de sécurité/i)
+    .count()
+    .catch(() => 0);
+  if (securityCheck > 0) {
+    return "Facebook is showing a security check";
+  }
+
+  return undefined;
+};
 
 export const getCurrentRadius = () =>
   requirePage()

@@ -47,7 +47,7 @@ process.title = "partmin-bot";
 dotenv.load();
 
 const PLATFORMS = [
-  // platforms.fb,
+  platforms.fb,
   platforms.craigslist,
   //  platforms.kijiji
 ];

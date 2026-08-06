@@ -1,15 +1,26 @@
 import { requirePage } from "index.js";
-import type { Locator } from "playwright";
+import type { Locator, Page } from "playwright";
 import { debugLog, verboseLog } from "util/log.js";
 import { tryNTimes, waitSeconds } from "util/misc.js";
 
-export const clearBrowsingData = async () => {
-  const page = requirePage();
-  await page.context().clearCookies();
-  await page.evaluate(() => {
-    window.localStorage.clear();
-    window.sessionStorage.clear();
-  });
+/**
+ * Run something in a throwaway browser context: no cookies, no storage, nothing
+ * shared with the main page. Used for anonymous page loads that must not touch
+ * the logged-in session.
+ */
+export const withCleanPage = async <T>(
+  cb: (page: Page) => Promise<T>
+): Promise<T> => {
+  const browser = requirePage().context().browser();
+  if (!browser) {
+    throw new Error("Can't create a clean browser context: no browser.");
+  }
+  const context = await browser.newContext();
+  try {
+    return await cb(await context.newPage());
+  } finally {
+    await context.close().catch(() => {});
+  }
 };
 
 export const waitUntilUrlChanges = async (compareTo?: string) => {
