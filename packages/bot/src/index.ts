@@ -156,31 +156,40 @@ const retrieval = async (platforms: Platform[]) => {
 
       // per-listing callbacks:
       if (callbacks.perListing) {
-        try {
-          const activity = startActivity(presences?.perListing, unseen.length);
-          for (let i = 0; i < unseen.length; i++) {
-            activity?.update(i + 1);
-            const l = unseen[i];
-            if (!l) continue;
+        const activity = startActivity(presences?.perListing, unseen.length);
+        const failures: string[] = [];
+        for (let i = 0; i < unseen.length; i++) {
+          activity?.update(i + 1);
+          const l = unseen[i];
+          if (!l) continue;
 
-            debugLog(`visiting listing (${i + 1}/${unseen.length}): ${l.url}`);
+          debugLog(`visiting listing (${i + 1}/${unseen.length}): ${l.url}`);
+          // Per listing, not per batch: a single unparseable listing used to
+          // abort the loop, leaving every listing behind it unvisited — and so
+          // unfiltered, since the filters depend on what this callback fetches.
+          try {
             await callbacks
               .perListing(l)
               ?.then(() =>
                 randomWait({ short: true, suppressProgressLog: true })
               );
-            if (await logBreakIfConfigChanged(platform)) break;
+          } catch (e) {
+            if (isPlaywrightBrowserError(e)) {
+              throw e;
+            }
+            log(`Error while visiting ${l.url}:`, { error: true });
+            log(e, { error: true });
+            failures.push(l.url);
           }
-        } catch (e) {
-          if (isPlaywrightBrowserError(e)) {
-            throw e;
-          }
-          if (!shuttingDown) {
-            discordWarning(
-              `Error while visiting listings from ${platform}:`,
-              e
-            );
-          }
+          if (await logBreakIfConfigChanged(platform)) break;
+        }
+        if (failures.length && !shuttingDown) {
+          discordWarning(
+            `Couldn't retrieve details for ${failures.length} ${platform} listing${
+              failures.length === 1 ? "" : "s"
+            }:`,
+            failures.join("\n")
+          );
         }
       }
 
