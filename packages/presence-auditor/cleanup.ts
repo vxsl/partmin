@@ -11,10 +11,14 @@ if (!statusPath) {
   throw new Error("No status path provided");
 }
 
-// Define paths explicitly, matching those used in persistent.ts
-const botDataDir = "packages/bot/.data"; // Base directory assumed from persistent.ts paths
-const tokenPath = `${botDataDir}/bot-token`;
-const channelIDsPath = `${botDataDir}/channel-ids.json`;
+// Define paths explicitly, matching those used in persistent.ts.
+const serverID = process.env.DISCORD_SERVER_ID ?? "";
+// The token is shared across servers, but the channel IDs aren't: they live in
+// the per-server directory, one entry per channel partmin manages — which now
+// includes a listings channel per configured search.
+const commonDataDir = "packages/bot/.data";
+const tokenPath = `${commonDataDir}/bot-token`;
+const channelIDsPath = `${commonDataDir}-${serverID}/channel-ids.json`;
 
 const prefix = "[presence-auditor]";
 const log = (s: string) => console.log(`${prefix} ${s}`);
@@ -27,12 +31,9 @@ async function runCleanup() {
   log("Bot is no longer running - clearing presence.");
 
   let token: string;
-  let serverID: string;
   let channelIDs: Record<string, string>;
 
   try {
-    // Read server ID from environment variable
-    serverID = process.env.DISCORD_SERVER_ID ?? "";
     if (!serverID) {
       throw new Error("Environment variable DISCORD_SERVER_ID is not set.");
     }
@@ -48,12 +49,14 @@ async function runCleanup() {
     if (!existsSync(channelIDsPath))
       throw new Error(`Missing channel IDs file: ${channelIDsPath}`);
     const channelIDsRaw = readFileSync(channelIDsPath, "utf-8");
-    channelIDs = JSON.parse(channelIDsRaw);
+    const parsed = JSON.parse(channelIDsRaw);
 
-    // Basic validation after parsing
-    if (typeof channelIDs !== "object" || channelIDs === null) {
+    // Basic validation after parsing. The file holds the whole persisted object,
+    // so the id map is one level in.
+    if (typeof parsed?.channelIDs !== "object" || parsed.channelIDs === null) {
       throw new Error("Channel IDs file does not contain a valid JSON object.");
     }
+    channelIDs = parsed.channelIDs;
     for (const value of Object.values(channelIDs)) {
       if (typeof value !== "string") {
         throw new Error("Channel IDs file contains non-string values.");
