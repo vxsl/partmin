@@ -169,21 +169,20 @@ feed that isn't your apartment hunt.
 
 Each entry states only what differs from `search`; everything it leaves out is
 inherited, so a second search doesn't have to restate your city or your search
-radii. For a feed of cheap bikes near you, leave your existing `search` block
-alone and add `searches` alongside it:
+radii. To watch a cheaper price band in its own channel, leave your existing
+`search` block alone and add `searches` alongside it:
 
 ```json
   "searches": {
-    "bikes": {
-      "category": "bikes",
+    "cheap": {
       "platforms": ["fb"],
-      "params": { "price": { "min": 0, "max": 200 } },
+      "params": { "price": { "min": 0, "max": 900 } },
       "blacklist": []
     }
   }
 ```
 
-That produces a `🌇┃bikes` channel next to your existing listings channel.
+That produces a `🌇┃cheap` channel next to your existing listings channel.
 
 Notes:
 
@@ -194,14 +193,22 @@ Notes:
   `craigslist`. Omit it to use all of them. Craigslist is only searched for
   rentals, so a non-rental search should ask for `["fb"]`.
 - **`category`** is the Facebook Marketplace category slug — the path segment
-  after your city in a Marketplace URL. Browse to the category you want and copy
-  it from the address bar. `propertyrentals` is the default.
-- **There is no single "every category" slug.** Marketplace only serves a
-  newest-first, radius-scoped grid for a _specific_ category, so covering several
-  means one search per category. Two paths that look like they'd work don't:
-  `search` returns an empty result set unless it's given a search term, and the
-  bare city feed (`"category": ""`) ignores the radius and falls back to ~65 km,
-  which trips partmin's radius check.
+  after your city in a Marketplace URL. `propertyrentals` is the default, and in
+  practice it's the only value worth setting today; see below.
+- **Non-rental categories don't work properly yet.** Marketplace serves a
+  newest-first sortable grid at `/<city>/propertyrentals`, but not at the
+  equivalent path for other categories: `/<city>/electronics` and `/<city>/free`
+  return listings with no sort control at all, so partmin sees whatever
+  "Recommended" order Facebook picks rather than what's new. Worse, a slug
+  Marketplace doesn't recognise (`musicalinstruments`, `sportinggoods`) silently
+  redirects to the city-wide feed, which pins the radius at ~65 km and trips
+  partmin's radius check. Facebook's own category links go through
+  `/<city>/search/?query=<name>&category_id=<id>` instead — that form _is_
+  sortable and does respect the radius, but partmin doesn't emit it yet.
+- **There is no single "everything" URL.** `/<city>/search/` returns nothing
+  without a `query` (a `category_id` alone isn't enough), and the city-wide
+  "Browse all" feed has no sort control whatsoever. Covering all of Marketplace
+  means walking its ~18 top-level categories one at a time.
 - **Rental-only filters** — `pets`, `minBedrooms`, and the `swaps`, `sublets` and
   `shared` exclusions — are ignored by searches whose `category` isn't
   `propertyrentals`. Listings there also carry less detail, since the fields
