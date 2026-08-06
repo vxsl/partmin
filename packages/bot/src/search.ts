@@ -1,139 +1,53 @@
 import { getSearchDir } from "constants.js";
-import { ChannelKey, searchChannelKey } from "discord/constants.js";
-import { readFileSync } from "fs";
 import type { Listing } from "listing.js";
 import {
-  PlatformKey,
-  StaticSearch,
-  StaticSearchOverride,
-  StaticUserConfig,
-  primarySearchName,
-  rentalCategory,
-  userConfigPath,
-  validateSearchName,
-} from "user-config.js";
+  ResolvedSearch,
+  readRawSearchNames,
+  resolveSearches,
+} from "search-resolution.js";
+import { StaticSearch, primarySearchName, validateSearchName } from "user-config.js";
 import { getUserConfig } from "util/config.js";
 import { parseJSON } from "util/io.js";
 import { log } from "util/log.js";
 import { PersistentDataDef } from "util/persistence.js";
 
-/**
- * One search partmin runs: a fully resolved set of search criteria, the Discord
- * channel its listings go to, and the platforms it covers. `search` in the
- * user's config is one of these; each entry of `searches` is another.
- */
-export type ResolvedSearch = {
-  name: string;
-  channelKey: ChannelKey;
-  config: StaticSearch;
-  platforms: PlatformKey[];
-};
-
-/**
- * The platforms partmin currently drives. A search may narrow this list, but
- * naming anything outside it won't bring it back.
- */
-export const enabledPlatforms: PlatformKey[] = ["fb", "craigslist"];
-
-/**
- * Whether a search is looking for somewhere to live. Rental-specific filters and
- * listing fields are meaningless for, say, a search over bicycles, so they're
- * skipped when this is false.
- */
-export const isRentalSearch = (config: StaticSearch) =>
-  (config.category ?? rentalCategory) === rentalCategory;
-
-const mergeSearch = (
-  base: StaticSearch,
-  o: StaticSearchOverride
-): StaticSearch => ({
-  category: o.category ?? base.category,
-  platforms: o.platforms ?? base.platforms,
-  blacklist: o.blacklist ?? base.blacklist,
-  blacklistRegex: o.blacklistRegex ?? base.blacklistRegex,
-  location: {
-    city: o.location?.city ?? base.location.city,
-    region: o.location?.region ?? base.location.region,
-    mapDevelopersURL:
-      o.location?.mapDevelopersURL ?? base.location.mapDevelopersURL,
-    commuteDestinations:
-      o.location?.commuteDestinations ?? base.location.commuteDestinations,
-  },
-  params: {
-    price: o.params?.price ?? base.params.price,
-    minBedrooms: o.params?.minBedrooms ?? base.params.minBedrooms,
-    pets: o.params?.pets ?? base.params.pets,
-    exclude: o.params?.exclude ?? base.params.exclude,
-    unreliableParams:
-      o.params?.unreliableParams ?? base.params.unreliableParams,
-  },
-});
+export {
+  enabledPlatforms,
+  isRentalSearch,
+  type ResolvedSearch,
+} from "search-resolution.js";
 
 // Searches are re-resolved on every pass, so an unrunnable platform would
 // otherwise be reported over and over.
 const reportedUnavailablePlatforms = new Set<string>();
 
-const resolvePlatforms = (name: string, config: StaticSearch) => {
-  const requested = config.platforms ?? enabledPlatforms;
-  const result = requested.filter((p) => enabledPlatforms.includes(p));
-  for (const p of requested) {
-    const key = `${name}-${p}`;
-    if (!result.includes(p) && !reportedUnavailablePlatforms.has(key)) {
+export const getSearches = async () =>
+  resolveSearches(await getUserConfig(), {
+    onUnavailablePlatform: (search, platform) => {
+      const key = `${search}-${platform}`;
+      if (reportedUnavailablePlatforms.has(key)) return;
       reportedUnavailablePlatforms.add(key);
       log(
-        `Search "${name}" asks for the ${p} platform, which partmin doesn't currently drive. Ignoring it.`
+        `Search "${search}" asks for the ${platform} platform, which partmin doesn't currently drive. Ignoring it.`
       );
-    }
-  }
-  return result;
-};
-
-export const resolveSearches = (
-  config: StaticUserConfig
-): ResolvedSearch[] => {
-  const resolve = (name: string, search: StaticSearch): ResolvedSearch => ({
-    name,
-    channelKey: searchChannelKey(name),
-    config: search,
-    platforms: resolvePlatforms(name, search),
+    },
   });
 
-  return [
-    resolve(primarySearchName, config.search),
-    ...Object.entries(config.searches ?? {}).map(([name, override]) => {
-      validateSearchName(name);
-      return resolve(name, mergeSearch(config.search, override));
-    }),
-  ];
-};
-
-export const getSearches = async () => resolveSearches(await getUserConfig());
-
-/**
- * The configured search names, read straight out of the config file. Channels
- * are named after searches and have to be set up before the config has
- * necessarily been filled in, which rules out the validating accessors.
- */
-export const getSearchNamesForChannelSetup = () => {
-  let raw: StaticUserConfig | undefined;
-  try {
-    raw = parseJSON<StaticUserConfig>(
-      readFileSync(userConfigPath, { encoding: "utf-8" })
-    );
-  } catch {
-    raw = undefined;
-  }
-  const extra = Object.keys(raw?.searches ?? {}).filter((name) => {
+/** The configured search names, for deciding which channels partmin manages. */
+export const getSearchNamesForChannelSetup = () => [
+  primarySearchName,
+  ...readRawSearchNames().filter((name) => {
     try {
       validateSearchName(name);
       return true;
     } catch (e) {
-      log(`Ignoring a configured search: ${e instanceof Error ? e.message : e}`);
+      log(
+        `Ignoring a configured search: ${e instanceof Error ? e.message : e}`
+      );
       return false;
     }
-  });
-  return [primarySearchName, ...extra];
-};
+  }),
+];
 
 // ------------------------------------------------------------
 // per-search state

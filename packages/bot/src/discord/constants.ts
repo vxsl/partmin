@@ -7,7 +7,9 @@ import {
   PermissionsBitField,
   PresenceData,
 } from "discord.js";
-import { PresenceActivityDef } from "discord/presence.js";
+// Type-only: importing the module itself would drag the Discord client, and
+// with it most of the bot, into anything that just wants a channel name.
+import type { PresenceActivityDef } from "discord/presence.js";
 import { load } from "dotenv-mono";
 import { primarySearchName } from "user-config.js";
 import { envVarInstruction, readableSeconds } from "util/string.js";
