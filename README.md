@@ -5,7 +5,7 @@
 #### **Listings are retrieved from the following platforms:**
 
 - [Craigslist](https://craigslist.org/)
-- ~~[Facebook Marketplace](https://www.facebook.com/marketplace)~~ _**⚠️ Facebook Marketplace is currently disabled due to captcha enforcement.**_
+- [Facebook Marketplace](https://www.facebook.com/marketplace) _**⚠️ requires a one-time manual login — see [Facebook Marketplace setup](#facebook-marketplace-setup).**_
 - ~~[Kijiji](https://www.kijiji.ca/)~~ _**⚠️ Kijiji has removed their RSS feature, so this platform is currently disabled.**_
 
 ![demo](https://github.com/vxsl/partmin/assets/53827672/bae4c2f9-675a-4329-8f4a-8d85afd74948)
@@ -108,6 +108,51 @@
 1. **🚀 Your self-hosted bot is now online! Follow the instructions provided by the bot to configure your search.**
 
    ![setup](https://github.com/vxsl/partmin/assets/53827672/917a1104-8ef6-44e6-9ecb-d95cefb4169a)
+
+---
+
+## Facebook Marketplace setup
+
+Facebook enforces a captcha on login, which partmin can't solve. Marketplace also
+serves different results to logged-out visitors, so a real session is required.
+
+partmin handles this by logging in **as rarely as possible**: the session is saved
+to `packages/bot/.data/fb-session.json` (inside the volume-mounted data directory)
+and restored on every start, so a login is only needed when there's no session yet
+or Facebook has invalidated it. The other platforms keep working regardless — a
+missing Facebook session only skips Marketplace.
+
+When a login is needed, partmin posts a message to Discord with a screenshot of what
+it's looking at, and waits. To complete the login, run the `fb-login` service, which
+serves a real browser over [noVNC](https://novnc.com/):
+
+```shell
+docker compose --profile login run --rm --service-ports fb-login
+```
+
+Then, from your own machine, forward the port and open it in a browser:
+
+```shell
+ssh -L 6080:localhost:6080 your-server
+```
+
+<http://localhost:6080/vnc.html?autoconnect=1&resize=scale>
+
+Log in there, solving whatever captcha or 2FA prompt Facebook raises. The helper
+detects the session, writes it to disk, and exits. partmin picks it up on its next
+Marketplace pass — **no restart required**, and the bot can keep running throughout.
+
+Notes:
+
+- Because the login happens inside the container, the session is created from the
+  same IP address and browser build the bot uses. Logging in elsewhere and copying
+  the session over tends to get flagged by Facebook.
+- The noVNC port is published on the host's loopback interface only, so it isn't
+  reachable from outside the machine without the SSH tunnel above.
+- If you set `FB_USER` and `FB_PASS` in your `.env`, the helper pre-fills them (and
+  the bot will attempt an unattended login, backing off to this flow the moment
+  Facebook presents a challenge). They're optional — you can just type the
+  credentials into the browser instead.
 
 ---
 
