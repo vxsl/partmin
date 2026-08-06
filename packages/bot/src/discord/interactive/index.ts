@@ -152,7 +152,9 @@ const getComponents = <G extends ComponentGroupDefs>({
       }
     })
   );
-  return result;
+  // Discord rejects the whole message if any action row is empty, so an order
+  // entry whose components all failed to resolve must not become a row:
+  return result.filter((row) => row.components.length > 0);
 };
 
 // __________________________________________________________________________________________

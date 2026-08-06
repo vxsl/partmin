@@ -162,15 +162,19 @@ const imageCycle = (l: Listing) =>
     },
   });
 
-const getListingButtons = (l: Listing) =>
-  !l.imgURLs.length && !l.details.longDescription
-    ? undefined
-    : {
-        ...(l.imgURLs.length > 1 && { imageCycle: imageCycle(l) }),
-        ...(l.details.longDescription && {
-          descriptionToggle: descriptionToggle(l),
-        }),
-      };
+// Returns undefined rather than an empty object when there's nothing to
+// interact with: a single image has nothing to cycle through and no description
+// has nothing to toggle. An empty set of groups would still ask Discord for an
+// action row, and Discord rejects rows containing no components.
+const getListingButtons = (l: Listing) => {
+  const defs = {
+    ...(l.imgURLs.length > 1 && { imageCycle: imageCycle(l) }),
+    ...(l.details.longDescription && {
+      descriptionToggle: descriptionToggle(l),
+    }),
+  };
+  return Object.keys(defs).length ? defs : undefined;
+};
 
 export const sendListing = async (
   l: Listing,
@@ -219,10 +223,15 @@ export const reinitializeInteractiveListingMessages = async () => {
         );
         return;
       }
+      const componentGroupDefs = getListingButtons(l);
+      if (!componentGroupDefs) {
+        // nothing interactive was ever attached to this listing
+        return;
+      }
       try {
         startInteractive({
           message,
-          componentGroupDefs: getListingButtons(l),
+          componentGroupDefs,
         });
         successCount++;
       } catch (e) {
