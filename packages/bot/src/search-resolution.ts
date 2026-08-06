@@ -86,7 +86,12 @@ export const resolveSearches = (
         options?.onUnavailablePlatform?.(name, p);
       }
     }
-    return { name, channelKey: searchChannelKey(name), config: search, platforms };
+    return {
+      name,
+      channelKey: searchChannelKey(name),
+      config: search,
+      platforms,
+    };
   };
 
   return [
@@ -108,7 +113,9 @@ export const readRawSearchNames = (): string[] => {
       readFileSync(userConfigPath, { encoding: "utf-8" })
     ) as StaticUserConfig;
     const searches = raw?.searches;
-    return searches && typeof searches === "object" ? Object.keys(searches) : [];
+    return searches && typeof searches === "object"
+      ? Object.keys(searches)
+      : [];
   } catch {
     return [];
   }

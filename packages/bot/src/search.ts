@@ -5,7 +5,11 @@ import {
   readRawSearchNames,
   resolveSearches,
 } from "search-resolution.js";
-import { StaticSearch, primarySearchName, validateSearchName } from "user-config.js";
+import {
+  StaticSearch,
+  primarySearchName,
+  validateSearchName,
+} from "user-config.js";
 import { getUserConfig } from "util/config.js";
 import { parseJSON } from "util/io.js";
 import { log } from "util/log.js";

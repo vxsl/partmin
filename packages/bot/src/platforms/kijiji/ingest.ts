@@ -185,10 +185,7 @@ export const onSearchParamsChanged = async () => {
     () => page.locator(`xpath=//div[@aria-modal='true']//input`),
     async (el) => {
       await manualClear(el);
-      await type(
-        el,
-        `${config.location.city}, ${config.location.region}`
-      );
+      await type(el, `${config.location.city}, ${config.location.region}`);
     }
   );
   await waitSeconds(2); // TODO don't arbitrary wait.

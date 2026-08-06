@@ -14,11 +14,7 @@ import listingEmbed, { colors } from "discord/interactive/listing/embed.js";
 import { getTextChannel } from "discord/util.js";
 import { Listing } from "listing.js";
 import persistent from "persistent.js";
-import {
-  ResolvedSearch,
-  getSearchPersistent,
-  getSearches,
-} from "search.js";
+import { ResolvedSearch, getSearchPersistent, getSearches } from "search.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { discordFormat, splitString } from "util/string.js";
 
