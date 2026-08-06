@@ -20,6 +20,17 @@ export const getDirs = () => {
   return dirs;
 };
 
+// Per-search state lives beside the primary search's files rather than
+// replacing them, so that upgrading doesn't strand the history the primary
+// search has already written.
+export const getSearchDir = (searchName: string) => {
+  const dir = `${getDirs().data}/searches/${searchName}`;
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+};
+
 export const getStatusPathForAuditor = () =>
   `${getDirs().commonDataProd}/discord-bot-status-for-auditor`;
 export const chromeVersion = "120.0.6099.109";

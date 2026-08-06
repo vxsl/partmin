@@ -19,8 +19,8 @@ import {
   setMarketplaceLocation,
 } from "platforms/fb/util.js";
 import { PlatformKey } from "types/platform.js";
-import { PetType } from "user-config.js";
-import { getUserConfig } from "util/config.js";
+import { getSearchConfig, isRentalSearch } from "search.js";
+import { PetType, rentalCategory } from "user-config.js";
 import {
   acresToSqft,
   approxFSA,
@@ -67,8 +67,8 @@ export const perListing = async (l: Listing) => {
 
   let infos: any[] = [];
 
-  const config = await getUserConfig();
-  const isAptSearch = config.search.category === "propertyrentals";
+  const config = await getSearchConfig();
+  const isAptSearch = isRentalSearch(config);
 
   await tryNTimes(3, async () => {
     // Listing detail pages are public, so they're fetched anonymously to keep
@@ -247,7 +247,7 @@ export const perListing = async (l: Listing) => {
     }
 
     try {
-      const params = config.search.params;
+      const params = config.params;
       const unreliableParams = params.unreliableParams;
 
       try {
@@ -390,11 +390,11 @@ export const perListing = async (l: Listing) => {
 
 export const visitMarketplace = async (radius: Circle) => {
   const page = requirePage();
-  const config = await getUserConfig();
+  const config = await getSearchConfig();
 
-  const city = config.search.location.city;
-  const category = config.search.category ?? "propertyrentals";
-  const isAptSearch = category === "propertyrentals";
+  const city = config.location.city;
+  const category = config.category ?? rentalCategory;
+  const isAptSearch = isRentalSearch(config);
 
   const vals = {
     // location:
@@ -413,18 +413,18 @@ export const visitMarketplace = async (radius: Circle) => {
 
     // search parameters:
     ...(isAptSearch &&
-      config.search.params.exclude?.shared && {
+      config.params.exclude?.shared && {
         propertyType: ["house", "townhouse", "apartment-condo"].join(","),
       }),
-    ...(config.search.params.price.min !== undefined && {
-      minPrice: config.search.params.price.min,
+    ...(config.params.price.min !== undefined && {
+      minPrice: config.params.price.min,
     }),
-    ...(config.search.params.price.max !== undefined && {
-      maxPrice: config.search.params.price.max,
+    ...(config.params.price.max !== undefined && {
+      maxPrice: config.params.price.max,
     }),
     ...(isAptSearch &&
-      config.search.params.minBedrooms !== undefined && {
-        minBedrooms: config.search.params.minBedrooms,
+      config.params.minBedrooms !== undefined && {
+        minBedrooms: config.params.minBedrooms,
       }),
   };
 
@@ -596,7 +596,7 @@ export const getListings = async (): Promise<Listing[]> => {
   verboseLog("Waiting for search page to be ready");
   await elementShouldExist("css", '[aria-label="Search Marketplace"]');
   verboseLog("Search page ready");
-  const config = await getUserConfig();
+  const config = await getSearchConfig();
 
   return await withElementsByXpath(
     fbListingXpath,
@@ -637,7 +637,7 @@ export const getListings = async (): Promise<Listing[]> => {
 
         // sometimes facebook will show a private room for rent
         // even when the search parameters exclude "room only":
-        ...(config.search.params.exclude?.shared &&
+        ...(config.params.exclude?.shared &&
           ["Private room for rent", "Chambre privée à louer"].includes(
             title
           ) && {
@@ -672,8 +672,8 @@ export const main = async (
     return;
   }
 
-  const config = await getUserConfig();
-  const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
+  const config = await getSearchConfig();
+  const radii = decodeMapDevelopersURL(config.location.mapDevelopersURL);
 
   const activity = startActivity(fb.presenceActivities?.main, radii.length);
 

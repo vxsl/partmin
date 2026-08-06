@@ -1,17 +1,37 @@
 import {
   Array,
   Boolean,
+  Dictionary,
+  Literal,
   Optional,
   Number as RuntypeNumber,
   Record as RuntypeRecord,
   Static,
   String,
+  Union,
 } from "runtypes";
 import { throwOnUnknownKey } from "util/runtypes.js";
 import { RecursivePartial } from "util/type.js";
 
 const configDir = `${process.cwd()}/../../config`;
 export const userConfigPath = `${configDir}/user-config.json`;
+
+// The name of the search defined by the `search` block. Its Discord channel and
+// its seen-listing state predate named searches, so it keeps the un-suffixed
+// names both of those have always used.
+export const primarySearchName = "listings";
+
+// Facebook's category slug for apartment rentals, which also serves as
+// partmin's marker for "this search is looking for a place to live" — the
+// rental-specific filters and listing fields only apply to that kind of search.
+export const rentalCategory = "propertyrentals";
+
+export const PlatformKeyRuntype = Union(
+  Literal("kijiji"),
+  Literal("fb"),
+  Literal("craigslist")
+);
+export type PlatformKey = Static<typeof PlatformKeyRuntype>;
 
 const UnreliableParams = RuntypeRecord({
   minAreaSqFt: Optional(RuntypeNumber),
@@ -42,22 +62,39 @@ const PetParams = RuntypeRecord({
 
 export type PetType = keyof Static<typeof PetParams>;
 
-export const SearchParams = RuntypeRecord({
+const Price = RuntypeRecord({
+  min: RuntypeNumber,
+  max: RuntypeNumber,
+});
+
+const ExcludeParams = RuntypeRecord({
+  basements: Optional(Boolean),
+  shared: Optional(Boolean),
+  swaps: Optional(Boolean),
+  sublets: Optional(Boolean),
+});
+
+// Split around `price` so that SearchParams and its override counterpart share
+// these fields without reordering them: the interactive editor lists parameters
+// in declaration order.
+const searchParamsBeforePrice = {
   pets: Optional(PetParams),
-  exclude: Optional(
-    RuntypeRecord({
-      basements: Optional(Boolean),
-      shared: Optional(Boolean),
-      swaps: Optional(Boolean),
-      sublets: Optional(Boolean),
-    })
-  ),
+  exclude: Optional(ExcludeParams),
   minBedrooms: Optional(RuntypeNumber),
-  price: RuntypeRecord({
-    min: RuntypeNumber,
-    max: RuntypeNumber,
-  }),
+};
+const searchParamsAfterPrice = {
   unreliableParams: Optional(UnreliableParams),
+};
+
+export const SearchParams = RuntypeRecord({
+  ...searchParamsBeforePrice,
+  price: Price,
+  ...searchParamsAfterPrice,
+});
+const SearchParamsOverride = RuntypeRecord({
+  ...searchParamsBeforePrice,
+  price: Optional(Price),
+  ...searchParamsAfterPrice,
 });
 
 export const Location = RuntypeRecord({
@@ -66,17 +103,42 @@ export const Location = RuntypeRecord({
   mapDevelopersURL: String,
   commuteDestinations: Optional(Array(String)),
 });
-
-export const UserConfig = RuntypeRecord({
-  search: RuntypeRecord({
-    category: Optional(String),
-    params: SearchParams,
-    location: Location,
-    blacklist: Optional(Array(String)),
-    blacklistRegex: Optional(Array(String)),
-  }),
+const LocationOverride = RuntypeRecord({
+  city: Optional(String),
+  region: Optional(String),
+  mapDevelopersURL: Optional(String),
+  commuteDestinations: Optional(Array(String)),
 });
 
+export const Search = RuntypeRecord({
+  category: Optional(String),
+  platforms: Optional(Array(PlatformKeyRuntype)),
+  params: SearchParams,
+  location: Location,
+  blacklist: Optional(Array(String)),
+  blacklistRegex: Optional(Array(String)),
+});
+
+// An entry in `searches` states only what differs from `search`, so a second
+// search doesn't have to restate the location. Every field it does set replaces
+// the corresponding one from `search` outright — nested objects aren't merged
+// key-by-key.
+export const SearchOverride = RuntypeRecord({
+  category: Optional(String),
+  platforms: Optional(Array(PlatformKeyRuntype)),
+  params: Optional(SearchParamsOverride),
+  location: Optional(LocationOverride),
+  blacklist: Optional(Array(String)),
+  blacklistRegex: Optional(Array(String)),
+});
+
+export const UserConfig = RuntypeRecord({
+  search: Search,
+  searches: Optional(Dictionary(SearchOverride, String)),
+});
+
+export type StaticSearch = Static<typeof Search>;
+export type StaticSearchOverride = Static<typeof SearchOverride>;
 export type StaticUserConfig = Static<typeof UserConfig>;
 
 export const defaultUserConfigValues: RecursivePartial<StaticUserConfig> = {
@@ -106,6 +168,40 @@ export const defaultUserConfigValues: RecursivePartial<StaticUserConfig> = {
   },
 } as const;
 
+// A search's name becomes a Discord channel name and a directory name, and
+// mustn't collide with the channels partmin already manages.
+const reservedSearchNames = ["listings", "logs", "main-category"];
+const searchNamePattern = /^[a-z0-9][a-z0-9-]{0,30}$/;
+
+export const validateSearchName = (name: string) => {
+  if (!searchNamePattern.test(name)) {
+    throw new Error(
+      `Invalid search name "${name}" in searches. A name must be 1-31 characters of lowercase letters, digits and dashes, starting with a letter or digit.`
+    );
+  }
+  if (reservedSearchNames.includes(name)) {
+    throw new Error(`searches can't use the reserved name "${name}".`);
+  }
+};
+
+const validateSearch = (
+  s: StaticSearch | StaticSearchOverride,
+  label: string
+) => {
+  s.blacklistRegex?.forEach((r) => {
+    try {
+      new RegExp(r);
+    } catch (e) {
+      throw new Error(`Invalid blacklistRegex in ${label}: ${r}`);
+    }
+  });
+
+  const price = s.params?.price;
+  if (price && price.min > price.max) {
+    throw new Error(`min price is greater than max price in ${label}`);
+  }
+};
+
 export const validateUserConfig = (c: any) => {
   try {
     const validated = UserConfig.check(c);
@@ -114,16 +210,16 @@ export const validateUserConfig = (c: any) => {
       message: "Unexpected config option",
     });
 
-    validated.search.blacklistRegex?.forEach((r) => {
-      try {
-        new RegExp(r);
-      } catch (e) {
-        throw new Error(`Invalid blacklistRegex in config: ${r}`);
-      }
-    });
+    validateSearch(validated.search, "search");
 
-    if (validated.search.params.price.min > validated.search.params.price.max) {
-      throw new Error("min price is greater than max price");
+    for (const [name, override] of Object.entries(validated.searches ?? {})) {
+      validateSearchName(name);
+      // Runtypes ignores extra keys, and throwOnUnknownKey doesn't descend into
+      // a Dictionary, so each override has to be checked on its own.
+      throwOnUnknownKey(SearchOverride.fields, override, {
+        message: `Unexpected config option in searches.${name}`,
+      });
+      validateSearch(override, `searches.${name}`);
     }
   } catch (e) {
     console.error("Invalid config.");

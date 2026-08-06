@@ -4,7 +4,7 @@ import { requirePage } from "index.js";
 import { Listing, invalidateListing } from "listing.js";
 import { getCraigslistBaseURL } from "platforms/craigslist/constants.js";
 import craigslist from "platforms/craigslist/index.js";
-import { getUserConfig } from "util/config.js";
+import { getSearchConfig } from "search.js";
 import { decodeMapDevelopersURL, getGoogleMapsLink, trimAddress } from "util/geo.js";
 import { log } from "util/log.js";
 import { isNight } from "util/misc.js";
@@ -14,33 +14,33 @@ const KM_PER_MILE = 1.60934;
 export const main = async (
   processListings: (listings: Listing[]) => Promise<void>
 ): Promise<void> => {
-  const config = await getUserConfig();
-  const city = config.search.location.city;
+  const config = await getSearchConfig();
+  const city = config.location.city;
 
   const searchURL = new URL(`${getCraigslistBaseURL(city)}/search/apa`);
   searchURL.searchParams.set("sort", "date");
 
-  if (config.search.params.price.min !== undefined) {
+  if (config.params.price.min !== undefined) {
     searchURL.searchParams.set(
       "min_price",
-      String(config.search.params.price.min)
+      String(config.params.price.min)
     );
   }
-  if (config.search.params.price.max !== undefined) {
+  if (config.params.price.max !== undefined) {
     searchURL.searchParams.set(
       "max_price",
-      String(config.search.params.price.max)
+      String(config.params.price.max)
     );
   }
-  if (config.search.params.minBedrooms !== undefined) {
+  if (config.params.minBedrooms !== undefined) {
     searchURL.searchParams.set(
       "min_bedrooms",
-      String(config.search.params.minBedrooms)
+      String(config.params.minBedrooms)
     );
   }
 
   // Add geo filter derived from the configured search circles
-  const circles = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
+  const circles = decodeMapDevelopersURL(config.location.mapDevelopersURL);
   if (circles.length > 0) {
     const centerLat = circles.reduce((s, c) => s + c.lat, 0) / circles.length;
     const centerLon = circles.reduce((s, c) => s + c.lon, 0) / circles.length;

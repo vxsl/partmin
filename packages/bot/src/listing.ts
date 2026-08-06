@@ -1,6 +1,6 @@
 import { petsBlacklist, searchParamsBlacklist } from "constants.js";
+import { getSearchConfig, isRentalSearch } from "search.js";
 import { PlatformKey } from "types/platform.js";
-import { getUserConfig } from "util/config.js";
 import {
   CommuteSummary,
   Coordinates,
@@ -105,9 +105,9 @@ export const getCommuteOrigin = (l: Listing) =>
 
 export const addCommuteSummary = async (l: Listing) => {
   const origin = getCommuteOrigin(l);
-  const config = await getUserConfig();
-  if (origin && config.search.location?.commuteDestinations?.length) {
-    for (const dest of config.search.location?.commuteDestinations) {
+  const config = await getSearchConfig();
+  if (origin && config.location?.commuteDestinations?.length) {
+    for (const dest of config.location?.commuteDestinations) {
       await getCommuteSummary(origin, dest).then((summ) => {
         if (summ) {
           l.computed = {
@@ -129,16 +129,21 @@ const blacklistMatch = (v: BlacklistEntry, s: string | undefined) =>
   s === undefined ? false : typeof v === "string" ? s.includes(v) : s.match(v);
 
 export const checkForBlacklist = async (l: Listing) => {
-  const config = await getUserConfig();
+  const config = await getSearchConfig();
   const report = (v: BlacklistEntry, f: string) => `'${v}' in ${f}`;
 
   const desc = l.details.longDescription?.toLowerCase();
   const title = l.details.title?.toLowerCase();
   const loc = (l.details.longAddress ?? l.details.shortAddress)?.toLowerCase();
 
-  const petsEntries = Object.entries(config.search.params.pets ?? {}).reduce<
-    BlacklistEntry[]
-  >((bl, [_k, v]) => {
+  // Pets, swaps, sublets and shared units are all properties of a place to
+  // live. Applied to a search over, say, bicycles they'd only throw away
+  // perfectly good listings for mentioning a dog.
+  const isRental = isRentalSearch(config);
+
+  const petsEntries = (
+    isRental ? Object.entries(config.params.pets ?? {}) : []
+  ).reduce<BlacklistEntry[]>((bl, [_k, v]) => {
     const k = _k as keyof typeof petsBlacklist;
     if (!v) return bl;
     return [...bl, ...(petsBlacklist[k] ?? [])];
@@ -149,12 +154,15 @@ export const checkForBlacklist = async (l: Listing) => {
     ...petsEntries,
     ...conditionalSpreads([
       [petsEntries.length > 0, petsBlacklist.general],
-      [config.search.params.exclude?.swaps, searchParamsBlacklist.swaps],
-      [config.search.params.exclude?.sublets, searchParamsBlacklist.sublets],
-      [config.search.params.exclude?.shared, searchParamsBlacklist.shared],
+      [isRental && config.params.exclude?.swaps, searchParamsBlacklist.swaps],
+      [
+        isRental && config.params.exclude?.sublets,
+        searchParamsBlacklist.sublets,
+      ],
+      [isRental && config.params.exclude?.shared, searchParamsBlacklist.shared],
     ]),
-    ...(config.search.blacklist?.map((b) => b.toLowerCase()) ?? []),
-    ...(config.search.blacklistRegex?.map((b) => new RegExp(b, "i")) ?? []),
+    ...(config.blacklist?.map((b) => b.toLowerCase()) ?? []),
+    ...(config.blacklistRegex?.map((b) => new RegExp(b, "i")) ?? []),
   ]) {
     if (blacklistMatch(b, desc)) result.push(report(b, "description"));
     if (blacklistMatch(b, title)) result.push(report(b, "title"));

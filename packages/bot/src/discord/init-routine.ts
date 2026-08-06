@@ -128,7 +128,6 @@ const checkPrice = async () => {
         : 0;
 
     await persistent.userConfig.writeValue({
-      ...defaultUserConfigValues,
       ...userConfig,
       search: {
         ...userConfig.search,

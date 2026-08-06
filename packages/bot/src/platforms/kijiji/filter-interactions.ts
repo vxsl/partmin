@@ -1,6 +1,6 @@
 import { ensureFilterIsOpen, getFilterXpath } from "platforms/kijiji/util.js";
-import { StaticUserConfig } from "user-config.js";
-import { getUserConfig } from "util/config.js";
+import { getSearchConfig } from "search.js";
+import { StaticSearch } from "user-config.js";
 import {
   clickAllByXPath,
   clickByXPath,
@@ -12,13 +12,13 @@ import { waitSeconds } from "util/misc.js";
 export class FilterDef<V> {
   constructor(
     public id: string,
-    public getConfigValue: (c: StaticUserConfig) => V,
+    public getConfigValue: (c: StaticSearch) => V,
     public noopCondition: (v: V) => boolean,
     public func: (v: V, xpath: string) => void
   ) {}
   static fromObject<V>(obj: {
     id: string;
-    getConfigValue: (c: StaticUserConfig) => V;
+    getConfigValue: (c: StaticSearch) => V;
     noopCondition: (v: V) => boolean;
     func: (v: V, xpath: string) => void;
   }) {
@@ -39,12 +39,10 @@ type RecursiveMap<O> = {
     : FilterDef<O[K]>;
 };
 
-export type FilterInteractionsMap = RecursiveMap<
-  StaticUserConfig["search"]["params"]
->;
+export type FilterInteractionsMap = RecursiveMap<StaticSearch["params"]>;
 
 export const doFilter = async <V>(f: FilterDef<V>) => {
-  const config = await getUserConfig();
+  const config = await getSearchConfig();
   const v = f.getConfigValue(config);
   if (f.noopCondition(v)) {
     return;
@@ -57,7 +55,7 @@ const filterInteractions: FilterInteractionsMap = {
   exclude: {
     basements: FilterDef.fromObject({
       id: "unittype",
-      getConfigValue: (c) => c.search.params.exclude?.basements,
+      getConfigValue: (c) => c.params.exclude?.basements,
       noopCondition: (v) => !v,
       func: (_, xpath) => {
         return clickAllByXPath(`//label[not(text()='Basement')]`, {
@@ -74,7 +72,7 @@ const filterInteractions: FilterInteractionsMap = {
   },
   price: FilterDef.fromObject({
     id: "price",
-    getConfigValue: (c) => c.search.params.price,
+    getConfigValue: (c) => c.params.price,
     noopCondition: (v) => v.min === undefined && v.max === undefined,
     func: async (v, xpath) => {
       await fillInputByLabel("from", v.min, {
@@ -91,7 +89,7 @@ const filterInteractions: FilterInteractionsMap = {
   }),
   minBedrooms: FilterDef.fromObject({
     id: "numberbedrooms",
-    getConfigValue: (c) => c.search.params.minBedrooms,
+    getConfigValue: (c) => c.params.minBedrooms,
     noopCondition: (v) => v === undefined || v === 0,
     func: async (v, xpath) => {
       for (const p of [

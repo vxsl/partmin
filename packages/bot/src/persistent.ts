@@ -4,7 +4,8 @@ import {
   validateAdvancedConfig,
 } from "advanced-config.js";
 import { ChannelIDs } from "discord/index.js";
-import { Listing } from "listing.js";
+// Note: per-search state (seen listings, ignored listings) is defined in
+// search.ts instead, since there's one copy of each per configured search.
 import {
   StaticUserConfig,
   userConfigPath,
@@ -101,21 +102,6 @@ const persistent = {
     label: "Google Maps API key",
     envVar: "GOOGLE_MAPS_API_KEY",
     common: true,
-  }),
-
-  // ---------------------------------------
-  // process
-  listings: new PersistentDataDef<Listing[]>({
-    path: `listings.json`,
-    readTransform: parseJSON,
-    writeTransform: JSON.stringify,
-    label: "all listings",
-  }),
-  ignore: new PersistentDataDef<string[]>({
-    path: `ignore.json`,
-    readTransform: parseJSON,
-    writeTransform: JSON.stringify,
-    label: "ignored listings",
   }),
 
   // ---------------------------------------

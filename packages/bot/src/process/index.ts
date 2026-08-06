@@ -9,10 +9,10 @@ import {
   ensureLocationLink,
   isValid,
 } from "listing.js";
-import persistent from "persistent.js";
 import { isWithinRadii } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
 import { asyncFilter } from "util/misc.js";
+import { PersistentDataDef } from "util/persistence.js";
 
 dotenv.load();
 
@@ -74,7 +74,10 @@ export const decorateAndFilterListings = async (unseenListings: Listing[]) => {
   return validResults;
 };
 
-export const preprocessListings = async (listings: Listing[]) => {
+export const preprocessListings = async (
+  listings: Listing[],
+  ignoreStore: PersistentDataDef<string[]>
+) => {
   const withinRadii = await asyncFilter(listings, async (l, i) => {
     if (!l.details.coords) return true;
     const v = await isWithinRadii(l.details.coords);
@@ -91,12 +94,12 @@ export const preprocessListings = async (listings: Listing[]) => {
 
   const res = withinRadii.slice(0, 15);
 
-  let ignore = (await persistent.ignore.value()) ?? [];
-  await persistent.ignore.writeValue([
+  let ignore = (await ignoreStore.value()) ?? [];
+  await ignoreStore.writeValue([
     ...ignore,
     ...withinRadii.slice(15).map(getListingKey),
   ]);
-  ignore = (await persistent.ignore.value()) ?? [];
+  ignore = (await ignoreStore.value()) ?? [];
   return res.filter((l) => {
     const doIgnore = ignore.includes(getListingKey(l));
     if (doIgnore) {

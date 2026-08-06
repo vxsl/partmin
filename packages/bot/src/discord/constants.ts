@@ -1,3 +1,4 @@
+import { devOptions } from "advanced-config.js";
 import {
   ActivityType,
   ChannelType,
@@ -8,6 +9,7 @@ import {
 } from "discord.js";
 import { PresenceActivityDef } from "discord/presence.js";
 import { load } from "dotenv-mono";
+import { primarySearchName } from "user-config.js";
 import { envVarInstruction, readableSeconds } from "util/string.js";
 
 load();
@@ -47,9 +49,12 @@ const prodChannelKeys = ["main-category", "listings", "logs"] as const;
 const testChannelKeys = prodChannelKeys.map((k) => `test-${k}` as const);
 type ProdChannelKey = (typeof prodChannelKeys)[number];
 type TestChannelKey = (typeof testChannelKeys)[number];
-export type ChannelKey = ProdChannelKey | TestChannelKey;
+// Every search past the first contributes a listings channel whose key is only
+// known at runtime, so the key type stays open. The literals are kept in the
+// union purely so that the fixed channels still autocomplete.
+export type ChannelKey = ProdChannelKey | TestChannelKey | (string & {});
 
-type BaseChannelDef<Prod extends boolean, IsCategory extends boolean> = {
+type BaseChannelDef<IsCategory extends boolean> = {
   defaultName: string;
 } & (IsCategory extends true
   ? {
@@ -61,16 +66,14 @@ type BaseChannelDef<Prod extends boolean, IsCategory extends boolean> = {
   : {
       type: ChannelType.GuildText;
       topic: string;
-      parent?: Prod extends true ? ProdChannelKey : TestChannelKey;
+      parent?: ChannelKey;
       msgFlags?: MessageCreateOptions["flags"];
     });
-type ProdChannelDef = BaseChannelDef<true, true | false>;
-type TestChannelDef = BaseChannelDef<false, true | false>;
-export type ChannelDef = ProdChannelDef | TestChannelDef;
-export type CategoryDef = ProdChannelDef & { type: ChannelType.GuildCategory };
-export type TextChannelDef = ProdChannelDef & { type: ChannelType.GuildText };
+export type ChannelDef = BaseChannelDef<true> | BaseChannelDef<false>;
+export type CategoryDef = BaseChannelDef<true>;
+export type TextChannelDef = BaseChannelDef<false>;
 
-export const prodChannelDefs: Record<ProdChannelKey, ProdChannelDef> = {
+export const prodChannelDefs: Record<ProdChannelKey, ChannelDef> = {
   "main-category": {
     defaultName: "🏘 partmin",
     type: ChannelType.GuildCategory,
@@ -91,7 +94,7 @@ export const prodChannelDefs: Record<ProdChannelKey, ProdChannelDef> = {
   },
 };
 
-export const testChannelDefs: Record<TestChannelKey, TestChannelDef> = {
+export const testChannelDefs: Record<TestChannelKey, ChannelDef> = {
   "test-main-category": {
     defaultName: "partmin-test",
     type: ChannelType.GuildCategory,
@@ -112,10 +115,64 @@ export const testChannelDefs: Record<TestChannelKey, TestChannelDef> = {
   },
 };
 
-export const channelDefs: Record<ChannelKey, ChannelDef> = {
+// ------------------------------------------------------------
+// per-search listings channels
+
+const listingsChannelKey = (name: string, testing: boolean): ChannelKey =>
+  `${testing ? "test-" : ""}${
+    name === primarySearchName ? "listings" : `listings-${name}`
+  }`;
+
+/** The channel a given search's listings are announced in. */
+export const searchChannelKey = (name: string) =>
+  listingsChannelKey(name, !!devOptions.testing);
+
+const searchChannelDef = (name: string, testing: boolean): ChannelDef => ({
+  defaultName: `${testing ? "🧪" : "🌇"}┃${name}`,
+  type: ChannelType.GuildText,
+  topic: `${
+    testing ? "[test] " : ""
+  }@partmin created this channel. This is where you'll find listings that match your "${name}" search.`,
+  parent: testing ? "test-main-category" : "main-category",
+  ...(testing && { msgFlags: MessageFlags.SuppressNotifications }),
+});
+
+// Keyed by plain string rather than ChannelKey: the per-search keys aren't known
+// until the config has been read, so requiring the fixed ones to be present
+// would only get in the way.
+export type ChannelDefs = Record<string, ChannelDef>;
+
+const buildChannelDefs = (searchNames: string[]): ChannelDefs => {
+  const defs: ChannelDefs = { ...prodChannelDefs };
+  const addSearchChannels = (testing: boolean) => {
+    for (const name of searchNames) {
+      // the primary search's channel is `listings`, already defined above
+      if (name === primarySearchName) continue;
+      defs[listingsChannelKey(name, testing)] = searchChannelDef(name, testing);
+    }
+  };
+  addSearchChannels(false);
+  if (devOptions.testing) {
+    Object.assign(defs, testChannelDefs);
+    addSearchChannels(true);
+  }
+  return defs;
+};
+
+// The set of channels partmin manages depends on the configured searches, so it
+// can only be assembled once the config has been read. Until then, callers
+// looking up a fixed channel still get what they expect.
+let channelDefs: ChannelDefs = {
   ...prodChannelDefs,
   ...testChannelDefs,
 };
+
+export const defineChannelDefs = (searchNames: string[]) => {
+  channelDefs = buildChannelDefs(searchNames);
+  return channelDefs;
+};
+
+export const getChannelDefs = () => channelDefs;
 
 // ------------------------------------------------------------
 // presence

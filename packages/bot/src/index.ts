@@ -30,7 +30,14 @@ import {
 } from "process/index.js";
 import psList from "ps-list";
 import type { Page } from "playwright";
-import { Platform, platforms } from "types/platform.js";
+import {
+  ResolvedSearch,
+  enabledPlatforms,
+  getSearchPersistent,
+  getSearches,
+  setCurrentSearch,
+} from "search.js";
+import { platforms } from "types/platform.js";
 import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
 import {
   debugLog,
@@ -45,12 +52,6 @@ import { discordFormat } from "util/string.js";
 process.title = "partmin-bot";
 
 dotenv.load();
-
-const PLATFORMS = [
-  platforms.fb,
-  platforms.craigslist,
-  //  platforms.kijiji
-];
 
 let page: Page | undefined;
 export const requirePage = () => {
@@ -77,34 +78,50 @@ const logBreakIfConfigChanged = async (platform: string) => {
   return res;
 };
 
-const retrieval = async (platforms: Platform[]) => {
-  await ifUserConfigIsChanged(async () => {
-    for (const {
-      callbacks: { onSearchParamsChanged },
-      name: platform,
-    } of platforms) {
+// A config change invalidates whatever the platforms have set up for the
+// previous criteria, so this runs once per pass over all the searches rather
+// than once per search.
+const prepareForConfigChange = () =>
+  ifUserConfigIsChanged(async () => {
+    for (const platform of enabledPlatforms) {
+      const {
+        callbacks: { onSearchParamsChanged },
+        name,
+      } = platforms[platform];
       if (!onSearchParamsChanged) continue;
 
       const n = 3;
       log(
-        `Since the config has changed, running essential preparation for ${platform} retrieval loop.`
+        `Since the config has changed, running essential preparation for ${name} retrieval loop.`
       );
       await tryNTimes(
         n,
         () => onSearchParamsChanged() ?? Promise.resolve()
       ).catch((e) => {
         throw new Error(
-          `Unable to run essential preparation for ${platform} (tried ${n} times): ${e}`
+          `Unable to run essential preparation for ${name} (tried ${n} times): ${e}`
         );
       });
     }
   });
 
+const retrieval = async (search: ResolvedSearch) => {
+  // Everything the platforms, filters and embeds read about the search comes
+  // from here.
+  setCurrentSearch(search);
+  const { listings: seenListings, ignore } = getSearchPersistent(search);
+
+  log(
+    `\n#######################################################\nsearch: ${
+      search.name
+    } (${search.platforms.join(", ") || "no platforms"})\n`
+  );
+
   for (const {
     name: platform,
     callbacks,
     presenceActivities: presences,
-  } of platforms) {
+  } of search.platforms.map((k) => platforms[k])) {
     log(
       `\n=======================================================\n${platform}\n`
     );
@@ -116,7 +133,7 @@ const retrieval = async (platforms: Platform[]) => {
       // pre-process listings before per-listing callbacks
       let preprocessedListings: Listing[] = [];
       try {
-        preprocessedListings = await preprocessListings(listings);
+        preprocessedListings = await preprocessListings(listings, ignore);
         if (!preprocessedListings.length) {
           log(`No valid listings found after pre-processing.`);
           return;
@@ -140,7 +157,7 @@ const retrieval = async (platforms: Platform[]) => {
       // abort if config changed:
       if (await logBreakIfConfigChanged(platform)) return; // TODO this used to be a break
 
-      const seen = (await persistent.listings.value()) ?? [];
+      const seen = (await seenListings.value()) ?? [];
       const seenKeys = new Set(seen.map(getListingKey));
       const unseen = preprocessedListings.filter(
         (l) => !seenKeys.has(getListingKey(l))
@@ -234,7 +251,7 @@ const retrieval = async (platforms: Platform[]) => {
             }): ${l.url}`
           );
           try {
-            await sendListing(l);
+            await sendListing(l, { channel: search.channelKey });
           } catch (e) {
             discordWarning(
               `Error while sending Discord notification for listing ${i + 1}/${
@@ -263,7 +280,7 @@ const retrieval = async (platforms: Platform[]) => {
         );
 
         // save listings only once all notifications have been sent
-        await persistent.listings.writeValue([...seen, ...unseen]);
+        await seenListings.writeValue([...seen, ...unseen]);
       } catch (e) {
         if (!shuttingDown) {
           discordWarning(
@@ -422,13 +439,19 @@ const handleBrowserError = async (e: unknown) => {
       await fatalError("Failed to initialize browser.");
     }
 
+    // Platform init happens once, so it has to cover everything any of the
+    // configured searches will ask for.
+    const platformsToInit = [
+      ...new Set((await getSearches()).flatMap((s) => s.platforms)),
+    ].map((k) => platforms[k]);
+
     await tryNTimes(
       2,
       async () => {
         for (const {
           callbacks: { init },
           name: platform,
-        } of PLATFORMS) {
+        } of platformsToInit) {
           if (!init) continue;
           log(`Running init routine for ${platform}...`);
           await init();
@@ -443,7 +466,12 @@ const handleBrowserError = async (e: unknown) => {
     while (retries < Infinity) {
       // TODO consider parameterizing retries
       try {
-        await retrieval(PLATFORMS);
+        await prepareForConfigChange();
+        // Re-resolved every pass so that config edits take effect without a
+        // restart, the same way search parameters always have.
+        for (const search of await getSearches()) {
+          await retrieval(search);
+        }
         retries = 0;
       } catch (e) {
         const ogPage: Page | undefined = page;

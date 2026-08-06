@@ -7,7 +7,7 @@ import { baseURL } from "platforms/kijiji/constants.js";
 import kijiji from "platforms/kijiji/index.js";
 import { kijijiGet, setFilters } from "platforms/kijiji/util.js";
 import Parser from "rss-parser";
-import { getUserConfig } from "util/config.js";
+import { getSearchConfig } from "search.js";
 import { getGoogleMapsLink, trimAddress } from "util/geo.js";
 import { debugLog, log } from "util/log.js";
 import { notUndefined, waitSeconds } from "util/misc.js";
@@ -79,7 +79,7 @@ export const perListing = async (l: Listing) => {
     // TODO
   }
 
-  const config = await getUserConfig();
+  const config = await getSearchConfig();
 
   try {
     const attrs = data.viewItemPage.viewItemData.adAttributes.attributes.filter(
@@ -95,7 +95,7 @@ export const perListing = async (l: Listing) => {
             value: a.localeSpecificValues.en.value,
           }))
       );
-    } else if (config.search.params.unreliableParams?.requireOutdoorSpace) {
+    } else if (config.params.unreliableParams?.requireOutdoorSpace) {
       invalidateListing(
         l,
         "unreliableParamsMismatch",
@@ -115,7 +115,7 @@ export const perListing = async (l: Listing) => {
         key: attr.localeSpecificValues.en.label,
         value: attr.localeSpecificValues.en.value,
       });
-    } else if (config.search.params.unreliableParams?.requireParking) {
+    } else if (config.params.unreliableParams?.requireParking) {
       invalidateListing(
         l,
         "unreliableParamsMismatch",
@@ -131,7 +131,7 @@ export const perListing = async (l: Listing) => {
       (a: any) => a.machineKey === "areainfeet"
     );
     const n = parseInt(attr.machineValue);
-    const min = config.search.params.unreliableParams?.minAreaSqFt;
+    const min = config.params.unreliableParams?.minAreaSqFt;
     if (!isNaN(n) && attr.machineValue !== 0) {
       if (min !== undefined && n < min) {
         invalidateListing(
@@ -159,7 +159,7 @@ export const perListing = async (l: Listing) => {
         key: attr.localeSpecificValues.en.label,
         value: attr.localeSpecificValues.en.value,
       });
-    } else if (config.search.params.unreliableParams?.petsStrict) {
+    } else if (config.params.unreliableParams?.petsStrict) {
       invalidateListing(l, "paramsMismatch", "Explicitly disallows pets");
     }
   } catch {
@@ -178,7 +178,7 @@ export const onSearchParamsChanged = async () => {
   await kijijiGet(baseURL);
   await clickByXPath(`//header[1]//*[text() = 'Canada']`);
 
-  const config = await getUserConfig();
+  const config = await getSearchConfig();
 
   await waitSeconds(2); // TODO don't arbitrary wait. Figure out the multiple renders of this element
   await withElement(
@@ -187,7 +187,7 @@ export const onSearchParamsChanged = async () => {
       await manualClear(el);
       await type(
         el,
-        `${config.search.location.city}, ${config.search.location.region}`
+        `${config.location.city}, ${config.location.region}`
       );
     }
   );

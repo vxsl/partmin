@@ -3,8 +3,11 @@ import { Listing } from "listing.js";
 import craigslist from "platforms/craigslist/index.js";
 import fb from "platforms/fb/index.js";
 import kijiji from "platforms/kijiji/index.js";
+import type { PlatformKey } from "user-config.js";
 
-export type PlatformKey = "kijiji" | "fb" | "craigslist";
+// Declared alongside the config runtype that validates it, so that a search can
+// name a platform without this module having to be imported to check it.
+export type { PlatformKey };
 export type Platform = {
   name: string;
   icon: string;

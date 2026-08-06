@@ -14,6 +14,11 @@ import listingEmbed, { colors } from "discord/interactive/listing/embed.js";
 import { getTextChannel } from "discord/util.js";
 import { Listing } from "listing.js";
 import persistent from "persistent.js";
+import {
+  ResolvedSearch,
+  getSearchPersistent,
+  getSearches,
+} from "search.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { discordFormat, splitString } from "util/string.js";
 
@@ -187,14 +192,14 @@ export const sendListing = async (
     componentGroupDefs: getListingButtons(l),
   });
 
-export const reinitializeInteractiveListingMessages = async () => {
-  const listings = await persistent.listings.value();
+const reinitializeSearchListingMessages = async (search: ResolvedSearch) => {
+  const listings = await getSearchPersistent(search).listings.value();
   if (!listings?.length) {
     return;
   }
   const listingsMap = new Map(listings.map((l) => [l.url, l]));
   const appID = await persistent.discordAppID.requireValue();
-  const channel = await getTextChannel("listings");
+  const channel = await getTextChannel(search.channelKey);
 
   let successCount = 0;
 
@@ -249,10 +254,16 @@ export const reinitializeInteractiveListingMessages = async () => {
     } else {
       log(
         successCount
-          ? `Reinitialized ${successCount} interactive listing messages`
-          : "No interactive listing messages to reinitialize"
+          ? `Reinitialized ${successCount} interactive listing messages in ${channel.name}`
+          : `No interactive listing messages to reinitialize in ${channel.name}`
       );
     }
   };
   return fetchAndProcessMessages();
+};
+
+export const reinitializeInteractiveListingMessages = async () => {
+  for (const search of await getSearches()) {
+    await reinitializeSearchListingMessages(search);
+  }
 };

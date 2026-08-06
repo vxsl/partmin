@@ -3,9 +3,9 @@ import { getStatusPathForAuditor } from "constants.js";
 import { ChannelType, DiscordAPIError, MessageCreateOptions } from "discord.js";
 import {
   ChannelKey,
-  channelDefs,
   errorColor,
   fatalErrorColor,
+  getChannelDefs,
   warningColor,
 } from "discord/constants.js";
 import { discordClient, discordIsReady } from "discord/index.js";
@@ -31,6 +31,9 @@ export const writeStatusForAuditor = (status: DiscordBotLoggedInStatus) =>
 export const getTextChannel = async (c: ChannelKey) => {
   const guildInfo = await persistent.channelIDs.requireValue();
   const id = guildInfo.channelIDs[c];
+  if (!id) {
+    throw new Error(`No channel ID recorded for "${c}"`);
+  }
   const result = await (discordClient.channels.cache.get(id) ??
     discordClient.channels.fetch(id));
   if (result?.type !== ChannelType.GuildText) {
@@ -113,7 +116,7 @@ const _discordSend = async (_msg: any, options?: DiscordSendOptions) => {
     options?.channel ?? (devOptions.testing ? "test-listings" : "listings");
   const c = await getTextChannel(k);
 
-  const flags = channelDefs[k].msgFlags;
+  const flags = getChannelDefs()[k]?.msgFlags;
 
   if (options?.createOptions) {
     return c.send(options.createOptions);

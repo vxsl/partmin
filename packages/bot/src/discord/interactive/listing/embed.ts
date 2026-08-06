@@ -4,7 +4,7 @@ import { ColorResolvable, EmbedBuilder } from "discord.js";
 
 import { Listing, ensureLocationLink, getCommuteOrigin } from "listing.js";
 import { platforms } from "types/platform.js";
-import { getUserConfig } from "util/config.js";
+import { getSearchConfig } from "search.js";
 import {
   Coordinates,
   formatCommuteSummaryMD,
@@ -43,11 +43,11 @@ const listingEmbed = async (l: Listing) => {
         })
       : undefined;
 
-  const config = await getUserConfig();
+  const config = await getSearchConfig();
 
   const commuteOrigin = getCommuteOrigin(l);
   const commutes = await Promise.all(
-    (config.search.location?.commuteDestinations ?? []).map(async (d) => {
+    (config.location?.commuteDestinations ?? []).map(async (d) => {
       const summ = l.computed?.commuteDestinations?.[d];
       if (!summ || !commuteOrigin) {
         return "";

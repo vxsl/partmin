@@ -1,7 +1,7 @@
 import axios from "axios";
 import haversine from "haversine";
 import persistent from "persistent.js";
-import { getUserConfig } from "util/config.js";
+import { getSearchConfig } from "search.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import { notUndefined } from "util/misc.js";
 import { abbreviateDuration, sanitizeString } from "util/string.js";
@@ -121,8 +121,8 @@ export const constructMapDevelopersURL = (coords: Coordinates) => {
 };
 
 export const isWithinRadii = async (coords: Coordinates) => {
-  const config = await getUserConfig();
-  const radii = decodeMapDevelopersURL(config.search.location.mapDevelopersURL);
+  const config = await getSearchConfig();
+  const radii = decodeMapDevelopersURL(config.location.mapDevelopersURL);
   verboseLog(
     `checking if ${Coordinates.toString(coords)} is within ${
       radii.length > 1
@@ -343,9 +343,9 @@ export const formatCommuteSummaryMD = (
 };
 
 export const trimAddress = async (address: string): Promise<string> => {
-  const config = await getUserConfig();
-  const city = sanitizeString(config.search.location.city);
-  const region = sanitizeString(config.search.location.region);
+  const config = await getSearchConfig();
+  const city = sanitizeString(config.location.city);
+  const region = sanitizeString(config.location.region);
   const cityIndex = sanitizeString(address).lastIndexOf(city);
   const regionIndex = sanitizeString(address).lastIndexOf(region);
   if (cityIndex === 0 || regionIndex <= cityIndex) {

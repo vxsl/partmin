@@ -12,8 +12,13 @@ type PersistentStringDefConstructorArgs<T> = {
   label: string;
   validate?: (v: T) => boolean | Promise<boolean>;
 } & (
-  | { common?: boolean; path: string; absolutePath?: undefined }
-  | { common?: undefined; path?: undefined; absolutePath: string }
+  | { common?: boolean; dir?: string; path: string; absolutePath?: undefined }
+  | {
+      common?: undefined;
+      dir?: undefined;
+      path?: undefined;
+      absolutePath: string;
+    }
 );
 type PersistentDataDefConstructorArgs<T> =
   PersistentStringDefConstructorArgs<T> & {
@@ -36,11 +41,13 @@ export class PersistentDataDef<T> {
     writeTransform,
     validate,
     common,
+    dir,
     absolutePath,
   }: PersistentDataDefConstructorArgs<T>) {
     const dirs = getDirs();
     this.path =
-      absolutePath ?? `${common ? dirs.commonData : dirs.data}/${path}`;
+      absolutePath ??
+      `${dir ?? (common ? dirs.commonData : dirs.data)}/${path}`;
     this.envVar = envVar;
     this.label = label;
     this.readTransform = readTransform;

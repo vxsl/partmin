@@ -1,4 +1,3 @@
-import { devOptions } from "advanced-config.js";
 import {
   BitField,
   CategoryChannel,
@@ -15,17 +14,18 @@ import {
 } from "discord.js";
 import setupCommands from "discord/commands/index.js";
 import {
-  ChannelDef,
+  ChannelDefs,
   ChannelKey,
-  channelDefs,
+  defineChannelDefs,
   discordGuildID,
-  prodChannelDefs,
+  getChannelDefs,
   requiredPermissions,
 } from "discord/constants.js";
 import { setPresence } from "discord/presence.js";
 import { writeStatusForAuditor } from "discord/util.js";
 import dotenv from "dotenv-mono";
 import persistent from "persistent.js";
+import { getSearchNamesForChannelSetup } from "search.js";
 import { stdout as singleLineStdOut } from "single-line-log";
 import { debugLog, log, logNoDiscord } from "util/log.js";
 import { waitSeconds } from "util/misc.js";
@@ -144,11 +144,9 @@ const getChannelsToBeCreated = async ({
       ...guildInfo.channelIDs,
     };
   };
-  const alreadyExist: Partial<Record<ChannelKey, GuildChannel>> = {};
-  const toCreate: Partial<Record<ChannelKey, ChannelDef>> = {};
-  for (const [_key, def] of Object.entries(
-    devOptions.testing ? channelDefs : prodChannelDefs
-  )) {
+  const alreadyExist: Record<string, GuildChannel> = {};
+  const toCreate: ChannelDefs = {};
+  for (const [_key, def] of Object.entries(getChannelDefs())) {
     const key = _key as ChannelKey;
     for (const c of actualChannels) {
       if (c.type !== def.type) continue;
@@ -189,8 +187,8 @@ const createChannels = async ({
   guild,
   guildInfo,
 }: {
-  toCreate: Partial<Record<ChannelKey, ChannelDef>>;
-  alreadyExist: Partial<Record<ChannelKey, GuildChannel>>;
+  toCreate: ChannelDefs;
+  alreadyExist: Record<string, GuildChannel>;
   guildInfo: RecursivePartial<ChannelIDs>;
   guild: Guild;
 }) => {
@@ -338,6 +336,9 @@ export const initDiscord = async () => {
   return await new Promise(async (resolve, reject) => {
     discordClient.once(Events.ClientReady, async () => {
       writeStatusForAuditor("logged-in");
+      // Each configured search gets its own listings channel, so which channels
+      // partmin manages isn't known until the config has been read.
+      defineChannelDefs(getSearchNamesForChannelSetup());
       const guildInfo = await persistent.channelIDs.value();
       if (guildInfo) {
         debugLog("Cached server information found.");
