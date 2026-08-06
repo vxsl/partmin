@@ -11,7 +11,8 @@ libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 \
 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 \
 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 \
 libxss1 libxtst6 ca-certificates fonts-liberation libnss3 \
-lsb-release xdg-utils wget && \
+lsb-release xdg-utils wget \
+xvfb x11vnc x11-utils novnc websockify && \
 apt-get clean && \
 rm -rf /var/lib/apt/lists/*
 

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "yarn check && yarn start",
     "start": "tsx src/index.ts",
+    "fb-login": "tsx src/fb-login.ts",
     "check": "yarn typecheck && yarn lint",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."

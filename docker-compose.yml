@@ -10,6 +10,7 @@ services:
       - ./config:/usr/src/app/config
       - ./packages/bot/.data:/usr/src/app/packages/bot/.data
       - ./packages/bot/.test-data:/usr/src/app/packages/bot/.test-data
+      - playwright-browsers:/root/.cache/ms-playwright
       - /dev/shm:/dev/shm
       - /etc/localtime:/etc/localtime-real:ro
     entrypoint:
@@ -19,3 +20,29 @@ services:
         "--development.noSandbox=true",
         "--development.headed=false",
       ]
+
+  # Interactive Facebook login, served over noVNC. Not started by `up`:
+  #   docker compose --profile login run --rm --service-ports fb-login
+  fb-login:
+    profiles: ["login"]
+    build:
+      context: .
+      network: host
+    env_file: .env
+    environment:
+      FB_LOGIN_NO_SANDBOX: "true"
+    ports:
+      - "127.0.0.1:6080:6080"
+    volumes:
+      - ./config:/usr/src/app/config
+      - ./packages/bot/.data:/usr/src/app/packages/bot/.data
+      - ./packages/bot/.test-data:/usr/src/app/packages/bot/.test-data
+      - playwright-browsers:/root/.cache/ms-playwright
+      - /dev/shm:/dev/shm
+      - /etc/localtime:/etc/localtime-real:ro
+    entrypoint: ["./entrypoint.sh", "fb-login"]
+
+# The browser isn't baked into the image; caching it here means it's downloaded
+# once instead of on every container recreation, and shared with fb-login.
+volumes:
+  playwright-browsers:
