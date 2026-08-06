@@ -6,6 +6,7 @@ import {
   Coordinates,
   approxLocationLink,
   getCommuteSummary,
+  isWithinRadii,
 } from "util/geo.js";
 import { debugLog } from "util/log.js";
 import { conditionalSpreads, notUndefined } from "util/misc.js";
@@ -121,6 +122,31 @@ export const addCommuteSummary = async (l: Listing) => {
       });
     }
   }
+};
+
+/**
+ * Drops listings outside the configured search circles.
+ *
+ * Platforms only learn a listing's coordinates when the per-listing callback
+ * visits its page, which happens after preprocessing — so preprocessing's radius
+ * filter never sees them, and until this ran the only thing keeping listings
+ * local was the radius handed to the platform's own search. That's no help for
+ * Marketplace's city-wide feed, which ignores it.
+ */
+export const checkWithinSearchArea = async (l: Listing) => {
+  if (!l.details.coords) {
+    return;
+  }
+  if (await isWithinRadii(l.details.coords)) {
+    return;
+  }
+  invalidateListing(
+    l,
+    "outsideSearch",
+    `${
+      l.details.shortAddress ?? Coordinates.toString(l.details.coords)
+    } is outside the configured search area`
+  );
 };
 
 type BlacklistEntry = string | RegExp;

@@ -169,20 +169,21 @@ feed that isn't your apartment hunt.
 
 Each entry states only what differs from `search`; everything it leaves out is
 inherited, so a second search doesn't have to restate your city or your search
-radii. To watch a cheaper price band in its own channel, leave your existing
-`search` block alone and add `searches` alongside it:
+radii. For a feed of cheap things across _all_ of Marketplace, leave your
+existing `search` block alone and add `searches` alongside it:
 
 ```json
   "searches": {
-    "cheap": {
+    "deals": {
+      "category": "all",
       "platforms": ["fb"],
-      "params": { "price": { "min": 0, "max": 900 } },
+      "params": { "price": { "min": 0, "max": 200 } },
       "blacklist": []
     }
   }
 ```
 
-That produces a `🌇┃cheap` channel next to your existing listings channel.
+That produces a `🌇┃deals` channel next to your existing listings channel.
 
 Notes:
 
@@ -192,23 +193,25 @@ Notes:
 - **`platforms`** picks which sites a search covers — one or more of `fb` and
   `craigslist`. Omit it to use all of them. Craigslist is only searched for
   rentals, so a non-rental search should ask for `["fb"]`.
-- **`category`** is the Facebook Marketplace category slug — the path segment
-  after your city in a Marketplace URL. `propertyrentals` is the default, and in
-  practice it's the only value worth setting today; see below.
-- **Non-rental categories don't work properly yet.** Marketplace serves a
-  newest-first sortable grid at `/<city>/propertyrentals`, but not at the
-  equivalent path for other categories: `/<city>/electronics` and `/<city>/free`
-  return listings with no sort control at all, so partmin sees whatever
-  "Recommended" order Facebook picks rather than what's new. Worse, a slug
-  Marketplace doesn't recognise (`musicalinstruments`, `sportinggoods`) silently
-  redirects to the city-wide feed, which pins the radius at ~65 km and trips
-  partmin's radius check. Facebook's own category links go through
-  `/<city>/search/?query=<name>&category_id=<id>` instead — that form _is_
-  sortable and does respect the radius, but partmin doesn't emit it yet.
-- **There is no single "everything" URL.** `/<city>/search/` returns nothing
-  without a `query` (a `category_id` alone isn't enough), and the city-wide
-  "Browse all" feed has no sort control whatsoever. Covering all of Marketplace
-  means walking its ~18 top-level categories one at a time.
+- **`category`** picks what a Facebook search covers. `propertyrentals` (the
+  default) is Marketplace's rentals category. `all` is partmin's own name for
+  Marketplace's city-wide feed, which spans every category — see below. Any other
+  value is used as a literal Marketplace category slug, which is riskier than it
+  looks: `electronics` and `free` work, but a slug Marketplace doesn't recognise
+  (`musicalinstruments`, `sportinggoods`) silently redirects to the city-wide feed
+  instead of failing, and only `propertyrentals` offers a newest-first sort.
+- **`"category": "all"` behaves differently from a category page**, because
+  Marketplace's city-wide feed accepts none of the filters a category page does.
+  It ignores the price and the radius it's given, and it has no sort control at
+  all — it's ranked by Facebook, which is the point: it surfaces recent listings
+  it thinks are worth seeing. So partmin applies the parts Facebook drops:
+  - **price** is checked against `params.price` from the search tile, before
+    anything else, so over-priced listings don't eat the per-pass budget
+  - **search area** is checked against your radii once a listing's page has been
+    visited and its coordinates are known — the feed reaches ~65 km, well past
+    most search circles, so this does most of the filtering
+  - the feed reorders itself between loads, so coverage builds up over successive
+    passes rather than from one sweep. partmin visits it once per pass.
 - **Rental-only filters** — `pets`, `minBedrooms`, and the `swaps`, `sublets` and
   `shared` exclusions — are ignored by searches whose `category` isn't
   `propertyrentals`. Listings there also carry less detail, since the fields

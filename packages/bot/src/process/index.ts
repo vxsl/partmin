@@ -6,9 +6,11 @@ import {
   Listing,
   addCommuteSummary,
   checkForBlacklist,
+  checkWithinSearchArea,
   ensureLocationLink,
   isValid,
 } from "listing.js";
+import { getSearchConfig } from "search.js";
 import { isWithinRadii } from "util/geo.js";
 import { log, verboseLog } from "util/log.js";
 import { asyncFilter } from "util/misc.js";
@@ -30,6 +32,7 @@ export const decorateAndFilterListings = async (unseenListings: Listing[]) => {
     activity?.update(i);
     const [valid, invalid] = await promises;
     await checkForBlacklist(l);
+    await checkWithinSearchArea(l);
     if (isValid(l)) {
       valid.push(l);
       await ensureLocationLink(l);
@@ -78,7 +81,35 @@ export const preprocessListings = async (
   listings: Listing[],
   ignoreStore: PersistentDataDef<string[]>
 ) => {
-  const withinRadii = await asyncFilter(listings, async (l, i) => {
+  // Price is normally enforced by the query handed to the platform, but not
+  // every feed honours it — Marketplace's city-wide one ignores it outright. The
+  // price is already on the search tile, so this costs nothing, and doing it
+  // before the cap below keeps a flood of over-priced listings from crowding out
+  // ones that qualify.
+  const { min, max } = (await getSearchConfig()).params.price;
+  const overPriced: string[] = [];
+  const withinPrice = listings.filter((l) => {
+    const p = l.details.price;
+    // an unparsed price is no evidence either way; leave it to the later stages
+    if (p === undefined) {
+      return true;
+    }
+    if ((min !== undefined && p < min) || (max !== undefined && p > max)) {
+      overPriced.push(`${getListingKey(l)} (${p})`);
+      return false;
+    }
+    return true;
+  });
+  if (overPriced.length) {
+    log(
+      `${overPriced.length} listing${
+        overPriced.length !== 1 ? "s" : ""
+      } outside the configured price range${logLevels.verbose ? ":" : "."}`
+    );
+    verboseLog(overPriced.join(", "));
+  }
+
+  const withinRadii = await asyncFilter(withinPrice, async (l, i) => {
     if (!l.details.coords) return true;
     const v = await isWithinRadii(l.details.coords);
     if (!v) {

@@ -17,6 +17,7 @@ import { PersistentDataDef } from "util/persistence.js";
 
 export {
   enabledPlatforms,
+  isCityWideSearch,
   isRentalSearch,
   type ResolvedSearch,
 } from "search-resolution.js";

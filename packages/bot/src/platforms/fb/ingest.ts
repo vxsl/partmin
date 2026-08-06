@@ -19,7 +19,11 @@ import {
   setMarketplaceLocation,
 } from "platforms/fb/util.js";
 import { PlatformKey } from "types/platform.js";
-import { getSearchConfig, isRentalSearch } from "search.js";
+import {
+  getSearchConfig,
+  isCityWideSearch,
+  isRentalSearch,
+} from "search.js";
 import { PetType, rentalCategory } from "user-config.js";
 import {
   acresToSqft,
@@ -393,7 +397,12 @@ export const visitMarketplace = async (radius: Circle) => {
   const config = await getSearchConfig();
 
   const city = config.location.city;
-  const category = config.category ?? rentalCategory;
+  // Marketplace's city-wide feed is the bare city path. Asking for it by an
+  // unrecognised slug happens to redirect there, but only by accident — emit the
+  // real thing.
+  const category = isCityWideSearch(config)
+    ? ""
+    : config.category ?? rentalCategory;
   const isAptSearch = isRentalSearch(config);
 
   const vals = {
@@ -664,6 +673,42 @@ export const init = async () => {
   await ensureSession();
 };
 
+/**
+ * The city-wide feed can't be steered by radius, so there's nothing to tile:
+ * visit it once per pass. Marketplace reorders what it shows there between
+ * loads, so coverage comes from passes accumulating over time rather than from
+ * sweeping the search area — and the filters that feed ignores (price, search
+ * area) get applied to the listings once they come back.
+ */
+const cityWideMain = async (
+  processListings: (listings: Listing[]) => Promise<void>,
+  radii: Circle[]
+) => {
+  const activity = startActivity(fb.presenceActivities?.main, 1);
+  const anchor = radii[0];
+  if (!anchor) {
+    log("No search areas are configured, so there's nowhere to centre the feed.");
+    return;
+  }
+
+  log(`visiting the fb marketplace city-wide feed`);
+  await tryNTimes(3, async () => {
+    await visitMarketplace(anchor);
+    await withDOMChangesBlocked(async () => {
+      await elementShouldExist("xpath", fbListingXpath);
+      debugLog("Parsing listings...");
+      const listings = await getListings();
+      verboseLog(
+        `found ${listings.length} listings in the city-wide feed: ${listings
+          ?.map((l) => l.id)
+          .join(", ")}`
+      );
+      activity?.update(1);
+      await processListings(listings);
+    });
+  });
+};
+
 export const main = async (
   processListings: (listings: Listing[]) => Promise<void>
 ) => {
@@ -674,6 +719,10 @@ export const main = async (
 
   const config = await getSearchConfig();
   const radii = decodeMapDevelopersURL(config.location.mapDevelopersURL);
+
+  if (isCityWideSearch(config)) {
+    return await cityWideMain(processListings, radii);
+  }
 
   const activity = startActivity(fb.presenceActivities?.main, radii.length);
 

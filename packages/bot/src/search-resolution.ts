@@ -5,6 +5,7 @@ import {
   StaticSearch,
   StaticSearchOverride,
   StaticUserConfig,
+  cityWideCategory,
   primarySearchName,
   rentalCategory,
   userConfigPath,
@@ -39,6 +40,15 @@ export const enabledPlatforms: PlatformKey[] = ["fb", "craigslist"];
  */
 export const isRentalSearch = (config: StaticSearch) =>
   (config.category ?? rentalCategory) === rentalCategory;
+
+/**
+ * Whether a search covers every category by way of Marketplace's city-wide feed.
+ * That feed ignores the price and radius it's handed, so partmin has to apply
+ * both itself — and the radius it reports back (~65 km) would otherwise look
+ * like Marketplace refusing to honour the configured one.
+ */
+export const isCityWideSearch = (config: StaticSearch) =>
+  config.category === cityWideCategory;
 
 /**
  * Lays an entry of `searches` over the `search` block. Every field the override

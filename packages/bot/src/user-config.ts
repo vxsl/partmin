@@ -26,6 +26,14 @@ export const primarySearchName = "listings";
 // rental-specific filters and listing fields only apply to that kind of search.
 export const rentalCategory = "propertyrentals";
 
+// Not a Marketplace slug but partmin's own name for the city-wide feed —
+// Marketplace's own landing page, whose ranking surfaces recent listings it
+// thinks are worth seeing. It's the only way to cover every category at once,
+// but it accepts none of the filters a category page does, so price and search
+// area have to be enforced here instead. See "Running more than one search" in
+// the README.
+export const cityWideCategory = "all";
+
 export const PlatformKeyRuntype = Union(
   Literal("kijiji"),
   Literal("fb"),
