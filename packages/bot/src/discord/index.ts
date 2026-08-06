@@ -274,6 +274,32 @@ const createChannels = async ({
   return results;
 };
 
+const setupChannels = async (
+  guildInfo: RecursivePartial<ChannelIDs>,
+  guild: Guild
+) => {
+  const { toCreate, alreadyExist } = await getChannelsToBeCreated({
+    guild,
+    guildInfo,
+  });
+  if (Object.keys(toCreate).length) {
+    debugLog(
+      `Going to create the following channels:\n${Object.entries(toCreate)
+        .map(([key, def]) => ` - ${key} ("${def?.defaultName}")`)
+        .join(", ")}`
+    );
+  }
+
+  await createChannels({
+    toCreate,
+    alreadyExist,
+    guildInfo,
+    guild,
+  });
+
+  return guildInfo as ChannelIDs; // TODO use runtypes to throw if info is malformed.
+};
+
 const setupGuild = async (guildInfo: RecursivePartial<ChannelIDs>) => {
   let guild: Guild | undefined;
   let role: Role | undefined;
@@ -306,26 +332,28 @@ const setupGuild = async (guildInfo: RecursivePartial<ChannelIDs>) => {
     }
   }
 
-  const { toCreate, alreadyExist } = await getChannelsToBeCreated({
-    guild,
-    guildInfo,
-  });
-  if (Object.keys(toCreate).length) {
-    debugLog(
-      `Going to create the following channels:\n${Object.entries(toCreate)
-        .map(([key, def]) => ` - ${key} ("${def?.defaultName}")`)
-        .join(", ")}`
-    );
+  return setupChannels(guildInfo, guild);
+};
+
+/**
+ * Gives any search that doesn't have a listings channel yet one. Called before
+ * each retrieval pass so that adding a search to the config takes effect the
+ * same way editing one does, without a restart.
+ */
+export const ensureSearchChannels = async (searchNames: string[]) => {
+  defineChannelDefs(searchNames);
+  const cached = await persistent.channelIDs.value();
+  const missing = Object.keys(getChannelDefs()).filter(
+    (k) => !cached?.channelIDs?.[k]
+  );
+  if (!missing.length) {
+    return;
   }
-
-  await createChannels({
-    toCreate,
-    alreadyExist,
-    guildInfo,
-    guild,
-  });
-
-  return guildInfo as ChannelIDs; // TODO use runtypes to throw if info is malformed.
+  log(`Setting up channels that don't exist yet: ${missing.join(", ")}`);
+  const guild = await getGuild(discordGuildID);
+  await persistent.channelIDs.writeValue(
+    await setupChannels(cached ?? {}, guild)
+  );
 };
 
 export const initDiscord = async () => {

@@ -8,6 +8,7 @@ import { presenceActivities, successColor } from "discord/constants.js";
 import {
   discordClient,
   discordIsReady,
+  ensureSearchChannels,
   initDiscord,
   shutdownDiscord,
 } from "discord/index.js";
@@ -469,7 +470,9 @@ const handleBrowserError = async (e: unknown) => {
         await prepareForConfigChange();
         // Re-resolved every pass so that config edits take effect without a
         // restart, the same way search parameters always have.
-        for (const search of await getSearches()) {
+        const searches = await getSearches();
+        await ensureSearchChannels(searches.map((s) => s.name));
+        for (const search of searches) {
           await retrieval(search);
         }
         retries = 0;
