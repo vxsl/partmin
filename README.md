@@ -169,13 +169,13 @@ feed that isn't your apartment hunt.
 
 Each entry states only what differs from `search`; everything it leaves out is
 inherited, so a second search doesn't have to restate your city or your search
-radii. For a feed of _every_ Marketplace category under $200, leave your existing
-`search` block alone and add `searches` alongside it:
+radii. For a feed of cheap bikes near you, leave your existing `search` block
+alone and add `searches` alongside it:
 
 ```json
   "searches": {
-    "deals": {
-      "category": "search",
+    "bikes": {
+      "category": "bikes",
       "platforms": ["fb"],
       "params": { "price": { "min": 0, "max": 200 } },
       "blacklist": []
@@ -183,7 +183,7 @@ radii. For a feed of _every_ Marketplace category under $200, leave your existin
   }
 ```
 
-That produces a `🌇┃deals` channel next to your existing listings channel.
+That produces a `🌇┃bikes` channel next to your existing listings channel.
 
 Notes:
 
@@ -195,9 +195,13 @@ Notes:
   rentals, so a non-rental search should ask for `["fb"]`.
 - **`category`** is the Facebook Marketplace category slug — the path segment
   after your city in a Marketplace URL. Browse to the category you want and copy
-  it from the address bar. `propertyrentals` is the default; `search` is the
-  path Marketplace uses when you're not in a particular category. Worth watching
-  the first pass to confirm you're getting what you expected.
+  it from the address bar. `propertyrentals` is the default.
+- **There is no single "every category" slug.** Marketplace only serves a
+  newest-first, radius-scoped grid for a _specific_ category, so covering several
+  means one search per category. Two paths that look like they'd work don't:
+  `search` returns an empty result set unless it's given a search term, and the
+  bare city feed (`"category": ""`) ignores the radius and falls back to ~65 km,
+  which trips partmin's radius check.
 - **Rental-only filters** — `pets`, `minBedrooms`, and the `swaps`, `sublets` and
   `shared` exclusions — are ignored by searches whose `category` isn't
   `propertyrentals`. Listings there also carry less detail, since the fields
