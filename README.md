@@ -31,6 +31,9 @@
 
   - <img src="https://github.com/vxsl/partmin/assets/53827672/22f015f5-ca76-49d4-ba34-d4c91b5ef5e2" width="250">
 
+- run [more than one search](#running-more-than-one-search), each with its own
+  channel — including non-rental Marketplace categories
+
 - tweak your search on-the-fly with [slash commands](#discord-commands):
   - <img src="https://github.com/vxsl/partmin/assets/53827672/a7b9b3f0-d775-42ef-b0d3-b3462df7d244" width="650">
 
@@ -153,6 +156,60 @@ Notes:
   the bot will attempt an unattended login, backing off to this flow the moment
   Facebook presents a challenge). They're optional — you can just type the
   credentials into the browser instead.
+
+---
+
+## Running more than one search
+
+By default partmin runs the single search described by the `search` block of
+`config/user-config.json` and posts its results to one channel. Adding a
+`searches` block gives you additional searches, each with **its own channel and
+its own memory of what it has already sent** — useful when you want a separate
+feed that isn't your apartment hunt.
+
+Each entry states only what differs from `search`; everything it leaves out is
+inherited, so a second search doesn't have to restate your city or your search
+radii. For a feed of _every_ Marketplace category under $200, leave your existing
+`search` block alone and add `searches` alongside it:
+
+```json
+  "searches": {
+    "deals": {
+      "category": "search",
+      "platforms": ["fb"],
+      "params": { "price": { "min": 0, "max": 200 } },
+      "blacklist": []
+    }
+  }
+```
+
+That produces a `🌇┃deals` channel next to your existing listings channel.
+
+Notes:
+
+- **Names** may use lowercase letters, digits and dashes. The name becomes the
+  channel name, so pick something short. Renaming a search creates a new channel
+  and leaves the old one behind for you to delete.
+- **`platforms`** picks which sites a search covers — one or more of `fb` and
+  `craigslist`. Omit it to use all of them. Craigslist is only searched for
+  rentals, so a non-rental search should ask for `["fb"]`.
+- **`category`** is the Facebook Marketplace category slug — the path segment
+  after your city in a Marketplace URL. Browse to the category you want and copy
+  it from the address bar. `propertyrentals` is the default; `search` is the
+  path Marketplace uses when you're not in a particular category. Worth watching
+  the first pass to confirm you're getting what you expected.
+- **Rental-only filters** — `pets`, `minBedrooms`, and the `swaps`, `sublets` and
+  `shared` exclusions — are ignored by searches whose `category` isn't
+  `propertyrentals`. Listings there also carry less detail, since the fields
+  partmin reads for bedrooms, unit size and pet policy are specific to rentals.
+- **partmin sends at most 15 new listings per pass per search area**, and
+  permanently ignores anything beyond that. This rarely bites a rental search,
+  but a busy category can exceed it on every pass — so treat a broad search as a
+  sample of what's new rather than an exhaustive feed, and narrow it with
+  `price`, a tighter `category` or a smaller radius if you're missing things.
+- The `/search-parameters` command edits the `search` block. Extra searches are
+  configured by editing the file, which partmin picks up on its next pass — no
+  restart needed.
 
 ---
 
