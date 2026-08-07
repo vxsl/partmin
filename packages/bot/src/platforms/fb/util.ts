@@ -118,6 +118,22 @@ export const isLoggedIn = async () =>
     .cookies("https://www.facebook.com")
     .then((cs) => cs.some((c) => c.name === "c_user" && !!c.value));
 
+/**
+ * Whether Marketplace is refusing to serve us for going too fast.
+ *
+ * Facebook replaces the page with "You're Temporarily Blocked … misusing this
+ * feature by going too fast". Every element the scraper looks for is absent on
+ * it, so without this check the block reads as a page full of broken selectors
+ * and the bot keeps hammering, which is what earned the block.
+ */
+export const isTemporarilyBlocked = async () => {
+  const body = await requirePage()
+    .locator("body")
+    .innerText({ timeout: 3000 })
+    .catch(() => "");
+  return /temporarily blocked/i.test(body);
+};
+
 const challengeURLFragments: [string, string][] = [
   ["/checkpoint/", "Facebook is showing a security checkpoint"],
   ["two_step_verification", "Facebook is asking for a 2FA code"],
@@ -181,6 +197,12 @@ export const getCurrentRadius = () =>
       }
       return parseFloat(_r);
     });
+
+/** Whether the radius control is on the page at all, without waiting for it. */
+export const radiusControlExists = async () =>
+  (await requirePage()
+    .locator(`xpath=//text()[contains(., "Within")]/..`)
+    .count()) > 0;
 
 export const setMarketplaceLocation = async (fsa: string, radius: number) => {
   const page = requirePage();

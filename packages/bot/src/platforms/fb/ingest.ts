@@ -1,6 +1,10 @@
 import { AttachmentBuilder } from "discord.js";
 import { startActivity } from "discord/presence.js";
-import { discordSend, manualDiscordSend } from "discord/util.js";
+import {
+  discordSend,
+  discordWarning,
+  manualDiscordSend,
+} from "discord/util.js";
 import { requirePage } from "index.js";
 import { addBulletPoints, invalidateListing, Listing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
@@ -16,7 +20,9 @@ import {
   fbType,
   getCurrentRadius,
   isLoggedIn,
+  isTemporarilyBlocked,
   loginChallengeReason,
+  radiusControlExists,
   setMarketplaceLocation,
 } from "platforms/fb/util.js";
 import { PlatformKey } from "types/platform.js";
@@ -487,6 +493,61 @@ export const login = async () => {
   throw new Error("Facebook didn't complete the login within 30 seconds");
 };
 
+/**
+ * Marketplace has told us to slow down. Distinct from any other failure because
+ * the answer is to stop, not to retry: every selector is missing from the block
+ * page, so retrying reads as a broken page and digs the hole deeper.
+ */
+class MarketplaceBlockedError extends Error {
+  constructor() {
+    super(
+      "Facebook has temporarily blocked partmin from Marketplace for making requests too quickly."
+    );
+    this.name = "MarketplaceBlockedError";
+  }
+}
+
+const blockBackoffMs = 60 * 60 * 1000;
+let blockedUntil: number | undefined;
+
+/** Records the block, tells the user once, and keeps us off Marketplace. */
+const noteBlocked = async () => {
+  const alreadyKnown = blockedUntil !== undefined && Date.now() < blockedUntil;
+  blockedUntil = Date.now() + blockBackoffMs;
+  if (alreadyKnown) {
+    return;
+  }
+  const until = new Date(blockedUntil).toLocaleTimeString();
+  log(
+    `Facebook has temporarily blocked us. Pausing Marketplace until ${until}.`
+  );
+  await discordWarning(
+    "Facebook has temporarily blocked partmin from Marketplace",
+    `Facebook says partmin was "going too fast". Marketplace is paused until ${until}; other platforms carry on as usual.`,
+    { monospace: false }
+  );
+};
+
+/** True when we're still serving out a block, in which case don't touch it. */
+const isPausedForBlock = () => {
+  if (blockedUntil === undefined) {
+    return false;
+  }
+  if (Date.now() >= blockedUntil) {
+    blockedUntil = undefined;
+    log("The Facebook block should have expired; trying Marketplace again.");
+    return false;
+  }
+  return true;
+};
+
+/** Raises if the page we just loaded is the block page. */
+const throwIfBlocked = async () => {
+  if (await isTemporarilyBlocked()) {
+    throw new MarketplaceBlockedError();
+  }
+};
+
 const manualLoginPromptIntervalMs = 30 * 60 * 1000;
 let lastManualLoginPromptAt: number | undefined;
 
@@ -697,6 +758,7 @@ const cityWideMain = async (
   log(`visiting the fb marketplace city-wide feed`);
   await tryNTimes(3, async () => {
     await visitMarketplace(anchor);
+    await throwIfBlocked();
     await withDOMChangesBlocked(async () => {
       await elementShouldExist("xpath", fbListingXpath);
       debugLog("Parsing listings...");
@@ -717,6 +779,11 @@ export const main = async (
 ) => {
   if (!(await ensureSession())) {
     log("Skipping Facebook Marketplace until a session is available.");
+    return;
+  }
+
+  if (isPausedForBlock()) {
+    log("Skipping Marketplace while Facebook's rate limit is in effect.");
     return;
   }
 
@@ -754,15 +821,24 @@ export const main = async (
       try {
         await tryNTimes(3, async (i) => {
           const url = await visitMarketplace(r);
+          await throwIfBlocked();
           let closestRadius = undefined;
-          if (i > 0) {
+          // Only worth attempting when the control is actually on the page —
+          // it isn't on a block page, and waiting 10 seconds per retry to
+          // rediscover that was most of the noise in the logs.
+          if (i > 0 && (await radiusControlExists())) {
             log("Trying to set the correct radius manually...");
             const fsa = await approxFSA(r);
             closestRadius = await setMarketplaceLocation(fsa, r.radius).catch(
               async (e) => {
                 log(e);
-                const actualRadius = await getCurrentRadius();
-                if (Math.abs(actualRadius - r.radius) < 0.1) {
+                const actualRadius = await getCurrentRadius().catch(
+                  () => undefined
+                );
+                if (
+                  actualRadius !== undefined &&
+                  Math.abs(actualRadius - r.radius) < 0.1
+                ) {
                   log(
                     `Happily, Facebook ended up loaded results for ${actualRadius} km after all.`
                   );
@@ -848,6 +924,11 @@ export const main = async (
         // first, which is what failedRadiiIndices exists to avoid.
         if (isPlaywrightBrowserError(e)) {
           throw e;
+        }
+        // No point walking the remaining areas: the block applies to all of them.
+        if (e instanceof MarketplaceBlockedError) {
+          await noteBlocked();
+          return;
         }
         if (!secondAttempt) {
           failedRadiiIndices.push(_i);
