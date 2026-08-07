@@ -780,7 +780,29 @@ export const main = async (
             verboseLog(
               "Ensuring facebook didn't override the specified radius..."
             );
-            await getCurrentRadius().then((actualRadius) => {
+            // Marketplace doesn't show the "Within N km" label to a logged-in
+            // visitor, so more often than not the radius simply can't be read.
+            // Failing the area over that cost 30 seconds a time and, once every
+            // area had failed, a browser rebuild.
+            //
+            // It isn't load-bearing any more: every listing's coordinates are
+            // checked against the search area once its page has been visited, so
+            // an unconfirmed radius can't put a listing from the wrong place in
+            // front of you. All it costs is the early warning.
+            const actualRadius = await getCurrentRadius().catch((e) => {
+              verboseLog(
+                `Couldn't read back the radius Marketplace applied: ${errToString(
+                  e
+                )}`
+              );
+              return undefined;
+            });
+
+            if (actualRadius === undefined) {
+              debugLog(
+                `Carrying on without confirming the radius for ${rLabel}; listings still have to fall inside the search area.`
+              );
+            } else {
               const minAcceptable = radius * 0.9;
               const maxAcceptable = radius * 1.1;
 
@@ -802,7 +824,7 @@ export const main = async (
                   `Facebook successfully loaded results for ${actualRadius} km radius.`
                 );
               }
-            });
+            }
 
             debugLog("Parsing listings...");
             const listings = await getListings();

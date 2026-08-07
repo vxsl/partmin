@@ -163,10 +163,17 @@ export const loginChallengeReason = async (): Promise<string | undefined> => {
   return undefined;
 };
 
+/**
+ * The radius Marketplace says it applied, read off the "Within N km" label.
+ *
+ * That label is only rendered for logged-out visitors, so for the bot this
+ * usually finds nothing — hence the short timeout, and why callers treat a
+ * failure here as "couldn't confirm" rather than "this area is broken".
+ */
 export const getCurrentRadius = () =>
   requirePage()
     .locator(`xpath=//text()[contains(., "Within")]/..`)
-    .innerText()
+    .innerText({ timeout: 5000 })
     .then((text) => text.match(/(\d+\.?\d*)\s?(kilomet|km)/)?.[1])
     .then((_r) => {
       if (_r === undefined) {
@@ -181,9 +188,7 @@ export const setMarketplaceLocation = async (fsa: string, radius: number) => {
   // open the modal:
   await elementShouldExist("xpath", `//text()[contains(., "Within")]/..`);
   await seconds(Math.random() * 1 + 1);
-  await fbClick(
-    page.locator(`xpath=//text()[contains(., "Within")]/..`)
-  );
+  await fbClick(page.locator(`xpath=//text()[contains(., "Within")]/..`));
 
   // make sure the modal is open:
   await elementShouldExist(
