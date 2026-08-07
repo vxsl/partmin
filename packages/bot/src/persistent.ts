@@ -42,6 +42,9 @@ const persistent = {
   }),
   userConfig: new PersistentDataDef<StaticUserConfig>({
     absolutePath: userConfigPath,
+    // Edited by hand in the mounted config directory, so changes have to be
+    // noticed without a restart — adding a search shouldn't need one.
+    reloadFromDisk: true,
     readTransform: parseJSON,
     writeTransform: (v) => JSON.stringify(v, null, 2),
     label: "user configuration",

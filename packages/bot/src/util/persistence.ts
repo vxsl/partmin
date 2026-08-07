@@ -11,6 +11,12 @@ type PersistentStringDefConstructorArgs<T> = {
   envVar?: string;
   label: string;
   validate?: (v: T) => boolean | Promise<boolean>;
+  /**
+   * Re-read the file on every access instead of answering from the copy loaded
+   * at startup. For files a human edits directly, where the bot is expected to
+   * notice without being restarted.
+   */
+  reloadFromDisk?: boolean;
 } & (
   | { common?: boolean; dir?: string; path: string; absolutePath?: undefined }
   | {
@@ -29,6 +35,8 @@ export class PersistentDataDef<T> {
   envVar?: string;
   private path: string;
   private loaded: T | undefined;
+  private lastRead: string | undefined;
+  private reloadFromDisk: boolean;
   private label: string;
   protected readTransform: (read: string) => NonNullable<T> | undefined;
   protected writeTransform: (v: T) => string;
@@ -43,6 +51,7 @@ export class PersistentDataDef<T> {
     common,
     dir,
     absolutePath,
+    reloadFromDisk,
   }: PersistentDataDefConstructorArgs<T>) {
     const dirs = getDirs();
     this.path =
@@ -53,8 +62,10 @@ export class PersistentDataDef<T> {
     this.readTransform = readTransform;
     this.writeTransform = writeTransform;
     this.validate = validate;
+    this.reloadFromDisk = reloadFromDisk ?? false;
     const read = this.readValue();
     if (read) {
+      this.lastRead = read;
       this.loaded = this.readTransform(read);
     }
     if (this.loaded === undefined || this.loaded === "") {
@@ -91,6 +102,7 @@ export class PersistentDataDef<T> {
     }
     this.loaded = v;
     const s = this.writeTransform(v);
+    this.lastRead = s;
     if (!options?.skipLog) {
       debugLog(`Writing new value for ${this.label}`);
     }
@@ -100,8 +112,8 @@ export class PersistentDataDef<T> {
     message?: string;
   }): Promise<NonNullable<T | never>> {
     const v = await this.value();
-    if (v !== undefined) {
-      return v;
+    if (v !== undefined && v !== null) {
+      return v as NonNullable<T>;
     }
     if (options?.message) {
       console.log(`\n\n${options.message}\n\n`);
@@ -113,6 +125,9 @@ export class PersistentDataDef<T> {
     }
   }
   async value() {
+    if (this.reloadFromDisk) {
+      return await this.reloadedValue();
+    }
     if (this.loaded) {
       return this.loaded;
     }
@@ -125,6 +140,46 @@ export class PersistentDataDef<T> {
       }
     }
     return v;
+  }
+
+  /**
+   * Picks up edits made to the file by hand, which the cached path above can't:
+   * it answers with whatever was on disk at startup for the life of the process.
+   *
+   * Re-validating on every read would be wasteful — and for the user config,
+   * noisy, since validation warns in Discord — so the raw text is compared first
+   * and the work only happens when it has actually changed. A file that's been
+   * edited into an invalid state leaves the last good value in place rather than
+   * taking the bot down.
+   */
+  private async reloadedValue() {
+    const read = this.readValue();
+    if (read === undefined || read === this.lastRead) {
+      return this.loaded;
+    }
+    const v = this.readTransform(read);
+    if (v === undefined) {
+      log(
+        `Couldn't parse the new contents of ${this.label}; keeping the previous value.`
+      );
+      return this.loaded;
+    }
+    try {
+      if (this.validate && !(await this.validate(v))) {
+        throw new Error("failed validation");
+      }
+    } catch (e) {
+      log(`Ignoring an invalid change to ${this.label}: ${e}`, { error: true });
+      // remembered so the same broken contents aren't re-reported every read
+      this.lastRead = read;
+      return this.loaded;
+    }
+    if (this.lastRead !== undefined) {
+      debugLog(`Picked up a change to ${this.label}`);
+    }
+    this.lastRead = read;
+    this.loaded = v;
+    return this.loaded;
   }
 }
 
