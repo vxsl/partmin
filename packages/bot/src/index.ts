@@ -39,6 +39,7 @@ import {
   setCurrentSearch,
 } from "search.js";
 import { platforms } from "types/platform.js";
+import { isPlaywrightBrowserError } from "util/browser.js";
 import { ifUserConfigIsChanged, isUserConfigChanged } from "util/config.js";
 import {
   debugLog,
@@ -61,13 +62,6 @@ export const requirePage = () => {
   }
   return page;
 };
-
-const isPlaywrightBrowserError = (e: unknown): boolean =>
-  e instanceof Error &&
-  (e.message.includes("closed") ||
-    e.message.includes("Target closed") ||
-    e.message.includes("crashed") ||
-    e.constructor.name === "TimeoutError");
 
 export let shuttingDown = false;
 
@@ -203,9 +197,9 @@ const retrieval = async (search: ResolvedSearch) => {
         }
         if (failures.length && !shuttingDown) {
           discordWarning(
-            `Couldn't retrieve details for ${failures.length} ${platform} listing${
-              failures.length === 1 ? "" : "s"
-            }:`,
+            `Couldn't retrieve details for ${
+              failures.length
+            } ${platform} listing${failures.length === 1 ? "" : "s"}:`,
             failures.join("\n")
           );
         }
@@ -315,7 +309,11 @@ const shutdownBrowser = async () => {
     debugLogNoDiscord("The browser is already closed.");
     return;
   }
-  await page?.context().browser()?.close().catch(() => {});
+  await page
+    ?.context()
+    .browser()
+    ?.close()
+    .catch(() => {});
 };
 
 export const shutdown = async () => {

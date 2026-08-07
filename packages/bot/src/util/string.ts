@@ -86,3 +86,36 @@ export const splitString = (s: string, maxLength: number) => {
 
 export const errToString = (e: unknown) =>
   e instanceof Error ? `${e.stack || `${e.name}: ${e.message}`}` : `${e}`;
+
+const relativeAgeUnitMinutes: Record<string, number> = {
+  minute: 1,
+  hour: 60,
+  day: 60 * 24,
+  week: 60 * 24 * 7,
+  month: 60 * 24 * 30,
+  year: 60 * 24 * 365,
+};
+
+/**
+ * The age in minutes implied by a phrase like "Listed 6 days ago" or "Listed
+ * about an hour ago", which Marketplace falls back to when it doesn't hand over a
+ * creation timestamp. Undefined when there's nothing recognisable in it.
+ *
+ * Worth parsing properly rather than looking for the word "day": that matches
+ * both "a day ago" and "6 days ago", which are on opposite sides of any sensible
+ * cutoff.
+ */
+export const parseRelativeAgeMinutes = (s: string | undefined) => {
+  if (!s) {
+    return undefined;
+  }
+  const match = s
+    .toLowerCase()
+    .match(/(\d+|an?)\s+(minute|hour|day|week|month|year)s?/);
+  const unit = match?.[2] ? relativeAgeUnitMinutes[match[2]] : undefined;
+  if (!match?.[1] || unit === undefined) {
+    return undefined;
+  }
+  const n = /^\d+$/.test(match[1]) ? parseInt(match[1], 10) : 1;
+  return n * unit;
+};

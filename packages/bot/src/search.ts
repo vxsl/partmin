@@ -19,6 +19,7 @@ export {
   enabledPlatforms,
   isCityWideSearch,
   isRentalSearch,
+  maxListingAgeMinutes,
   type ResolvedSearch,
 } from "search-resolution.js";
 

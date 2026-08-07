@@ -50,6 +50,31 @@ export const isRentalSearch = (config: StaticSearch) =>
 export const isCityWideSearch = (config: StaticSearch) =>
   config.category === cityWideCategory;
 
+/** Default freshness window for the city-wide feed, in hours. */
+const cityWideMaxListingAgeHours = 24;
+
+/**
+ * How old a listing may be and still be worth sending.
+ *
+ * A category page is sorted newest-first, so a tight window is right: anything
+ * older has been offered before. The city-wide feed is ranked instead, and
+ * happily resurfaces week-old listings, so the same window would reject all of
+ * it — but no window at all lets those week-old listings through, which is no
+ * better. A day is the compromise, and `params.maxListingAgeHours` overrides it.
+ */
+export const maxListingAgeMinutes = (
+  config: StaticSearch,
+  options: { defaultMinutes: number }
+) => {
+  const configured = config.params.maxListingAgeHours;
+  if (configured !== undefined) {
+    return configured * 60;
+  }
+  return isCityWideSearch(config)
+    ? cityWideMaxListingAgeHours * 60
+    : options.defaultMinutes;
+};
+
 /**
  * Lays an entry of `searches` over the `search` block. Every field the override
  * sets replaces the corresponding one outright — nested objects aren't merged
@@ -77,6 +102,8 @@ export const mergeSearch = (
   params: {
     price: o.params?.price ?? base.params.price,
     minBedrooms: o.params?.minBedrooms ?? base.params.minBedrooms,
+    maxListingAgeHours:
+      o.params?.maxListingAgeHours ?? base.params.maxListingAgeHours,
     pets: o.params?.pets ?? base.params.pets,
     exclude: o.params?.exclude ?? base.params.exclude,
     unreliableParams:

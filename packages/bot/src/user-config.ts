@@ -95,6 +95,11 @@ const searchParamsBeforePrice = {
   minBedrooms: Optional(RuntypeNumber),
 };
 const searchParamsAfterPrice = {
+  // How old a listing may be and still be worth sending. Left unset, a
+  // date-sorted category page uses a tight window (anything older has been seen
+  // already) while the city-wide feed, which is ranked rather than chronological,
+  // uses a day.
+  maxListingAgeHours: Optional(RuntypeNumber),
   unreliableParams: Optional(UnreliableParams),
 };
 

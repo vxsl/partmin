@@ -19,7 +19,16 @@ import {
   setMarketplaceLocation,
 } from "platforms/fb/util.js";
 import { PlatformKey } from "types/platform.js";
-import { getSearchConfig, isCityWideSearch, isRentalSearch } from "search.js";
+import {
+  BrowserRestartRequired,
+  isPlaywrightBrowserError,
+} from "util/browser.js";
+import {
+  getSearchConfig,
+  isCityWideSearch,
+  isRentalSearch,
+  maxListingAgeMinutes,
+} from "search.js";
 import { PetType, rentalCategory } from "user-config.js";
 import {
   acresToSqft,
@@ -31,6 +40,7 @@ import {
   sqMetersToSqft,
 } from "util/geo.js";
 import { findNestedJSONProperty } from "util/json.js";
+import { errToString, parseRelativeAgeMinutes } from "util/string.js";
 import { debugLog, log, verboseLog } from "util/log.js";
 import {
   isNight,
@@ -137,18 +147,11 @@ export const perListing = async (l: Listing) => {
       return;
     }
 
-    const maxMin = isNight() ? 60 : 30;
-    // The city-wide feed is ranked rather than chronological, so most of what it
-    // surfaces is hours or days old. An age cutoff would reject essentially all
-    // of it — there, "new" means "not seen before", which the seen-listing store
-    // already decides.
-    const invalidateIfStale = (reason: string) => {
-      if (isCityWideSearch(config)) {
-        verboseLog(`Not applying the age cutoff to ${l.id}: ${reason}`);
-        return;
-      }
+    const maxMin = maxListingAgeMinutes(config, {
+      defaultMinutes: isNight() ? 60 : 30,
+    });
+    const invalidateIfStale = (reason: string) =>
       invalidateListing(l, "stale", reason);
-    };
 
     try {
       const timestamp = getPart((i) => i.creation_time);
@@ -174,16 +177,15 @@ export const perListing = async (l: Listing) => {
           f.display_label.includes("Listed")
         )?.display_label;
 
-        if (
-          (maxMin <= 60 &&
-            l.details.dateFallbackStr?.toLowerCase().includes("hours")) ||
-          l.details.dateFallbackStr?.toLowerCase().includes("day") ||
-          l.details.dateFallbackStr?.toLowerCase().includes("week") ||
-          l.details.dateFallbackStr?.toLowerCase().includes("month") ||
-          l.details.dateFallbackStr?.toLowerCase().includes("year")
-        ) {
+        const ageFromText = parseRelativeAgeMinutes(l.details.dateFallbackStr);
+        if (ageFromText === undefined) {
+          throw new Error(
+            `Couldn't read an age out of "${l.details.dateFallbackStr}"`
+          );
+        }
+        if (ageFromText > maxMin) {
           invalidateIfStale(
-            `Stale threshold is ${maxMin} minutes and found text "${l.details.dateFallbackStr}"`
+            `Listing is about ${ageFromText} minutes old, past the ${maxMin}-minute limit ("${l.details.dateFallbackStr}")`
           );
         }
       } catch (e) {
@@ -729,6 +731,7 @@ export const main = async (
   const activity = startActivity(fb.presenceActivities?.main, radii.length);
 
   const failedRadiiIndices: number[] = [];
+  let succeeded = 0;
 
   for (let secondAttempt = 0; secondAttempt < 2; secondAttempt++) {
     const arr = secondAttempt ? failedRadiiIndices.map((i) => radii[i]) : radii;
@@ -812,24 +815,40 @@ export const main = async (
             await processListings(listings);
           });
         });
+        succeeded++;
         if (i < arr.length - 1) {
           await randomWait({ short: true, suppressProgressLog: true });
         }
       } catch (e) {
-        if (e instanceof MarketplaceRadiusError) {
-          if (secondAttempt) {
-            discordSend(e.message, { italic: true });
-            log(
-              `Skipping ${rLabel} this time because Facebook refused to load the correct radius.`
-            );
-          } else {
-            failedRadiiIndices.push(i);
-          }
-          continue;
-        } else {
+        // Only a dead browser is worth abandoning the sweep for. Anything else —
+        // a radius Marketplace won't honour, an empty result page, a selector that
+        // never appeared — belongs to this area alone. It used to throw all the
+        // way out of main, so the retrieval loop restarted every area from the
+        // first, which is what failedRadiiIndices exists to avoid.
+        if (isPlaywrightBrowserError(e)) {
           throw e;
         }
+        if (!secondAttempt) {
+          failedRadiiIndices.push(_i);
+          log(`Will come back to ${rLabel}: ${errToString(e)}`);
+        } else {
+          if (e instanceof MarketplaceRadiusError) {
+            discordSend(e.message, { italic: true });
+          }
+          log(`Giving up on ${rLabel} for this pass: ${errToString(e)}`, {
+            error: true,
+          });
+        }
+        continue;
       }
     }
+  }
+
+  // Every area failing is a different problem from a flaky one: the browser is
+  // wedged, and only the retrieval loop can replace it.
+  if (radii.length && !succeeded) {
+    throw new BrowserRestartRequired(
+      `None of the ${radii.length} search areas could be loaded this pass.`
+    );
   }
 };

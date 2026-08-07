@@ -226,10 +226,11 @@ Notes:
     has been visited and its coordinates are known — the feed reaches ~65 km, so
     this does most of the filtering, and it's why such a search wants
     `location.radiusKm` rather than your rental circles
-  - **listing age is not checked**, unlike a category page. That feed is ranked
-    rather than chronological, so most of what it shows is hours or days old and
-    the usual 30-minute cutoff would reject essentially all of it. "New" there
-    means partmin hasn't sent it to you before
+  - **listing age** is checked against a day rather than the ~30 minutes a
+    category page uses. That feed is ranked rather than chronological, so a
+    30-minute cutoff rejects essentially all of it, while no cutoff at all lets
+    through the week-old listings its ranking happily resurfaces. Set
+    `params.maxListingAgeHours` to pick your own window
   - the feed reorders itself between loads, so coverage builds up over successive
     passes rather than from one sweep. partmin visits it once per pass.
 - **Rental-only filters** — `pets`, `minBedrooms`, and the `swaps`, `sublets` and

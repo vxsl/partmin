@@ -4,7 +4,7 @@ import { requirePage } from "index.js";
 import { Listing, invalidateListing } from "listing.js";
 import { getCraigslistBaseURL } from "platforms/craigslist/constants.js";
 import craigslist from "platforms/craigslist/index.js";
-import { getSearchConfig } from "search.js";
+import { getSearchConfig, maxListingAgeMinutes } from "search.js";
 import { getGoogleMapsLink, getSearchCircles, trimAddress } from "util/geo.js";
 import { log } from "util/log.js";
 import { isNight } from "util/misc.js";
@@ -89,7 +89,9 @@ export const perListing = async (l: Listing) => {
   const page = requirePage();
   await page.goto(l.url);
 
-  const maxMin = isNight() ? 60 : 30;
+  const maxMin = maxListingAgeMinutes(await getSearchConfig(), {
+    defaultMinutes: isNight() ? 60 : 30,
+  });
 
   try {
     const dateEl = page.locator("time.date").first();

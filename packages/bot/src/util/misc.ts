@@ -57,7 +57,6 @@ export const tryNTimes = async <T>(
 
 export const isNight = () =>
   !(new Date().getHours() >= 5 && new Date().getHours() < 22);
-
 export const randomWait = async (options?: {
   short?: true;
   suppressLog?: boolean;
