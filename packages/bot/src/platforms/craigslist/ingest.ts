@@ -5,7 +5,7 @@ import { Listing, invalidateListing } from "listing.js";
 import { getCraigslistBaseURL } from "platforms/craigslist/constants.js";
 import craigslist from "platforms/craigslist/index.js";
 import { getSearchConfig } from "search.js";
-import { decodeMapDevelopersURL, getGoogleMapsLink, trimAddress } from "util/geo.js";
+import { getGoogleMapsLink, getSearchCircles, trimAddress } from "util/geo.js";
 import { log } from "util/log.js";
 import { isNight } from "util/misc.js";
 
@@ -21,16 +21,10 @@ export const main = async (
   searchURL.searchParams.set("sort", "date");
 
   if (config.params.price.min !== undefined) {
-    searchURL.searchParams.set(
-      "min_price",
-      String(config.params.price.min)
-    );
+    searchURL.searchParams.set("min_price", String(config.params.price.min));
   }
   if (config.params.price.max !== undefined) {
-    searchURL.searchParams.set(
-      "max_price",
-      String(config.params.price.max)
-    );
+    searchURL.searchParams.set("max_price", String(config.params.price.max));
   }
   if (config.params.minBedrooms !== undefined) {
     searchURL.searchParams.set(
@@ -40,18 +34,20 @@ export const main = async (
   }
 
   // Add geo filter derived from the configured search circles
-  const circles = decodeMapDevelopersURL(config.location.mapDevelopersURL);
+  const circles = await getSearchCircles();
   if (circles.length > 0) {
     const centerLat = circles.reduce((s, c) => s + c.lat, 0) / circles.length;
     const centerLon = circles.reduce((s, c) => s + c.lon, 0) / circles.length;
-    const boundingRadiusKm = Math.max(...circles.map((c) => {
-      const distKm = haversine(
-        { latitude: centerLat, longitude: centerLon },
-        { latitude: c.lat, longitude: c.lon },
-        { unit: "km" }
-      );
-      return distKm + c.radius;
-    }));
+    const boundingRadiusKm = Math.max(
+      ...circles.map((c) => {
+        const distKm = haversine(
+          { latitude: centerLat, longitude: centerLon },
+          { latitude: c.lat, longitude: c.lon },
+          { unit: "km" }
+        );
+        return distKm + c.radius;
+      })
+    );
     const boundingRadiusMiles = Math.ceil(boundingRadiusKm / KM_PER_MILE);
     searchURL.searchParams.set("lat", centerLat.toFixed(4));
     searchURL.searchParams.set("lon", centerLon.toFixed(4));
@@ -71,12 +67,17 @@ export const main = async (
     ).map((li) => {
       const url = li.querySelector("a")?.href ?? "";
       const id = url.split("/").pop()?.replace(".html", "") ?? "";
-      const priceText =
-        li.querySelector(".price")?.textContent?.trim() ?? "";
-      const price =
-        parseInt(priceText.replace(/[$,]/g, "")) || undefined;
+      const priceText = li.querySelector(".price")?.textContent?.trim() ?? "";
+      const price = parseInt(priceText.replace(/[$,]/g, "")) || undefined;
       const title = li.getAttribute("title") ?? id;
-      return { platform: "craigslist", id, url, details: { title, price }, imgURLs: [], videoURLs: [] } as any;
+      return {
+        platform: "craigslist",
+        id,
+        url,
+        details: { title, price },
+        imgURLs: [],
+        videoURLs: [],
+      } as any;
     });
   });
 
@@ -97,7 +98,11 @@ export const perListing = async (l: Listing) => {
       const date = new Date(dateStr);
       l.details.date = Math.floor(date.getTime() / 1000);
       if (Date.now() - date.getTime() > maxMin * 60 * 1000) {
-        invalidateListing(l, "stale", `Listing is older than ${maxMin} minutes`);
+        invalidateListing(
+          l,
+          "stale",
+          `Listing is older than ${maxMin} minutes`
+        );
       }
     }
   } catch {

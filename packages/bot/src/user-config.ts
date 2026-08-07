@@ -109,17 +109,32 @@ const SearchParamsOverride = RuntypeRecord({
   ...searchParamsAfterPrice,
 });
 
+const Center = RuntypeRecord({
+  lat: RuntypeNumber,
+  lon: RuntypeNumber,
+});
+
+// Set `radiusKm` to cover one circle of that size instead of the ones drawn in
+// `mapDevelopersURL`. Carving a city into neighbourhoods is right for somewhere
+// to live and wrong for everything else — a good deal is worth crossing town
+// for. `center` defaults to the middle of the drawn circles.
+const locationAreaFields = {
+  commuteDestinations: Optional(Array(String)),
+  radiusKm: Optional(RuntypeNumber),
+  center: Optional(Center),
+};
+
 export const Location = RuntypeRecord({
   city: String,
   region: String,
   mapDevelopersURL: String,
-  commuteDestinations: Optional(Array(String)),
+  ...locationAreaFields,
 });
 const LocationOverride = RuntypeRecord({
   city: Optional(String),
   region: Optional(String),
   mapDevelopersURL: Optional(String),
-  commuteDestinations: Optional(Array(String)),
+  ...locationAreaFields,
 });
 
 export const Search = RuntypeRecord({

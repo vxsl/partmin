@@ -19,19 +19,15 @@ import {
   setMarketplaceLocation,
 } from "platforms/fb/util.js";
 import { PlatformKey } from "types/platform.js";
-import {
-  getSearchConfig,
-  isCityWideSearch,
-  isRentalSearch,
-} from "search.js";
+import { getSearchConfig, isCityWideSearch, isRentalSearch } from "search.js";
 import { PetType, rentalCategory } from "user-config.js";
 import {
   acresToSqft,
   approxFSA,
   Circle,
   Coordinates,
-  decodeMapDevelopersURL,
   getGoogleMapsLink,
+  getSearchCircles,
   sqMetersToSqft,
 } from "util/geo.js";
 import { findNestedJSONProperty } from "util/json.js";
@@ -83,7 +79,9 @@ export const perListing = async (l: Listing) => {
       const scripts = await page
         .locator("xpath=//script")
         .all()
-        .then((els) => Promise.all(els.map((e) => e.innerHTML().catch(() => ""))));
+        .then((els) =>
+          Promise.all(els.map((e) => e.innerHTML().catch(() => "")))
+        );
 
       // Facebook moved the listing's fields out of marketplace_product_details_page
       // (which now carries only photos and an id), so gather every object on the
@@ -140,6 +138,17 @@ export const perListing = async (l: Listing) => {
     }
 
     const maxMin = isNight() ? 60 : 30;
+    // The city-wide feed is ranked rather than chronological, so most of what it
+    // surfaces is hours or days old. An age cutoff would reject essentially all
+    // of it — there, "new" means "not seen before", which the seen-listing store
+    // already decides.
+    const invalidateIfStale = (reason: string) => {
+      if (isCityWideSearch(config)) {
+        verboseLog(`Not applying the age cutoff to ${l.id}: ${reason}`);
+        return;
+      }
+      invalidateListing(l, "stale", reason);
+    };
 
     try {
       const timestamp = getPart((i) => i.creation_time);
@@ -151,11 +160,7 @@ export const perListing = async (l: Listing) => {
       debugLog(`This listing was created at ${date}`);
 
       if (Date.now() - date.getTime() > maxMin * 60 * 1000) {
-        invalidateListing(
-          l,
-          "stale",
-          `Listing is older than ${maxMin} minutes`
-        );
+        invalidateIfStale(`Listing is older than ${maxMin} minutes`);
       }
     } catch (e) {
       debugLog(`Couldn't find creation_time for listing ${l.id}: ${e}`);
@@ -177,9 +182,7 @@ export const perListing = async (l: Listing) => {
           l.details.dateFallbackStr?.toLowerCase().includes("month") ||
           l.details.dateFallbackStr?.toLowerCase().includes("year")
         ) {
-          invalidateListing(
-            l,
-            "stale",
+          invalidateIfStale(
             `Stale threshold is ${maxMin} minutes and found text "${l.details.dateFallbackStr}"`
           );
         }
@@ -187,11 +190,7 @@ export const perListing = async (l: Listing) => {
         // Fail closed. Throwing here used to abort the whole batch, and treating
         // an unknown age as "fresh" is how month-old listings got sent.
         debugLog(`Couldn't determine the age of listing ${l.id}: ${e}`);
-        invalidateListing(
-          l,
-          "stale",
-          "Couldn't determine how old this listing is"
-        );
+        invalidateIfStale("Couldn't determine how old this listing is");
       }
     }
 
@@ -659,7 +658,8 @@ export const getListings = async (): Promise<Listing[]> => {
 
       await withElement(
         () => e.locator("img"),
-        (img) => img.getAttribute("src").then((src) => src && res.imgURLs.push(src))
+        (img) =>
+          img.getAttribute("src").then((src) => src && res.imgURLs.push(src))
       );
 
       return res;
@@ -687,7 +687,9 @@ const cityWideMain = async (
   const activity = startActivity(fb.presenceActivities?.main, 1);
   const anchor = radii[0];
   if (!anchor) {
-    log("No search areas are configured, so there's nowhere to centre the feed.");
+    log(
+      "No search areas are configured, so there's nowhere to centre the feed."
+    );
     return;
   }
 
@@ -718,7 +720,7 @@ export const main = async (
   }
 
   const config = await getSearchConfig();
-  const radii = decodeMapDevelopersURL(config.location.mapDevelopersURL);
+  const radii = await getSearchCircles();
 
   if (isCityWideSearch(config)) {
     return await cityWideMain(processListings, radii);

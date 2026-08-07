@@ -71,6 +71,8 @@ export const mergeSearch = (
       o.location?.mapDevelopersURL ?? base.location.mapDevelopersURL,
     commuteDestinations:
       o.location?.commuteDestinations ?? base.location.commuteDestinations,
+    radiusKm: o.location?.radiusKm ?? base.location.radiusKm,
+    center: o.location?.center ?? base.location.center,
   },
   params: {
     price: o.params?.price ?? base.params.price,

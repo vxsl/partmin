@@ -178,6 +178,7 @@ block alone and add `searches` alongside it:
       "category": "all",
       "platforms": ["fb"],
       "params": { "price": { "min": 0 } },
+      "location": { "radiusKm": 25 },
       "blacklist": []
     }
   }
@@ -185,11 +186,19 @@ block alone and add `searches` alongside it:
 
 That produces a `🌇┃deals` channel next to your existing listings channel.
 
-Note what that `price` does: both bounds are optional, and because an override
-replaces a field outright rather than merging into it, writing only `min` drops
-the `max` inherited from `search`. That's usually what you want here — a rent
-ceiling makes no sense across every category, and a good deal on something
-expensive is still a good deal.
+Two things in there are worth understanding, because both exist to undo something
+inherited from your rental search:
+
+- **`price`**: both bounds are optional, and because an override replaces a field
+  outright rather than merging into it, writing only `min` drops the `max`
+  inherited from `search`. A rent ceiling makes no sense across every category,
+  and a good deal on something expensive is still a good deal.
+- **`location.radiusKm`**: covers a single circle of that many kilometres instead
+  of the ones drawn in `mapDevelopersURL`, centred on the middle of those circles
+  (or on an explicit `location.center: { "lat": …, "lon": … }`). Search circles
+  drawn tightly around the neighbourhoods you'd live in will reject almost
+  everything a city-wide feed surfaces — you'd cross town for a good deal on a
+  bike, so the area should say so.
 
 Notes:
 
@@ -213,9 +222,14 @@ Notes:
   it thinks are worth seeing. So partmin applies the parts Facebook drops:
   - **price** is checked against `params.price` from the search tile, before
     anything else, so over-priced listings don't eat the per-pass budget
-  - **search area** is checked against your radii once a listing's page has been
-    visited and its coordinates are known — the feed reaches ~65 km, well past
-    most search circles, so this does most of the filtering
+  - **search area** is checked against the search's own area once a listing's page
+    has been visited and its coordinates are known — the feed reaches ~65 km, so
+    this does most of the filtering, and it's why such a search wants
+    `location.radiusKm` rather than your rental circles
+  - **listing age is not checked**, unlike a category page. That feed is ranked
+    rather than chronological, so most of what it shows is hours or days old and
+    the usual 30-minute cutoff would reject essentially all of it. "New" there
+    means partmin hasn't sent it to you before
   - the feed reorders itself between loads, so coverage builds up over successive
     passes rather than from one sweep. partmin visits it once per pass.
 - **Rental-only filters** — `pets`, `minBedrooms`, and the `swaps`, `sublets` and

@@ -120,9 +120,45 @@ export const constructMapDevelopersURL = (coords: Coordinates) => {
   )}`;
 };
 
+/**
+ * The area a search covers.
+ *
+ * By default that's the circles drawn in `mapDevelopersURL`, which is the right
+ * shape for a rental hunt: specific neighbourhoods, tightly drawn. A search that
+ * sets `radiusKm` gets a single circle of that size instead, centred on `center`
+ * or on the middle of the drawn ones — for anything that isn't somewhere to live,
+ * a neighbourhood carve-up throws away listings you'd happily cross town for.
+ */
+export const getSearchCircles = async (): Promise<Circle[]> => {
+  const { location } = await getSearchConfig();
+  const drawn = decodeMapDevelopersURL(location.mapDevelopersURL);
+  if (location.radiusKm === undefined) {
+    return drawn;
+  }
+  const center =
+    location.center ??
+    (drawn.length
+      ? {
+          lat: drawn.reduce((sum, c) => sum + c.lat, 0) / drawn.length,
+          lon: drawn.reduce((sum, c) => sum + c.lon, 0) / drawn.length,
+        }
+      : undefined);
+  const single = Circle.build({
+    lat: center?.lat,
+    lon: center?.lon,
+    radius: location.radiusKm,
+  });
+  if (!single) {
+    log(
+      `Couldn't centre a ${location.radiusKm} km search area; falling back to the drawn circles.`
+    );
+    return drawn;
+  }
+  return [single];
+};
+
 export const isWithinRadii = async (coords: Coordinates) => {
-  const config = await getSearchConfig();
-  const radii = decodeMapDevelopersURL(config.location.mapDevelopersURL);
+  const radii = await getSearchCircles();
   verboseLog(
     `checking if ${Coordinates.toString(coords)} is within ${
       radii.length > 1
