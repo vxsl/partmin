@@ -5,6 +5,7 @@ import { requirePage } from "index.js";
 import { addBulletPoints, invalidateListing, Listing } from "listing.js";
 import { fbListingXpath } from "platforms/fb/constants.js";
 import fb from "platforms/fb/index.js";
+import { parseListingTile } from "platforms/fb/tile.js";
 import {
   applyFbSessionToContext,
   saveFbSession,
@@ -619,20 +620,18 @@ export const getListings = async (): Promise<Listing[]> => {
         return undefined;
       }
 
-      const SEP = " - ";
-      const text = await e
-        .innerText()
-        .then((t) =>
-          t.replace("\n", SEP).replace(/^C\$+/, "").replace("\n", SEP)
+      const innerText = await e.innerText();
+      const { price, title, badges } = parseListingTile(innerText);
+      if (price === undefined) {
+        verboseLog(
+          `No price found on the tile for listing ${id}: ${JSON.stringify(
+            innerText
+          )}`
         );
-      const tokens = text.split(SEP);
-      const price =
-        tokens[0] !== undefined
-          ? tokens[0].includes("FREE")
-            ? 0
-            : parseInt(tokens[0].replace(/^[^\d]*|[\$,]/g, ""))
-          : undefined;
-      const title = tokens.slice(1, tokens.length - 1).join(SEP);
+      }
+      if (badges.length) {
+        verboseLog(`Tile for ${id} carried badges: ${badges.join(", ")}`);
+      }
 
       const res: Listing = {
         platform,
