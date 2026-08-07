@@ -70,9 +70,13 @@ const PetParams = RuntypeRecord({
 
 export type PetType = keyof Static<typeof PetParams>;
 
+// Both bounds are optional, and omitting one means "don't bound it that way" —
+// the platform queries and partmin's own price check have always treated them as
+// such. A search over everything Marketplace has doesn't want a ceiling: a good
+// deal on something expensive is still a good deal.
 const Price = RuntypeRecord({
-  min: RuntypeNumber,
-  max: RuntypeNumber,
+  min: Optional(RuntypeNumber),
+  max: Optional(RuntypeNumber),
 });
 
 const ExcludeParams = RuntypeRecord({
@@ -205,7 +209,11 @@ const validateSearch = (
   });
 
   const price = s.params?.price;
-  if (price && price.min > price.max) {
+  if (
+    price?.min !== undefined &&
+    price?.max !== undefined &&
+    price.min > price.max
+  ) {
     throw new Error(`min price is greater than max price in ${label}`);
   }
 };

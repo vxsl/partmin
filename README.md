@@ -169,21 +169,27 @@ feed that isn't your apartment hunt.
 
 Each entry states only what differs from `search`; everything it leaves out is
 inherited, so a second search doesn't have to restate your city or your search
-radii. For a feed of cheap things across _all_ of Marketplace, leave your
-existing `search` block alone and add `searches` alongside it:
+radii. For a feed spanning _all_ of Marketplace, leave your existing `search`
+block alone and add `searches` alongside it:
 
 ```json
   "searches": {
     "deals": {
       "category": "all",
       "platforms": ["fb"],
-      "params": { "price": { "min": 0, "max": 200 } },
+      "params": { "price": { "min": 0 } },
       "blacklist": []
     }
   }
 ```
 
 That produces a `🌇┃deals` channel next to your existing listings channel.
+
+Note what that `price` does: both bounds are optional, and because an override
+replaces a field outright rather than merging into it, writing only `min` drops
+the `max` inherited from `search`. That's usually what you want here — a rent
+ceiling makes no sense across every category, and a good deal on something
+expensive is still a good deal.
 
 Notes:
 
