@@ -14,11 +14,11 @@ if (!statusPath) {
 // Define paths explicitly, matching those used in persistent.ts.
 const serverID = process.env.DISCORD_SERVER_ID ?? "";
 // The token is shared across servers, but the channel IDs aren't: they live in
-// the per-server directory, one entry per channel partmin manages — which now
-// includes a listings channel per configured search.
+// the per-server directory nested inside it, one entry per channel partmin
+// manages — which now includes a listings channel per configured search.
 const commonDataDir = "packages/bot/.data";
 const tokenPath = `${commonDataDir}/bot-token`;
-const channelIDsPath = `${commonDataDir}-${serverID}/channel-ids.json`;
+const channelIDsPath = `${commonDataDir}/${serverID}/channel-ids.json`;
 
 const prefix = "[presence-auditor]";
 const log = (s: string) => console.log(`${prefix} ${s}`);

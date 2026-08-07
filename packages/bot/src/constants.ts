@@ -1,20 +1,34 @@
 import { devOptions } from "advanced-config.js";
 import { discordGuildID } from "discord/constants.js";
-import { existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, renameSync } from "fs";
 import { PetType, StaticUserConfig } from "user-config.js";
 
 export const getDirs = () => {
   const dirPrefix = devOptions?.testing ? "test-" : "";
   const cwd = process.cwd();
+  const commonData = `${cwd}/.${dirPrefix}data`;
+  // Per-server state nests inside the common data directory rather than sitting
+  // beside it as `.data-<server>`. docker-compose only ever mounted `.data`, so
+  // the sibling directory lived and died with the container — taking the seen
+  // listings with it, and re-announcing every listing after a rebuild.
+  const data = `${commonData}/${discordGuildID}`;
+
+  const legacyData = `${cwd}/.${dirPrefix}data-${discordGuildID}`;
+  if (existsSync(legacyData) && !existsSync(data)) {
+    mkdirSync(commonData, { recursive: true });
+    renameSync(legacyData, data);
+    console.log(`Moved server data from ${legacyData} to ${data}`);
+  }
+
   const dirs = {
-    data: `${cwd}/.${dirPrefix}data-${discordGuildID}`,
-    commonData: `${cwd}/.${dirPrefix}data`,
+    data,
+    commonData,
     commonDataProd: `${cwd}/.data`,
     puppeteerCache: `${cwd}/.puppeteer`,
   };
   for (const dir of Object.values(dirs)) {
     if (!existsSync(dir)) {
-      mkdirSync(dir);
+      mkdirSync(dir, { recursive: true });
     }
   }
   return dirs;
